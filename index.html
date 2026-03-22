@@ -1,0 +1,2782 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Terminal Academy</title>
+<style>
+:root {
+  --bg: #0c0c1d;
+  --panel: #111128;
+  --panel2: #161638;
+  --term-bg: #0a0a0a;
+  --green: #00ff88;
+  --green2: #00cc66;
+  --cyan: #00e5ff;
+  --yellow: #ffd700;
+  --red: #ff3860;
+  --pink: #ff79c6;
+  --orange: #ffb86c;
+  --text: #e0e0e0;
+  --dim: #666688;
+  --border: #2a2a4a;
+  --success: #00ff88;
+  --font: 'Menlo', 'Monaco', 'Courier New', monospace;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:var(--font); height:100vh; overflow:hidden; display:flex; flex-direction:column; }
+
+/* ===== TOP BAR ===== */
+#top-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:8px 16px; background:var(--panel); border-bottom:1px solid var(--border);
+  min-height:48px; gap:16px; flex-shrink:0;
+}
+#top-bar .logo { color:var(--green); font-size:16px; font-weight:bold; white-space:nowrap; }
+#top-bar .logo span { color:var(--cyan); }
+.xp-area { display:flex; align-items:center; gap:12px; flex:1; max-width:400px; }
+.level-badge {
+  background:var(--green); color:#000; padding:2px 10px; border-radius:12px;
+  font-size:12px; font-weight:bold; white-space:nowrap;
+}
+.xp-bar-outer {
+  flex:1; height:12px; background:var(--panel2); border-radius:6px;
+  border:1px solid var(--border); overflow:hidden; min-width:80px;
+}
+.xp-bar-inner { height:100%; background:linear-gradient(90deg,var(--green2),var(--cyan)); transition:width .5s ease; border-radius:6px; }
+.xp-text { font-size:11px; color:var(--dim); white-space:nowrap; }
+.top-btns { display:flex; gap:8px; }
+.top-btns button {
+  background:var(--panel2); border:1px solid var(--border); color:var(--text);
+  padding:4px 12px; border-radius:4px; font-family:var(--font); font-size:12px; cursor:pointer;
+}
+.top-btns button:hover { border-color:var(--green); color:var(--green); }
+.top-btns button.active { border-color:var(--green); color:var(--green); background:rgba(0,255,136,.08); }
+
+/* ===== MAIN LAYOUT ===== */
+#main { display:flex; flex:1; overflow:hidden; }
+
+/* ===== TERMINAL ===== */
+#terminal-pane { flex:1; display:flex; flex-direction:column; min-width:0; }
+#terminal {
+  flex:1; background:var(--term-bg); padding:12px; overflow-y:auto;
+  font-size:13px; line-height:1.6; scroll-behavior:smooth;
+}
+#terminal .line { white-space:pre-wrap; word-break:break-all; }
+#terminal .prompt-text { color:var(--green); }
+#terminal .cmd-text { color:#fff; }
+#terminal .output { color:#ccc; }
+#terminal .error { color:var(--red); }
+#terminal .info { color:var(--cyan); }
+#terminal .success { color:var(--success); }
+#terminal .warning { color:var(--yellow); }
+#terminal .highlight { color:var(--pink); }
+#terminal .dir-color { color:var(--cyan); font-weight:bold; }
+#terminal .file-color { color:var(--text); }
+#terminal .exec-color { color:var(--green); }
+#terminal .hidden-color { color:var(--dim); }
+#terminal .perm-color { color:var(--yellow); }
+
+#input-line {
+  display:flex; align-items:center; padding:8px 12px;
+  background:#0d0d0d; border-top:1px solid var(--border); flex-shrink:0;
+}
+#input-line .prompt { color:var(--green); white-space:pre; font-size:13px; }
+#input-line input {
+  flex:1; background:transparent; border:none; color:#fff;
+  font-family:var(--font); font-size:13px; outline:none; caret-color:var(--green);
+}
+
+/* ===== SIDE PANEL ===== */
+#side-panel {
+  width:380px; background:var(--panel); border-left:1px solid var(--border);
+  display:flex; flex-direction:column; overflow:hidden; flex-shrink:0;
+}
+#side-panel.hidden { display:none; }
+.panel-tabs {
+  display:flex; border-bottom:1px solid var(--border); flex-shrink:0;
+}
+.panel-tabs button {
+  flex:1; padding:10px; background:transparent; border:none;
+  color:var(--dim); font-family:var(--font); font-size:12px; cursor:pointer;
+  border-bottom:2px solid transparent; transition:all .2s;
+}
+.panel-tabs button.active { color:var(--green); border-bottom-color:var(--green); }
+.panel-tabs button:hover { color:var(--text); }
+.panel-content { flex:1; overflow-y:auto; padding:16px; }
+.panel-content h2 { color:var(--cyan); font-size:14px; margin-bottom:8px; }
+.panel-content h3 { color:var(--green); font-size:13px; margin:12px 0 6px; }
+.panel-content p, .panel-content li { font-size:12px; line-height:1.6; color:var(--text); }
+.panel-content ul { padding-left:16px; }
+
+/* Lesson panel */
+.chapter-label { color:var(--dim); font-size:11px; text-transform:uppercase; letter-spacing:1px; margin-bottom:4px; }
+.lesson-title { color:var(--cyan); font-size:16px; font-weight:bold; margin-bottom:12px; }
+.lesson-desc { font-size:12px; line-height:1.7; color:#bbb; margin-bottom:16px; padding:10px; background:var(--panel2); border-radius:6px; border-left:3px solid var(--cyan); }
+.task-list { list-style:none; padding:0; }
+.task-item {
+  display:flex; align-items:flex-start; gap:8px; padding:8px 10px; margin:4px 0;
+  background:var(--panel2); border-radius:4px; border-left:3px solid var(--border);
+  font-size:12px; transition:all .3s;
+}
+.task-item.active { border-left-color:var(--yellow); background:rgba(255,215,0,.05); }
+.task-item.done { border-left-color:var(--success); opacity:.7; }
+.task-check { font-size:14px; flex-shrink:0; margin-top:1px; }
+.task-item.done .task-check { color:var(--success); }
+.task-item:not(.done) .task-check { color:var(--dim); }
+.task-text { flex:1; }
+.hint-btn {
+  background:transparent; border:1px solid var(--border); color:var(--yellow);
+  padding:2px 8px; border-radius:3px; font-family:var(--font); font-size:10px;
+  cursor:pointer; margin-top:6px;
+}
+.hint-btn:hover { background:rgba(255,215,0,.1); }
+.hint-text { color:var(--yellow); font-size:11px; margin-top:4px; padding:4px 8px; background:rgba(255,215,0,.05); border-radius:3px; display:none; }
+.hint-text.show { display:block; }
+.nav-btns { display:flex; gap:8px; margin-top:16px; padding-top:12px; border-top:1px solid var(--border); }
+.nav-btns button {
+  flex:1; padding:8px; background:var(--panel2); border:1px solid var(--border);
+  color:var(--text); font-family:var(--font); font-size:12px; border-radius:4px; cursor:pointer;
+}
+.nav-btns button:hover { border-color:var(--green); color:var(--green); }
+.nav-btns button:disabled { opacity:.3; cursor:default; border-color:var(--border); color:var(--dim); }
+
+/* Achievements */
+.achievement {
+  display:flex; align-items:center; gap:10px; padding:10px;
+  background:var(--panel2); border-radius:6px; margin:6px 0;
+  border:1px solid var(--border);
+}
+.achievement.unlocked { border-color:var(--yellow); }
+.achievement .ach-icon { font-size:24px; }
+.achievement .ach-info { flex:1; }
+.achievement .ach-name { font-size:12px; font-weight:bold; color:var(--text); }
+.achievement.unlocked .ach-name { color:var(--yellow); }
+.achievement .ach-desc { font-size:11px; color:var(--dim); }
+.achievement:not(.unlocked) { opacity:.4; }
+
+/* Glossary */
+.glossary-item { padding:10px; background:var(--panel2); border-radius:6px; margin:6px 0; }
+.glossary-item dt { color:var(--green); font-size:13px; font-weight:bold; }
+.glossary-item dd { font-size:12px; color:#bbb; margin-top:4px; line-height:1.6; }
+
+/* Toast */
+#toast {
+  position:fixed; top:60px; right:20px; z-index:999;
+  display:flex; flex-direction:column; gap:8px; pointer-events:none;
+}
+.toast-msg {
+  background:var(--panel); border:1px solid var(--yellow); color:var(--yellow);
+  padding:10px 16px; border-radius:6px; font-family:var(--font); font-size:12px;
+  animation:slideIn .3s ease, fadeOut .5s ease 2.5s forwards;
+  box-shadow:0 4px 20px rgba(0,0,0,.5);
+}
+.toast-msg.xp { border-color:var(--green); color:var(--green); }
+.toast-msg.level { border-color:var(--cyan); color:var(--cyan); font-size:14px; }
+.toast-msg.ach { border-color:var(--yellow); color:var(--yellow); }
+@keyframes slideIn { from{transform:translateX(100px);opacity:0}to{transform:translateX(0);opacity:1} }
+@keyframes fadeOut { to{opacity:0;transform:translateY(-10px)} }
+
+/* Adventure Mode */
+.quest-card {
+  background:var(--panel2); border:1px solid var(--border); border-radius:8px;
+  padding:14px; margin:8px 0; cursor:pointer; transition:all .2s;
+}
+.quest-card:hover { border-color:var(--cyan); }
+.quest-card.active { border-color:var(--yellow); background:rgba(255,215,0,.05); }
+.quest-card.completed { border-left:3px solid var(--green); opacity:.75; }
+.quest-card.locked { opacity:.35; cursor:default; }
+.quest-card .quest-num { color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:1px; }
+.quest-card .quest-title { color:var(--cyan); font-size:13px; font-weight:bold; margin:4px 0; }
+.quest-card.completed .quest-title { color:var(--green); }
+.quest-card .quest-desc { color:var(--dim); font-size:11px; line-height:1.5; }
+.quest-objective {
+  display:flex; align-items:flex-start; gap:8px; padding:6px 10px;
+  margin:4px 0; background:var(--panel2); border-radius:4px;
+  font-size:12px; border-left:3px solid var(--border);
+}
+.quest-objective.done { border-left-color:var(--green); opacity:.7; }
+.quest-objective.current { border-left-color:var(--yellow); background:rgba(255,215,0,.05); }
+.quest-narrative {
+  padding:12px; background:rgba(0,229,255,.05); border-left:3px solid var(--cyan);
+  border-radius:0 6px 6px 0; margin:10px 0; font-size:12px;
+  color:#bbb; line-height:1.7; font-style:italic;
+}
+.quest-progress-bar {
+  height:6px; background:var(--panel2); border-radius:3px; margin:8px 0;
+  border:1px solid var(--border); overflow:hidden;
+}
+.quest-progress-fill { height:100%; background:linear-gradient(90deg,var(--yellow),var(--orange)); border-radius:3px; transition:width .5s; }
+.location-tag {
+  display:inline-block; background:rgba(0,229,255,.1); color:var(--cyan);
+  font-size:10px; padding:2px 8px; border-radius:10px; margin:4px 4px 0 0;
+}
+
+/* Challenge Arena */
+.challenge-card {
+  background:var(--panel2); border:1px solid var(--border); border-radius:8px;
+  padding:16px; margin:12px 0;
+}
+.challenge-card.active-challenge { border-color:var(--cyan); }
+.challenge-card .ch-diff {
+  font-size:10px; text-transform:uppercase; letter-spacing:1px;
+  padding:2px 8px; border-radius:8px; display:inline-block; margin-bottom:8px;
+}
+.ch-diff.easy { background:rgba(0,255,136,.15); color:var(--green); }
+.ch-diff.medium { background:rgba(255,215,0,.15); color:var(--yellow); }
+.ch-diff.hard { background:rgba(255,56,96,.15); color:var(--red); }
+.ch-diff.expert { background:rgba(255,121,198,.15); color:var(--pink); }
+.challenge-card h4 { color:var(--text); font-size:13px; margin-bottom:6px; }
+.challenge-card p { color:var(--dim); font-size:11px; line-height:1.5; }
+.challenge-card .ch-xp { color:var(--yellow); font-size:11px; margin-top:6px; }
+.challenge-btn {
+  background:var(--cyan); color:#000; border:none; padding:8px 20px;
+  font-family:var(--font); font-size:12px; font-weight:bold; border-radius:4px;
+  cursor:pointer; margin-top:8px;
+}
+.challenge-btn:hover { opacity:.85; }
+.challenge-btn.skip { background:var(--panel2); color:var(--dim); border:1px solid var(--border); }
+.challenge-result { padding:12px; border-radius:6px; margin:8px 0; font-size:12px; }
+.challenge-result.pass { background:rgba(0,255,136,.1); border:1px solid var(--green); color:var(--green); }
+.challenge-result.fail { background:rgba(255,56,96,.1); border:1px solid var(--red); color:var(--red); }
+.streak-display {
+  display:flex; align-items:center; gap:8px; padding:10px;
+  background:var(--panel2); border-radius:6px; margin-bottom:12px;
+  border:1px solid var(--border);
+}
+.streak-display .streak-fire { font-size:20px; }
+.streak-display .streak-num { color:var(--orange); font-size:18px; font-weight:bold; }
+.streak-display .streak-label { color:var(--dim); font-size:11px; }
+.stats-grid {
+  display:grid; grid-template-columns:1fr 1fr; gap:8px; margin:12px 0;
+}
+.stat-box {
+  background:var(--panel2); border-radius:6px; padding:10px; text-align:center;
+  border:1px solid var(--border);
+}
+.stat-box .stat-val { color:var(--cyan); font-size:20px; font-weight:bold; }
+.stat-box .stat-label { color:var(--dim); font-size:10px; text-transform:uppercase; letter-spacing:.5px; }
+
+/* Quiz Mode */
+.quiz-question {
+  background:var(--panel2); border:1px solid var(--border); border-radius:8px;
+  padding:16px; margin:12px 0;
+}
+.quiz-question h4 { color:var(--cyan); font-size:13px; margin-bottom:12px; line-height:1.5; }
+.quiz-option {
+  display:block; width:100%; text-align:left; background:transparent;
+  border:1px solid var(--border); color:var(--text); padding:10px 12px;
+  font-family:var(--font); font-size:12px; border-radius:4px; cursor:pointer;
+  margin:4px 0; transition:all .2s;
+}
+.quiz-option:hover { border-color:var(--cyan); background:rgba(0,229,255,.05); }
+.quiz-option.correct { border-color:var(--green); background:rgba(0,255,136,.1); color:var(--green); }
+.quiz-option.wrong { border-color:var(--red); background:rgba(255,56,96,.1); color:var(--red); }
+.quiz-option:disabled { cursor:default; opacity:.7; }
+.quiz-explanation {
+  margin-top:10px; padding:10px; background:rgba(0,229,255,.05);
+  border-left:3px solid var(--cyan); border-radius:0 4px 4px 0;
+  font-size:11px; color:#bbb; line-height:1.6;
+}
+.quiz-score { display:flex; align-items:center; gap:16px; margin:12px 0; }
+.quiz-score .qs-ring {
+  width:60px; height:60px; border-radius:50%; display:flex; align-items:center;
+  justify-content:center; font-size:18px; font-weight:bold;
+  border:3px solid var(--green); color:var(--green);
+}
+.quiz-category-btn {
+  display:block; width:100%; text-align:left; background:var(--panel2);
+  border:1px solid var(--border); color:var(--text); padding:12px;
+  font-family:var(--font); font-size:12px; border-radius:6px; cursor:pointer;
+  margin:6px 0; transition:all .2s;
+}
+.quiz-category-btn:hover { border-color:var(--cyan); }
+.quiz-category-btn .cat-count { color:var(--dim); font-size:11px; float:right; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width:6px; }
+::-webkit-scrollbar-track { background:transparent; }
+::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+::-webkit-scrollbar-thumb:hover { background:var(--dim); }
+
+/* Welcome overlay */
+#welcome-overlay {
+  position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:100;
+  display:flex; align-items:center; justify-content:center;
+}
+#welcome-overlay.hidden { display:none; }
+#welcome-box {
+  background:var(--panel); border:1px solid var(--green); border-radius:12px;
+  padding:40px; max-width:600px; text-align:center;
+}
+#welcome-box h1 { color:var(--green); font-size:28px; margin-bottom:8px; }
+#welcome-box h1 span { color:var(--cyan); }
+#welcome-box .subtitle { color:var(--dim); font-size:14px; margin-bottom:24px; }
+#welcome-box .ascii-art { color:var(--green); font-size:11px; line-height:1.3; margin:16px 0; }
+#welcome-box p { color:#bbb; font-size:13px; line-height:1.7; margin-bottom:16px; }
+#welcome-box button {
+  background:var(--green); color:#000; border:none; padding:12px 32px;
+  font-family:var(--font); font-size:14px; font-weight:bold; border-radius:6px;
+  cursor:pointer; transition:all .2s;
+}
+#welcome-box button:hover { background:var(--cyan); }
+</style>
+</head>
+<body>
+
+<!-- Welcome Overlay -->
+<div id="welcome-overlay">
+  <div id="welcome-box">
+    <div class="ascii-art">
+ _____ _____ ____  __  __ ___ _   _    _    _
+|_   _| ____|  _ \|  \/  |_ _| \ | |  / \  | |
+  | | |  _| | |_) | |\/| || ||  \| | / _ \ | |
+  | | | |___|  _ &lt;| |  | || || |\  |/ ___ \| |___
+  |_| |_____|_| \_\_|  |_|___|_| \_/_/   \_\_____|
+     / \   / ___|  / \  |  _ \| ____|  \/  |\ \ / /
+    / _ \ | |     / _ \ | | | |  _| | |\/| | \ V /
+   / ___ \| |___ / ___ \| |_| | |___| |  | |  | |
+  /_/   \_\____/_/   \_\____/|_____|_|  |_|  |_|
+    </div>
+    <h1>Terminal <span>Academy</span></h1>
+    <p class="subtitle">Master the command line, one command at a time</p>
+    <p>Welcome, cadet! You're about to learn how to wield the most powerful tool in computing — the terminal. Through hands-on missions, you'll go from zero to power user.</p>
+    <p style="color:var(--yellow);font-size:12px;">12 Chapters · 50+ Missions · Endless Challenges · 45+ Quiz Questions · Achievements · Encyclopedia</p>
+    <button onclick="startGame()">BEGIN TRAINING →</button>
+  </div>
+</div>
+
+<!-- Top Bar -->
+<div id="top-bar">
+  <div class="logo">Terminal <span>Academy</span></div>
+  <div class="xp-area">
+    <div class="level-badge" id="level-badge">LVL 1</div>
+    <div class="xp-bar-outer"><div class="xp-bar-inner" id="xp-bar" style="width:0%"></div></div>
+    <div class="xp-text" id="xp-text">0 / 100 XP</div>
+  </div>
+  <div class="top-btns">
+    <button id="btn-lessons" class="active" onclick="showTab('lessons')">Missions</button>
+    <button id="btn-adventure" onclick="showTab('adventure')">Adventure</button>
+    <button id="btn-challenges" onclick="showTab('challenges')">Challenges</button>
+    <button id="btn-quiz" onclick="showTab('quiz')">Quiz</button>
+    <button id="btn-achievements" onclick="showTab('achievements')">Achievements</button>
+    <button id="btn-glossary" onclick="showTab('glossary')">Encyclopedia</button>
+    <button id="btn-toggle-panel" onclick="togglePanel()">◧</button>
+  </div>
+</div>
+
+<!-- Main -->
+<div id="main">
+  <!-- Terminal -->
+  <div id="terminal-pane">
+    <div id="terminal"></div>
+    <div id="input-line">
+      <span class="prompt" id="prompt">player@academy:~$ </span>
+      <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+    </div>
+  </div>
+
+  <!-- Side Panel -->
+  <div id="side-panel">
+    <div class="panel-tabs">
+      <button class="active" data-tab="lessons" onclick="showTab('lessons')">Missions</button>
+      <button data-tab="adventure" onclick="showTab('adventure')">Adventure</button>
+      <button data-tab="challenges" onclick="showTab('challenges')">Challenges</button>
+      <button data-tab="quiz" onclick="showTab('quiz')">Quiz</button>
+      <button data-tab="achievements" onclick="showTab('achievements')">Achievements</button>
+      <button data-tab="glossary" onclick="showTab('glossary')">Encyclopedia</button>
+    </div>
+    <div class="panel-content" id="panel-lessons"></div>
+    <div class="panel-content" id="panel-adventure" style="display:none"></div>
+    <div class="panel-content" id="panel-challenges" style="display:none"></div>
+    <div class="panel-content" id="panel-quiz" style="display:none"></div>
+    <div class="panel-content" id="panel-achievements" style="display:none"></div>
+    <div class="panel-content" id="panel-glossary" style="display:none"></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ============================================================
+// VIRTUAL FILESYSTEM
+// ============================================================
+function createFS() {
+  // type: 'dir' or 'file'
+  // permissions: rwxrwxrwx string
+  // content: string (for files)
+  // children: {} (for dirs)
+  const fs = {
+    '/': dir('rwxr-xr-x', {
+      home: dir('rwxr-xr-x', {
+        player: dir('rwxr-xr-x', {
+          '.bashrc': file('rw-r--r--', '# ~/.bashrc\nexport PS1="\\u@\\h:\\w\\$ "\nexport PATH="/usr/local/bin:$PATH"\nalias ll="ls -la"\nalias gs="git status"\n\n# Welcome to your shell config!\n# This file runs every time you open a new terminal.\n'),
+          '.profile': file('rw-r--r--', '# ~/.profile\n# This runs once at login.\nexport EDITOR=nano\nexport LANG=en_US.UTF-8\n'),
+          '.hidden_treasure': file('rw-------', '🏆 You found the hidden treasure! Real terminal pros always check for dotfiles.\n'),
+          'documents': dir('rwxr-xr-x', {
+            'notes.txt': file('rw-r--r--', 'Terminal Academy Notes\n=====================\n\nDay 1: Learned what a terminal is.\nDay 2: Figured out how to navigate directories!\nDay 3: Files are just text. Everything is a file.\nDay 4: Pipes are magical.\nDay 5: I feel like a hacker.\n'),
+            'todo.txt': file('rw-r--r--', '[ ] Learn all terminal commands\n[ ] Become a power user\n[ ] Automate boring stuff with scripts\n[ ] Impress friends with terminal skills\n[x] Install Terminal Academy\n'),
+            'quotes.txt': file('rw-r--r--', '"The command line is the most powerful tool in computing." - Every sysadmin ever\n"In the beginning was the command line." - Neal Stephenson\n"Talk is cheap. Show me the code." - Linus Torvalds\n"Any sufficiently advanced technology is indistinguishable from magic." - Arthur C. Clarke\n"First, solve the problem. Then, write the code." - John Johnson\n'),
+            'projects': dir('rwxr-xr-x', {
+              'website': dir('rwxr-xr-x', {
+                'index.html': file('rw-r--r--', '<!DOCTYPE html>\n<html>\n<head><title>My Site</title></head>\n<body>\n  <h1>Hello World!</h1>\n  <p>Built from the terminal, naturally.</p>\n</body>\n</html>\n'),
+                'style.css': file('rw-r--r--', 'body {\n  font-family: monospace;\n  background: #0a0a0a;\n  color: #00ff88;\n  margin: 40px;\n}\n'),
+                'app.js': file('rw-r--r--', 'console.log("Hello from the terminal!");\n\nfunction greet(name) {\n  return `Welcome, ${name}!`;\n}\n\nmodule.exports = { greet };\n'),
+              }),
+              'data': dir('rwxr-xr-x', {
+                'users.csv': file('rw-r--r--', 'name,email,role\nAlice,alice@example.com,admin\nBob,bob@example.com,user\nCharlie,charlie@example.com,user\nDiana,diana@example.com,admin\nEve,eve@example.com,user\nFrank,frank@example.com,moderator\nGrace,grace@example.com,admin\n'),
+                'sales.csv': file('rw-r--r--', 'month,product,amount\nJan,Widget,150\nJan,Gadget,200\nFeb,Widget,175\nFeb,Gadget,180\nMar,Widget,220\nMar,Gadget,250\nApr,Widget,190\nApr,Gadget,210\n'),
+                'log.txt': file('rw-r--r--', '[2024-01-15 08:23:01] INFO: Server started on port 3000\n[2024-01-15 08:23:05] INFO: Database connected\n[2024-01-15 08:24:12] WARNING: High memory usage detected\n[2024-01-15 08:25:00] INFO: Request from 192.168.1.1 - GET /api/users\n[2024-01-15 08:25:01] ERROR: Failed to fetch user #42 - timeout\n[2024-01-15 08:25:03] INFO: Request from 192.168.1.2 - POST /api/login\n[2024-01-15 08:25:04] WARNING: Failed login attempt for user "admin"\n[2024-01-15 08:26:00] ERROR: Connection refused to cache server\n[2024-01-15 08:26:30] INFO: Cache server reconnected\n[2024-01-15 08:27:00] INFO: Scheduled backup started\n[2024-01-15 08:27:45] INFO: Backup completed successfully\n'),
+                'config.json': file('rw-r--r--', '{\n  "app": "terminal-academy",\n  "version": "1.0.0",\n  "port": 3000,\n  "database": {\n    "host": "localhost",\n    "port": 5432,\n    "name": "academy_db"\n  },\n  "features": {\n    "darkMode": true,\n    "notifications": true\n  }\n}\n'),
+              }),
+            }),
+          }),
+          'downloads': dir('rwxr-xr-x', {
+            'readme.txt': file('rw-r--r--', 'This is your downloads folder.\nFiles downloaded from the internet end up here.\n'),
+            'archive.tar.gz': file('rw-r--r--', '[binary: compressed archive]'),
+          }),
+          'music': dir('rwxr-xr-x', {}),
+          'pictures': dir('rwxr-xr-x', {
+            'screenshot.png': file('rw-r--r--', '[binary: image file]'),
+          }),
+          'scripts': dir('rwxr-xr-x', {
+            'backup.sh': file('rwxr-xr-x', '#!/bin/bash\n# Simple backup script\n\nSOURCE="$HOME/documents"\nDEST="$HOME/backups"\nDATE=$(date +%Y%m%d)\n\nmkdir -p "$DEST"\ntar -czf "$DEST/backup-$DATE.tar.gz" "$SOURCE"\necho "Backup completed: $DEST/backup-$DATE.tar.gz"\n'),
+            'hello.sh': file('rwxr-xr-x', '#!/bin/bash\n# My first shell script!\n\nNAME="World"\nif [ ! -z "$1" ]; then\n  NAME="$1"\nfi\n\necho "Hello, $NAME!"\necho "Today is $(date)"\necho "You are logged in as $(whoami)"\n'),
+          }),
+          // ===== NEXUS ADVENTURE WORLD =====
+          'nexus': dir('rwxr-xr-x', {
+            'README.txt': file('rw-r--r--', '╔══════════════════════════════════════════════════╗\n║           NEXUS CYBER AGENCY - TERMINAL           ║\n║         Classification: EYES ONLY                 ║\n╚══════════════════════════════════════════════════╝\n\nWelcome, Recruit.\n\nYou have been granted Level 1 access to the NEXUS\nnetwork. Your handler, Agent_K, was supposed to\nbrief you today. But Agent_K has not reported in\nfor 72 hours.\n\nYour mission: Trace Agent_K\'s last known activity\nthrough the system. Find out what they were\ninvestigating, and why they disappeared.\n\nStart by exploring the lobby/.\nUse the commands you\'ve learned. Trust nothing.\n\n— Director Chen\n   NEXUS Cyber Agency\n'),
+            'lobby': dir('rwxr-xr-x', {
+              'notice_board.txt': file('rw-r--r--', '════════════ NEXUS NOTICE BOARD ════════════\n\n[PINNED] ALL-HANDS: Security audit next week.\n   Ensure all logs are preserved. -Director Chen\n\n[URGENT] Has anyone seen Agent_K? They missed\n   the 09:00 briefing three days in a row.\n   Contact reception if you have info.\n\n[REMINDER] Do NOT store passwords in plaintext.\n   Yes, I\'m looking at you, Agent_Murphy.\n\n[SOCIAL] Pizza Friday is cancelled. Again.\n   Blame the budget cuts.\n\n[IT DEPT] The server_room access logs show some\n   unusual activity around 02:00-04:00 last\n   Tuesday. If you were running maintenance,\n   please log it properly.\n'),
+              'visitor_log.csv': file('rw-r--r--', 'date,name,badge_id,purpose,signed_out\n2024-01-10,Dr. Sarah Mills,V-0091,Consultation,yes\n2024-01-11,James Chen,V-0092,Delivery,yes\n2024-01-12,Agent_K,A-0037,Late entry,no\n2024-01-12,UNKNOWN,V-????,Not recorded,no\n2024-01-13,Maint. Crew,M-0012,Server maintenance,yes\n'),
+              'reception': dir('rwxr-xr-x', {
+                'welcome_packet.txt': file('rw-r--r--', 'NEXUS NEW RECRUIT GUIDE\n======================\n\nKey Locations:\n  lobby/       - You are here\n  agent_k_office/ - Your handler\'s workspace\n  server_room/   - Critical infrastructure\n  comms/         - Communication center\n  archives/      - Records & personnel files\n  lab/           - Analysis & tools\n  vault/         - High-security evidence storage\n\nRemember: Use ls -a to check for hidden files.\nAgents often hide sensitive info in dotfiles.\n\nYour clearance: LEVEL 1\nSome areas may require elevated permissions.\n'),
+              }),
+            }),
+            'agent_k_office': dir('rwxr-xr-x', {
+              '.hidden_note': file('rw-------', '--- PRIVATE NOTE (Agent_K) ---\n\nThey\'re watching the main channels. If you find this,\ndon\'t trust the access logs at face value. Someone\nhas been editing them.\n\nI found something in the archives — a classified\nproject called ORACLE. It\'s not in any official index.\nLook in archives/ for a hidden directory.\n\nThe backdoor is in the server_room. I\'ve been\nmonitoring it but someone knows I\'m onto them.\n\nIf I go dark, check my outbox in comms/.\nThe password hint is in suspects.csv — look at\nthe first letters of the codenames.\n\n- K\n'),
+              'desk_photo.txt': file('rw-r--r--', '[A framed photo showing Agent_K at a team event.\n They\'re smiling, wearing a NEXUS lanyard.\n Written on the back: "The truth is in the data."]\n'),
+              'case_files': dir('rwxr-xr-x', {
+                'breach_report.txt': file('rw-r--r--', 'INCIDENT REPORT #2024-0042\n========================\nClassification: CONFIDENTIAL\nFiled by: Agent_K\nDate: 2024-01-10\n\nSUMMARY:\nUnauthorized access detected on internal server\ncluster between 02:15-03:47 on Jan 8, 2024.\nAttacker used valid credentials belonging to a\ndeactivated service account (svc_legacy_admin).\n\nACTIONS TAKEN:\n- Flagged anomalous login patterns\n- Cross-referenced with badge access logs\n- Identified data exfiltration from archives/\n\nSUSPICIOUS FINDINGS:\n- The service account was supposedly deactivated\n  6 months ago, but someone reactivated it\n- Access originated from INSIDE the building\n- 3.2GB of data was copied from the archives\n- Firewall logs show the data was sent to\n  an external IP: 198.51.100.42\n\nNEXT STEPS:\n- Review server_room access logs for Jan 8\n- Cross-reference personnel with building access\n- Check for any backdoors or persistence mechanisms\n\nSTATUS: ACTIVE INVESTIGATION\n'),
+                'suspects.csv': file('rw-r--r--', 'id,name,codename,department,clearance,alibi_verified\n1,Marcus Webb,RAVEN,Engineering,3,yes\n2,Diana Frost,ECHO,Analysis,4,no\n3,Tom Nakamura,VIPER,IT Security,5,yes\n4,Lisa Park,EMBER,Operations,3,yes\n5,unknown,LYNX,unknown,unknown,no\n6,Carlos Reyes,ATLAS,Archives,2,yes\n7,Yuki Tanaka,LOTUS,Lab,4,no\n'),
+                'timeline.txt': file('rw-r--r--', 'INVESTIGATION TIMELINE\n=====================\n\nJan 8, 02:15  - Unauthorized login detected (svc_legacy_admin)\nJan 8, 02:23  - Archive access: personnel files downloaded\nJan 8, 03:01  - Archive access: classified section accessed\nJan 8, 03:47  - Data exfiltration to 198.51.100.42\nJan 8, 04:00  - Connection terminated\nJan 9, 09:00  - Routine scan flags the anomaly\nJan 10, 11:00 - Agent_K assigned to investigation\nJan 10, 14:00 - Agent_K files breach_report.txt\nJan 11, 22:00 - Agent_K accesses server_room (after hours)\nJan 12, 01:30 - Agent_K last seen entering the building\nJan 12, 02:00 - Agent_K badge used in server_room\nJan 12, 03:15 - Last command logged from Agent_K terminal\nJan 12, ??:?? - Agent_K goes dark\n'),
+              }),
+              'bookmarks.txt': file('rw-r--r--', 'Agent_K\'s Research Notes\n=======================\n\n- Check server_room/access.log for entries around 02:00\n- The firewall rules were modified recently — compare old vs new\n- Personnel file for "ECHO" (Diana Frost) — clearance level 4,\n  alibi NOT verified\n- Also suspicious: "LYNX" — no record in personnel database?\n- Remember to check hidden directories in archives/\n'),
+            }),
+            'server_room': dir('rwxr-xr-x', {
+              'access.log': file('rw-r--r--', '[2024-01-07 08:00:12] BADGE-IN: M-0012 (Maint. Crew) - routine check\n[2024-01-07 08:45:33] BADGE-OUT: M-0012 (Maint. Crew)\n[2024-01-07 14:22:01] BADGE-IN: A-0015 (Agent_Murphy) - log review\n[2024-01-07 14:55:00] BADGE-OUT: A-0015 (Agent_Murphy)\n[2024-01-08 02:13:55] BADGE-IN: V-???? (UNREGISTERED) - ERROR\n[2024-01-08 02:14:02] AUTH-OVERRIDE: svc_legacy_admin granted access\n[2024-01-08 02:15:00] LOGIN: svc_legacy_admin from terminal-7\n[2024-01-08 03:47:22] LOGOUT: svc_legacy_admin\n[2024-01-08 03:48:01] BADGE-OUT: V-???? (UNREGISTERED)\n[2024-01-08 09:00:00] BADGE-IN: T-0003 (Tom Nakamura) - security audit\n[2024-01-08 09:00:15] ALERT: Anomalous access pattern flagged\n[2024-01-08 11:30:00] BADGE-OUT: T-0003 (Tom Nakamura)\n[2024-01-09 09:15:00] BADGE-IN: A-0037 (Agent_K) - investigation\n[2024-01-09 12:00:00] BADGE-OUT: A-0037 (Agent_K)\n[2024-01-11 22:05:00] BADGE-IN: A-0037 (Agent_K) - after hours\n[2024-01-11 23:45:00] BADGE-OUT: A-0037 (Agent_K)\n[2024-01-12 02:00:33] BADGE-IN: A-0037 (Agent_K) - after hours\n[2024-01-12 03:15:00] ALERT: Unauthorized modification to firewall_rules.txt\n[2024-01-12 03:15:22] LAST ACTIVITY: Agent_K terminal session ended\n[2024-01-12 03:16:00] BADGE-OUT: FORCED LOGOUT — no badge tap\n'),
+              'firewall_rules.txt': file('rw-r--r--', '# NEXUS FIREWALL RULES\n# Last modified: 2024-01-12 03:14:58\n# Modified by: svc_legacy_admin (!!! SHOULD BE DEACTIVATED !!!)\n\n# === STANDARD RULES ===\nALLOW inbound 443 (HTTPS)\nALLOW inbound 22 (SSH - internal only)\nALLOW outbound 443 (HTTPS)\nALLOW outbound 53 (DNS)\nDENY  outbound * (default)\n\n# === RECENTLY ADDED (SUSPICIOUS) ===\nALLOW outbound 4444 to 198.51.100.42  # WHO ADDED THIS??\nALLOW outbound 8080 to 198.51.100.42  # DATA EXFIL PORT\n\n# Agent_K note: These rules were added Jan 8 at 02:20.\n# Someone opened a channel to an external server.\n# This is how the data was stolen.\n'),
+              '.backdoor': file('rw-------', '#!/bin/bash\n# FOUND IT. This is the backdoor.\n# Filename: .backdoor (hidden from normal ls)\n# Created: 2024-01-08 02:18:00\n# Creator: svc_legacy_admin\n#\n# This script opens a reverse shell to 198.51.100.42\n# on port 4444. It\'s set to run every night at 02:00\n# via a hidden cron job.\n#\n# Agent_K note: I\'ve disabled the cron job but left\n# this file as evidence. Whoever planted this had\n# physical access to the server room AND knew the\n# svc_legacy_admin credentials.\n#\n# Cross-reference: Only 3 people had access to\n# svc_legacy_admin creds before it was "deactivated":\n# - Tom Nakamura (IT Security)\n# - Diana Frost (Analysis)\n# - Director Chen\n#\n# The badge log shows V-???? (UNREGISTERED) entering\n# at 02:13 on Jan 8. Someone used a cloned badge.\n'),
+              'backups': dir('rwxr-xr-x', {
+                'db_users_jan7.csv': file('rw-r--r--', 'username,role,status,last_login\nsvc_legacy_admin,admin,DEACTIVATED,2023-07-15\nagent_k,agent,active,2024-01-09\nagent_murphy,agent,active,2024-01-07\nd.frost,analyst,active,2024-01-08\nt.nakamura,security,active,2024-01-08\ndirector_chen,admin,active,2024-01-07\n'),
+                'db_users_jan9.csv': file('rw-r--r--', 'username,role,status,last_login\nsvc_legacy_admin,admin,active,2024-01-08\nagent_k,agent,active,2024-01-09\nagent_murphy,agent,active,2024-01-07\nd.frost,analyst,active,2024-01-08\nt.nakamura,security,active,2024-01-08\ndirector_chen,admin,active,2024-01-07\n'),
+              }),
+            }),
+            'comms': dir('rwxr-xr-x', {
+              'inbox': dir('rwxr-xr-x', {
+                'msg_001_from_director.txt': file('rw-r--r--', 'FROM: Director Chen\nTO: Agent_K\nDATE: 2024-01-10\nSUBJECT: Security Breach - Assignment\n\nK,\n\nYou\'re on the breach investigation. Full access\ngranted to server_room and archives. Report\ndirectly to me. Keep this quiet — I don\'t want\nthe mole to know we\'re looking.\n\n- Chen\n'),
+                'msg_002_from_unknown.txt': file('rw-r--r--', 'FROM: [SENDER REDACTED]\nTO: Agent_K\nDATE: 2024-01-11\nSUBJECT: You\'re getting close\n\nI know what you found in the server room.\nBack off now and nothing happens to you.\nThis is bigger than you think.\n\nDon\'t bother tracing this message.\nI routed it through 12 proxies.\n\nYou have 24 hours.\n'),
+                'msg_003_from_analyst.txt': file('rw-r--r--', 'FROM: Yuki Tanaka (Lab)\nTO: Agent_K\nDATE: 2024-01-11\nSUBJECT: RE: Malware Analysis\n\nK,\n\nI analyzed the backdoor script you found.\nIt\'s sophisticated — custom-built, not off-the-shelf.\nWhoever wrote this has deep knowledge of our\ninternal systems.\n\nThe coding style matches samples in our database\nfrom a threat actor we call "PHANTOM." But here\'s\nthe thing — PHANTOM is supposed to be an external\nthreat. This code was written by someone with\nINSIDE knowledge.\n\nCheck the lab/analysis/ folder. I left my full\nreport there.\n\n- Yuki\n'),
+              }),
+              'outbox': dir('rwxr-xr-x', {
+                '.unsent_draft.txt': file('rw-------', 'FROM: Agent_K\nTO: Director Chen\nDATE: 2024-01-12 02:45\nSUBJECT: URGENT — I know who the mole is\nSTATUS: *** UNSENT ***\n\nDirector,\n\nI\'ve identified the mole. The evidence points to\nDiana Frost (codename ECHO).\n\nProof:\n1. She\'s the only suspect whose alibi is unverified\n2. She had access to svc_legacy_admin credentials\n3. The badge used on Jan 8 (V-????) matches the\n   visitor badge she signed out on Jan 5 and\n   "lost" — check the visitor_log\n4. The PHANTOM coding style matches her academic\n   papers on network security (archived in lab)\n5. She has clearance level 4 — enough to access\n   the classified archives that were stolen\n6. First letters of suspect codenames she suggested:\n   R-E-V-E-L — she\'s taunting us\n\nI\'m in the server room now collecting final\nevidence. If this message sends, something\nwent wrong. Check the vault — I\'m copying\neverything there.\n\n*** THIS MESSAGE WAS NEVER SENT ***\n*** Agent_K session terminated at 03:15 ***\n'),
+              }),
+            }),
+            'archives': dir('rwxr-xr-x', {
+              'personnel': dir('rwxr-xr-x', {
+                'agents.csv': file('rw-r--r--', 'agent_id,name,codename,department,clearance,start_date,status\nA-0015,Murphy,SHIELD,Field Ops,2,2020-03-15,active\nA-0022,Santos,ARROW,Analysis,3,2019-08-01,active\nA-0037,Agent_K,GHOST,Investigations,4,2018-01-10,MISSING\nA-0041,Reeves,HAWK,Field Ops,2,2021-06-20,active\nA-0045,Park,EMBER,Operations,3,2019-11-05,active\n'),
+                'clearance_levels.txt': file('rw-r--r--', 'NEXUS CLEARANCE SYSTEM\n=====================\n\nLevel 1: Basic access (lobby, common areas)\nLevel 2: Agent access (offices, comms)\nLevel 3: Operations access (archives, standard)\nLevel 4: Senior access (classified archives, lab)\nLevel 5: Admin access (vault, all systems)\n\nNote: Level 4+ can access the classified archives.\nOnly Level 5 can access the vault.\n\nCurrent Level 5 holders:\n- Director Chen\n- Tom Nakamura (IT Security)\n'),
+              }),
+              'operations': dir('rwxr-xr-x', {
+                'op_thunderbolt.txt': file('rw-r--r--', 'OPERATION THUNDERBOLT\n====================\nStatus: COMPLETED\nLead: Agent Santos\n\nObjective: Investigate data leak from partner org.\nResult: External attacker identified and blocked.\nNo internal compromise detected.\n'),
+                'op_midnight.txt': file('rw-r--r--', 'OPERATION MIDNIGHT\n==================\nStatus: ACTIVE\nLead: Agent_K\n\nObjective: Investigate internal security breach\n(Jan 8 incident). Identify mole.\n\nNotes: Agent_K requested sole assignment.\nLast update: Jan 11 — "Making progress,\nexpect to identify suspect within 48 hours."\n\n*** NO FURTHER UPDATES ***\n'),
+              }),
+              '.classified': dir('rwx------', {
+                'project_oracle.txt': file('rw-------', 'PROJECT ORACLE\n==============\nClassification: TOP SECRET\nAccess: Level 4+ only\n\nProject Oracle is a predictive threat analysis\nprogram that models insider threat patterns.\nIt was developed by Diana Frost in 2023.\n\nIRONIC NOTE (added by Agent_K):\nThe person who built our insider threat detector\nIS the insider threat. Frost designed Oracle\nwith a deliberate blind spot — it can\'t detect\nher own access patterns. She literally built\nherself a backdoor into the detection system.\n\nFrost used Oracle\'s database to identify which\nagents were closest to discovering her. That\'s\nhow she knew Agent_K was getting close.\n\nEvidence chain:\n  server_room/.backdoor → Frost\'s coding style\n  archives/.classified/project_oracle.txt → this file\n  comms/outbox/.unsent_draft.txt → K\'s final report\n  vault/evidence/ → physical evidence\n'),
+              }),
+            }),
+            'lab': dir('rwxr-xr-x', {
+              'analysis': dir('rwxr-xr-x', {
+                'malware_report.txt': file('rw-r--r--', 'MALWARE ANALYSIS REPORT\n======================\nAnalyst: Yuki Tanaka\nDate: 2024-01-11\nSample: server_room/.backdoor\n\nFINDINGS:\n- Custom reverse shell, not a known tool\n- Coded in bash with advanced obfuscation\n- Uses port 4444 (common for Metasploit)\n- Connects to 198.51.100.42\n- Scheduled via hidden cron job\n\nCODING STYLE ANALYSIS:\n- Variable naming: camelCase (uncommon in bash)\n- Comment style matches academic papers\n- Error handling pattern seen in only one other\n  sample in our database: a proof-of-concept\n  submitted by Diana Frost during her interview\n  in 2019\n\nCONCLUSION:\n  High confidence (92%) the backdoor author is\n  the same person who wrote the 2019 PoC.\n'),
+                'network_capture.txt': file('rw-r--r--', 'NETWORK CAPTURE SUMMARY\n======================\nCapture window: 2024-01-08 02:00 - 04:00\n\n02:14:02 - TCP SYN to 198.51.100.42:4444\n02:14:03 - TCP SYN-ACK from 198.51.100.42\n02:14:03 - Connection established\n02:15:00 - Data transfer begins\n02:23:15 - Large transfer: archives/personnel/* (340KB)\n03:01:44 - Large transfer: archives/.classified/* (2.8MB)\n03:47:22 - Connection terminated\n03:48:01 - All traces cleaned (attempted)\n\nTotal data exfiltrated: ~3.2GB\nDestination: 198.51.100.42 (unregistered VPS)\n'),
+              }),
+              'tools': dir('rwxr-xr-x', {
+                'decoder.sh': file('rw-r--r--', '#!/bin/bash\n# NEXUS Decoder Tool v2.1\n# Decodes suspect codename patterns\n#\n# Usage: Make executable first! (chmod +x decoder.sh)\n# Then conceptually "run" it by reading the output.\n#\n# Running decoder on suspects.csv codenames...\n# Extracting first letters of codenames:\n#   RAVEN  → R\n#   ECHO   → E\n#   VIPER  → V\n#   EMBER  → E\n#   LYNX   → L\n#   ATLAS  → A\n#   LOTUS  → L\n#\n# Decoded message: R-E-V-E-L-A-L → "REVEAL"\n#\n# WAIT. The codenames spell "REVEAL"?\n# Agent_K noted this too. But who assigned\n# the codenames? Check the case files...\n# It was Diana Frost. She was taunting us.\n'),
+                'scanner.sh': file('rw-r--r--', '#!/bin/bash\n# NEXUS Network Scanner v1.3\n# Scans for active connections to suspicious IPs\n#\n# Usage: chmod +x scanner.sh to make executable\n#\n# Scan results:\n# [ALERT] Outbound rule to 198.51.100.42 still active!\n# [ALERT] Port 4444 - known backdoor port\n# [ALERT] Port 8080 - data exfiltration port\n# [INFO]  Backdoor cron job: DISABLED (by Agent_K)\n# [INFO]  Last connection: 2024-01-12 03:15\n# [WARN]  Firewall rules modified by deactivated account\n#\n# Recommendation: Remove suspicious firewall rules\n# and revoke svc_legacy_admin permanently.\n'),
+              }),
+            }),
+            'vault': dir('rwxr-xr-x', {
+              '.access_key': file('r--------', 'VAULT ACCESS KEY\n================\nClearance required: LEVEL 5\n\nThis key was locked by Agent_K before they\ndisappeared. You need to change its permissions\nto read it.\n\nKey: ORACLE-ECHO-2024\n\nUse this key as proof you\'ve traced the full\nevidence chain when writing the final report.\n'),
+              'evidence': dir('rwxr-xr-x', {
+                'badge_analysis.txt': file('rw-r--r--', 'BADGE FORENSICS\n===============\n\nThe unregistered badge (V-????) used on Jan 8\nwas analyzed by the lab.\n\nFindings:\n- It\'s a cloned visitor badge\n- Original badge V-0088 was signed out by\n  Diana Frost on Jan 5 for "a visiting consultant"\n- The consultant never showed up\n- Badge V-0088 was reported "lost" on Jan 7\n- Badge V-???? has the same RFID signature\n  as V-0088 — it\'s a clone\n\nConclusion: Frost cloned the visitor badge\nto access the server room without leaving\nher own badge trail.\n'),
+                'database_diff.txt': file('rw-r--r--', 'DATABASE COMPARISON\n==================\nComparing: db_users_jan7.csv vs db_users_jan9.csv\n\nCHANGES DETECTED:\n- svc_legacy_admin: status changed from\n  DEACTIVATED → active\n  (This account was reactivated between Jan 7-8)\n\nWho can modify user accounts?\n  → Only Level 5 (Admin access)\n  → Current Level 5: Director Chen, Tom Nakamura\n  → BUT: Diana Frost had temporary Level 5 access\n    from Dec 2023 for Project Oracle deployment\n    (access was supposed to expire Jan 1 but\n    was never revoked due to an oversight)\n\nThis is how Frost reactivated the service account.\n'),
+                'photo_metadata.txt': file('rw-r--r--', 'SECURITY CAMERA METADATA\n=======================\n\nCamera 7 (Server Room Entrance):\n  Jan 8, 02:13 - Figure enters wearing hoodie\n  Face: OBSCURED (hood up)\n  Height: ~5\'6" (matches Frost: 5\'6")\n  Build: Medium (matches Frost)\n  Badge scan: V-???? (cloned badge)\n\nCamera 12 (Parking Garage):\n  Jan 8, 01:55 - Vehicle enters: Silver Audi A4\n  License: Partially obscured\n  Note: Diana Frost drives a silver Audi A4\n  (per personnel records)\n\nCamera 3 (Lobby - Jan 12):\n  Jan 12, 03:10 - Agent_K seen entering server room\n  Jan 12, 03:20 - Second figure approaches server room\n  Face: OBSCURED\n  Jan 12, 03:25 - Agent_K NOT seen exiting\n  Jan 12, 03:30 - Second figure exits building\n\n*** Agent_K has not been seen since ***\n'),
+              }),
+              'final_report.txt': file('rw-r--r--', 'CASE FILE: OPERATION MIDNIGHT\n============================\nStatus: AWAITING COMPLETION\n\nThis report needs to be completed by YOU.\nYou\'ve traced the evidence. Now write your\nconclusions.\n\nUse: echo "your findings" >> final_report.txt\nto append your conclusions to this file.\n\nWhen you\'ve written your report, the case\nis closed and your mission is complete.\n\n-------- YOUR REPORT BELOW --------\n'),
+            }),
+          }),
+        }),
+      }),
+      etc: dir('rwxr-xr-x', {
+        'hosts': file('rw-r--r--', '127.0.0.1    localhost\n255.255.255.255  broadcasthost\n::1              localhost\n'),
+        'passwd': file('rw-r--r--', 'root:x:0:0:root:/root:/bin/bash\nplayer:x:1000:1000:Player:/home/player:/bin/bash\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n'),
+        'shells': file('rw-r--r--', '/bin/sh\n/bin/bash\n/bin/zsh\n/usr/bin/fish\n'),
+      }),
+      usr: dir('rwxr-xr-x', {
+        bin: dir('rwxr-xr-x', {}),
+        local: dir('rwxr-xr-x', {
+          bin: dir('rwxr-xr-x', {}),
+        }),
+      }),
+      var: dir('rwxr-xr-x', {
+        log: dir('rwxr-xr-x', {
+          'system.log': file('rw-r-----', '[2024-01-15 00:00:01] System boot complete\n[2024-01-15 00:00:02] Loading kernel modules\n[2024-01-15 00:00:03] Network interfaces up\n[2024-01-15 00:00:05] SSH daemon started\n[2024-01-15 06:00:00] Cron job: /etc/cron.daily/logrotate\n[2024-01-15 06:00:01] Log rotation completed\n'),
+        }),
+      }),
+      tmp: dir('rwxrwxrwt', {}),
+    }),
+  };
+  return fs;
+}
+
+function dir(perms, children) { return { type:'dir', permissions:perms, children:children||{} }; }
+function file(perms, content) { return { type:'file', permissions:perms, content:content||'' }; }
+
+// ============================================================
+// FILESYSTEM OPERATIONS
+// ============================================================
+function resolvePath(cwd, inputPath) {
+  if (!inputPath) return cwd;
+  let path = inputPath;
+  if (path.startsWith('~')) path = '/home/player' + path.slice(1);
+  if (!path.startsWith('/')) {
+    path = cwd === '/' ? '/' + path : cwd + '/' + path;
+  }
+  // Normalize . and ..
+  const parts = path.split('/').filter(Boolean);
+  const resolved = [];
+  for (const p of parts) {
+    if (p === '.') continue;
+    else if (p === '..') resolved.pop();
+    else resolved.push(p);
+  }
+  return '/' + resolved.join('/');
+}
+
+function getNode(fs, path) {
+  if (path === '/') return fs['/'];
+  const parts = path.split('/').filter(Boolean);
+  let node = fs['/'];
+  for (const p of parts) {
+    if (!node || node.type !== 'dir' || !node.children[p]) return null;
+    node = node.children[p];
+  }
+  return node;
+}
+
+function getParentAndName(fs, path) {
+  const parts = path.split('/').filter(Boolean);
+  const name = parts.pop();
+  const parentPath = '/' + parts.join('/');
+  const parent = getNode(fs, parentPath);
+  return { parent, name, parentPath };
+}
+
+function shortPath(path) {
+  return path.replace('/home/player', '~') || '/';
+}
+
+// ============================================================
+// GLOSSARY / ENCYCLOPEDIA
+// ============================================================
+const glossary = {
+  'terminal': { term:'Terminal', def:'A text-based interface to your computer. Before graphical desktops (GUIs), the terminal was the ONLY way to interact with computers. Think of it as a direct conversation with your machine — you type commands, it responds with text. The terminal app on your Mac (Terminal.app or iTerm2) is a "terminal emulator" — it simulates the old physical terminals.' },
+  'shell': { term:'Shell', def:'The program that interprets your commands inside the terminal. The terminal is the window; the shell is the brain. Common shells: Bash (Bourne Again Shell), Zsh (Z Shell, default on macOS), Fish, and sh. When you type a command, the shell parses it, finds the program, runs it, and shows you the output.' },
+  'bash': { term:'Bash (Bourne Again Shell)', def:'The most widely-used shell in the world. Created in 1989 as a free replacement for the Bourne Shell (sh). "Bash" stands for "Bourne Again Shell" — a pun on "born again." It\'s the default shell on most Linux systems and was the default on macOS until Catalina (2019). When people say "write a bash script," they mean a shell script that uses Bash syntax.' },
+  'zsh': { term:'Zsh (Z Shell)', def:'The default shell on macOS since Catalina (2019). It\'s very similar to Bash but with extra features: better tab completion, spelling correction, themes (Oh My Zsh!), and plugin support. Almost everything you learn in Bash works in Zsh too.' },
+  'cli': { term:'CLI (Command Line Interface)', def:'Any program you interact with by typing text commands rather than clicking buttons. Git, npm, brew, curl — these are all CLIs. The opposite is a GUI (Graphical User Interface). CLIs are powerful because they\'re scriptable, composable, and fast once you know them.' },
+  'command': { term:'Command', def:'An instruction you type into the shell. It can be a built-in shell feature (like cd), or an external program (like ls, grep, git). Commands often accept arguments (what to act on) and flags/options (how to act). Example: "ls -la /home" — ls is the command, -la are flags, /home is the argument.' },
+  'argument': { term:'Argument', def:'A value you pass to a command to tell it what to work on. In "cat readme.txt", the file readme.txt is the argument. In "cp file1.txt file2.txt", both files are arguments. Also called "parameters" or "args."' },
+  'flag': { term:'Flag / Option', def:'A modifier that changes how a command behaves. Flags usually start with - (short form) or -- (long form). Examples: "-a" means "all," "-l" means "long format," "--help" shows help text. You can often combine short flags: "-la" is the same as "-l -a."' },
+  'path': { term:'Path', def:'The address of a file or directory in the filesystem. There are two types:\n• Absolute path: starts with / (the root). Example: /home/player/documents/notes.txt\n• Relative path: starts from your current directory. Example: documents/notes.txt\nSpecial paths: ~ (home directory), . (current directory), .. (parent directory).' },
+  'root': { term:'Root (/ and root user)', def:'Two meanings:\n1. / (forward slash) is the ROOT DIRECTORY — the very top of the filesystem tree. Everything is inside /.\n2. "root" is also the SUPERUSER account with unlimited permissions. On macOS/Linux, you use "sudo" to run commands as root. With great power comes great responsibility!' },
+  'home': { term:'Home Directory (~)', def:'Your personal directory, usually /home/username on Linux or /Users/username on macOS. The ~ (tilde) character is a shortcut for your home directory. Your config files, documents, and personal stuff live here. When you open a new terminal, you start in your home directory.' },
+  'stdin': { term:'Standard Input (stdin)', def:'The default input stream for a program. By default, stdin comes from your keyboard. But with pipes (|) or redirection (<), you can feed data from files or other programs into stdin. Think of it as the program\'s "ear."' },
+  'stdout': { term:'Standard Output (stdout)', def:'The default output stream for a program — where it writes its normal results. By default, stdout goes to your terminal screen. With redirection (> or >>), you can send it to a file instead. Think of it as the program\'s "mouth."' },
+  'stderr': { term:'Standard Error (stderr)', def:'A separate output stream specifically for error messages. This is why error messages still appear on screen even when you redirect stdout to a file. You can redirect stderr with 2> or merge it with stdout using 2>&1.' },
+  'pipe': { term:'Pipe ( | )', def:'The | character connects the stdout of one command to the stdin of another, creating a pipeline. Example: "cat log.txt | grep ERROR | wc -l" — reads the file, filters for lines containing ERROR, then counts them. Pipes are the secret superpower of the terminal — they let you combine simple tools into powerful workflows.' },
+  'redirect': { term:'Redirection ( > >> < )', def:'Redirecting sends output somewhere other than the screen:\n• > writes stdout to a file (overwrites)\n• >> appends stdout to a file\n• < feeds a file into stdin\n• 2> redirects stderr\n• /dev/null is a "black hole" — redirect there to discard output.' },
+  'env': { term:'Environment Variable', def:'A named value available to all programs in your shell session. Common ones: HOME (your home dir), PATH (where to find programs), USER (your username), EDITOR (your preferred text editor). Set them with export NAME=value. View all with env or printenv.' },
+  'path_var': { term:'PATH (Environment Variable)', def:'The most important environment variable. It\'s a colon-separated list of directories where the shell looks for programs. When you type "ls", the shell searches each directory in PATH until it finds an "ls" executable. That\'s how the shell knows where programs live! View it with: echo $PATH.' },
+  'permissions': { term:'File Permissions', def:'Every file/directory has permissions controlling who can read (r), write (w), and execute (x) it. Shown as rwxrwxrwx — three groups of three: owner, group, others. Example: rwxr-xr-- means owner can do everything, group can read/execute, others can only read. Change with chmod.' },
+  'process': { term:'Process', def:'A running instance of a program. Every command you run creates a process with a unique PID (Process ID). You can see running processes with "ps" or "top". Kill a misbehaving process with "kill PID". Background processes run with &.' },
+  'dotfile': { term:'Dotfiles', def:'Files or directories whose names start with a dot (.) are "hidden" — they don\'t show up in normal ls output (use ls -a to see them). Configuration files are usually dotfiles: .bashrc, .zshrc, .gitconfig, .profile. The term "dotfiles" is also used to describe your personal configuration setup.' },
+  'shebang': { term:'Shebang (#!)', def:'The #! at the very start of a script file tells the system which program should interpret the script. "#!/bin/bash" means "run this with Bash." "#!/usr/bin/env python3" means "run this with Python 3." Without a shebang, the system doesn\'t know how to execute the script. The name comes from "hash-bang" (# is hash, ! is bang).' },
+  'alias': { term:'Alias', def:'A custom shortcut for a command. Example: alias ll="ls -la" lets you type "ll" instead of "ls -la". Aliases defined in the terminal are temporary (gone when you close it). To make them permanent, add them to your ~/.bashrc or ~/.zshrc file.' },
+  'glob': { term:'Glob Pattern', def:'Wildcard patterns for matching file names:\n• * matches any characters: *.txt matches all text files\n• ? matches one character: file?.txt matches file1.txt, fileA.txt\n• [abc] matches any one of a,b,c: file[12].txt matches file1.txt, file2.txt\nGlobs are expanded by the shell BEFORE the command runs.' },
+  'exit_code': { term:'Exit Code ($?)', def:'Every command returns a number when it finishes. 0 means success, anything else means failure. Check the last exit code with echo $?. This is how scripts make decisions: "if this command succeeded, do X, otherwise do Y." Common codes: 0=success, 1=general error, 2=misuse, 127=command not found, 130=terminated by Ctrl+C.' },
+  'sudo': { term:'Sudo', def:'Short for "Super User DO." Runs a command with administrator (root) privileges. Required for system-level operations like installing software or editing system files. Use with caution — sudo gives unlimited power. The first time you use it, your Mac asks for your password.' },
+  'package_manager': { term:'Package Manager', def:'A tool that installs, updates, and removes software. Instead of downloading from websites, you use a command:\n• macOS: brew (Homebrew) — "brew install git"\n• Ubuntu/Debian: apt — "sudo apt install git"\n• Fedora: dnf — "sudo dnf install git"\nPackage managers handle dependencies automatically.' },
+  'man_page': { term:'Man Pages (Manual)', def:'Built-in documentation for almost every command. Type "man ls" to read the manual for ls. Navigate with arrow keys, search with /keyword, quit with q. Man pages are dense but comprehensive — they\'re the original documentation before the internet! In this game, use "man <command>" for help.' },
+  'regex': { term:'Regular Expression (Regex)', def:'A pattern language for matching text. Used by grep, sed, awk, and many other tools. Basics: . matches any char, * means zero or more, ^ is start of line, $ is end of line, [abc] matches a/b/c, \\d matches digits. Regex is a superpower — once you learn it, you\'ll use it everywhere.' },
+  'ssh': { term:'SSH (Secure Shell)', def:'A protocol for securely connecting to remote computers. "ssh user@server.com" gives you a terminal on another machine. Used constantly in web development and server administration. SSH keys let you connect without typing passwords every time.' },
+  'script': { term:'Shell Script', def:'A file containing a series of commands that run in sequence. Instead of typing commands one by one, you write them in a file and run the file. Scripts start with a shebang (#!/bin/bash), and you make them executable with "chmod +x script.sh". This is the beginning of automation!' },
+};
+
+// ============================================================
+// MAN PAGES
+// ============================================================
+const manPages = {
+  pwd: { name:'pwd', synopsis:'pwd', desc:'Print Working Directory — shows the full path of where you currently are in the filesystem. Like checking the "You Are Here" dot on a map.', examples:['pwd  →  /home/player/documents'] },
+  whoami: { name:'whoami', synopsis:'whoami', desc:'Prints your username. Simple but useful in scripts or when you\'re connected to remote servers and forget which account you\'re using.', examples:['whoami  →  player'] },
+  hostname: { name:'hostname', synopsis:'hostname', desc:'Prints the name of your computer on the network.', examples:['hostname  →  academy'] },
+  ls: { name:'ls', synopsis:'ls [OPTIONS] [PATH]', desc:'List directory contents. Without arguments, shows files in the current directory.', options:['-a: Show ALL files, including hidden ones (dotfiles)','-l: Long format — shows permissions, size, date, and more','-la: Combine both! Show all files in long format'], examples:['ls','ls -l','ls -la','ls documents/','ls -la /etc'] },
+  cd: { name:'cd', synopsis:'cd [DIRECTORY]', desc:'Change Directory — navigate to a different directory. This is how you move around the filesystem.', options:['cd dirname: Go into dirname','cd ..: Go up one level (parent directory)','cd ~: Go to your home directory','cd /: Go to the root directory','cd -: Go back to previous directory','cd (no args): Go to home directory'], examples:['cd documents','cd ..','cd ~/projects','cd /etc','cd -'] },
+  cat: { name:'cat', synopsis:'cat [FILE...]', desc:'Concatenate and print files. Originally meant to concatenate multiple files together, but most often used to simply display a file\'s contents. Short for "concatenate."', examples:['cat notes.txt','cat file1.txt file2.txt'] },
+  head: { name:'head', synopsis:'head [-n NUM] [FILE]', desc:'Show the first lines of a file. Defaults to 10 lines. Great for peeking at large files without loading the whole thing.', options:['-n NUM: Show first NUM lines instead of 10'], examples:['head log.txt','head -n 5 log.txt'] },
+  tail: { name:'tail', synopsis:'tail [-n NUM] [FILE]', desc:'Show the last lines of a file. Defaults to 10 lines. Perfect for checking the latest entries in log files.', options:['-n NUM: Show last NUM lines instead of 10'], examples:['tail log.txt','tail -n 3 log.txt'] },
+  touch: { name:'touch', synopsis:'touch FILE...', desc:'Create an empty file, or update the timestamp of an existing file. The most common way to create a new empty file from the terminal.', examples:['touch newfile.txt','touch file1.txt file2.txt'] },
+  mkdir: { name:'mkdir', synopsis:'mkdir [-p] DIRECTORY...', desc:'Make Directory — create new directories.', options:['-p: Create parent directories as needed (no error if they exist)'], examples:['mkdir newfolder','mkdir -p projects/myapp/src'] },
+  cp: { name:'cp', synopsis:'cp [-r] SOURCE DEST', desc:'Copy files or directories.', options:['-r: Copy directories recursively (required for directories)'], examples:['cp file.txt backup.txt','cp -r mydir/ mydir_backup/'] },
+  mv: { name:'mv', synopsis:'mv SOURCE DEST', desc:'Move or rename files and directories. Unlike cp, the original is gone after mv.', examples:['mv old.txt new.txt  (rename)','mv file.txt documents/  (move)'] },
+  rm: { name:'rm', synopsis:'rm [-r] [-f] FILE...', desc:'Remove (delete) files. WARNING: There is no trash can — deleted files are gone forever!', options:['-r: Remove directories recursively','-f: Force — don\'t ask for confirmation'], examples:['rm file.txt','rm -r old_directory/'] },
+  echo: { name:'echo', synopsis:'echo [TEXT]', desc:'Print text to the terminal. Also used with redirection to write text into files.', examples:['echo "Hello World"','echo $HOME','echo "text" > file.txt  (write to file)','echo "more" >> file.txt  (append to file)'] },
+  grep: { name:'grep', synopsis:'grep [OPTIONS] PATTERN [FILE...]', desc:'Search for text patterns in files. One of the most useful commands in the terminal. The name comes from "Global Regular Expression Print."', options:['-i: Case-insensitive search','-n: Show line numbers','-r: Search recursively through directories','-c: Count matching lines'], examples:['grep "error" log.txt','grep -i "warning" log.txt','grep -n "TODO" *.txt','grep -r "function" projects/'] },
+  find: { name:'find', synopsis:'find [PATH] -name PATTERN', desc:'Search for files and directories by name, type, size, and more. Unlike grep (which searches file contents), find searches file names.', examples:['find . -name "*.txt"','find /home -name "config*"'] },
+  wc: { name:'wc', synopsis:'wc [OPTIONS] [FILE...]', desc:'Word Count — count lines, words, and characters. Shows all three by default.', options:['-l: Count only lines','-w: Count only words','-c: Count only characters/bytes'], examples:['wc notes.txt','wc -l log.txt','cat file.txt | wc -w'] },
+  sort: { name:'sort', synopsis:'sort [OPTIONS] [FILE]', desc:'Sort lines of text alphabetically. Can also read from stdin (piped input).', options:['-r: Reverse order','-n: Numeric sort','-u: Unique (remove duplicates while sorting)'], examples:['sort names.txt','sort -r names.txt','cat data.txt | sort -n'] },
+  uniq: { name:'uniq', synopsis:'uniq [OPTIONS] [FILE]', desc:'Filter out ADJACENT duplicate lines. Important: lines must be sorted first for uniq to catch all duplicates! That\'s why you almost always see "sort | uniq".', options:['-c: Prefix lines with count of occurrences','-d: Only show duplicated lines'], examples:['sort names.txt | uniq','sort data.txt | uniq -c'] },
+  cut: { name:'cut', synopsis:'cut -d DELIMITER -f FIELDS [FILE]', desc:'Extract specific columns from text. Great for CSV files and structured data.', options:['-d CHAR: Set the field delimiter (default: tab)','-f N: Select field(s) by number (1-indexed)'], examples:['cut -d "," -f 1 users.csv  (first column)','cut -d "," -f 1,3 users.csv  (first and third columns)'] },
+  chmod: { name:'chmod', synopsis:'chmod MODE FILE', desc:'Change file permissions. MODE can be octal (755) or symbolic (+x).', options:['Octal: 7=rwx, 6=rw-, 5=r-x, 4=r--, 0=---','755 = rwxr-xr-x (common for scripts)','644 = rw-r--r-- (common for files)','Symbolic: +x (add execute), -w (remove write)'], examples:['chmod 755 script.sh','chmod +x script.sh','chmod 644 file.txt'] },
+  history: { name:'history', synopsis:'history', desc:'Show your command history. In a real terminal, you can also search it with Ctrl+R and repeat commands with !! (last command) or !n (command number n).', examples:['history'] },
+  clear: { name:'clear', synopsis:'clear', desc:'Clear the terminal screen. Also works with Ctrl+L in most terminals. The history is still there — just scrolled out of view.', examples:['clear'] },
+  env: { name:'env', synopsis:'env', desc:'Display all environment variables. These are named values available to all programs in your shell session.', examples:['env'] },
+  export: { name:'export', synopsis:'export NAME=VALUE', desc:'Set an environment variable that will be available to child processes. Without export, a variable is only available in the current shell.', examples:['export EDITOR=nano','export MY_VAR="hello"'] },
+  alias: { name:'alias', synopsis:'alias NAME="COMMAND"', desc:'Create a shortcut for a command. Great for commands you type frequently.', examples:['alias ll="ls -la"','alias gs="git status"'] },
+  ps: { name:'ps', synopsis:'ps', desc:'List running processes. Shows your currently running programs and their PIDs (Process IDs).', examples:['ps'] },
+  which: { name:'which', synopsis:'which COMMAND', desc:'Shows the full path of a command — where the executable file lives on disk. Useful for figuring out which version of a program you\'re running.', examples:['which bash','which ls'] },
+  man: { name:'man', synopsis:'man COMMAND', desc:'Display the manual page for a command. In this game, it shows a helpful summary. In a real terminal, man pages are full documentation — navigate with arrows, search with /term, quit with q.', examples:['man ls','man grep'] },
+};
+
+// ============================================================
+// LESSONS
+// ============================================================
+const lessons = [
+  // CHAPTER 1: WHAT IS A TERMINAL?
+  {
+    chapter: 1, title: 'Welcome to the Terminal',
+    desc: 'The <span class="highlight">terminal</span> is a text-based interface to your computer. Before mice and graphical desktops existed, this was the ONLY way to use a computer. Inside the terminal runs a <span class="highlight">shell</span> — a program that interprets your commands. The most common shell is <span class="highlight">Bash</span> (Bourne Again Shell). On modern macOS, the default is <span class="highlight">Zsh</span> — but they work almost the same.\n\nYou type a command, press Enter, and the shell does it. Let\'s start with the basics.',
+    tasks: [
+      { text:'Type <code>whoami</code> to see your username', hint:'Just type: whoami', validate: c => c.cmd === 'whoami' },
+      { text:'Type <code>hostname</code> to see your computer\'s name', hint:'Just type: hostname', validate: c => c.cmd === 'hostname' },
+      { text:'Type <code>pwd</code> to see where you are (Print Working Directory)', hint:'Just type: pwd', validate: c => c.cmd === 'pwd' },
+      { text:'Type <code>echo "Hello Terminal"</code> to make the terminal speak', hint:'Type: echo "Hello Terminal"', validate: c => c.cmd.startsWith('echo ') },
+    ],
+    xp: 50,
+  },
+  // CHAPTER 2: LOOKING AROUND
+  {
+    chapter: 2, title: 'Looking Around with ls',
+    desc: '<span class="highlight">ls</span> is one of the most-used commands — it LiSts the contents of a directory. By itself, it shows files and folders in your current location. Add flags to change what it shows:\n\n• <span class="highlight">ls -a</span> — show ALL files, including hidden ones (files starting with a dot)\n• <span class="highlight">ls -l</span> — "long" format with details (permissions, size, date)\n• <span class="highlight">ls -la</span> — combine both!',
+    tasks: [
+      { text:'Type <code>ls</code> to see what\'s in your home directory', hint:'Just type: ls', validate: c => c.cmd === 'ls' },
+      { text:'Type <code>ls -a</code> to reveal hidden files (notice the dotfiles!)', hint:'Type: ls -a — dotfiles start with a period', validate: c => c.cmd === 'ls -a' || c.cmd === 'ls -la' || c.cmd === 'ls -al' },
+      { text:'Type <code>ls -l</code> to see details like permissions and file sizes', hint:'Type: ls -l — the first column shows permissions (rwx)', validate: c => c.cmd === 'ls -l' },
+      { text:'Type <code>ls -la</code> for the full picture — all files, all details', hint:'Type: ls -la', validate: c => c.cmd === 'ls -la' || c.cmd === 'ls -al' },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 3: NAVIGATION
+  {
+    chapter: 3, title: 'Navigating the Filesystem',
+    desc: '<span class="highlight">cd</span> (Change Directory) is how you move around. The filesystem is like a tree:\n\n• <span class="highlight">/</span> — the root (top of the tree)\n• <span class="highlight">~</span> — your home directory shortcut\n• <span class="highlight">..</span> — parent directory (go up one level)\n• <span class="highlight">.</span> — current directory\n• <span class="highlight">-</span> — previous directory (go back)\n\nPaths can be <em>absolute</em> (starting from /) or <em>relative</em> (from where you are now).',
+    tasks: [
+      { text:'Type <code>cd documents</code> to enter the documents folder', hint:'Type: cd documents', validate: c => c.cmd.startsWith('cd ') && c.cwd.endsWith('/documents') },
+      { text:'Use <code>ls</code> to see what\'s inside documents', hint:'Type: ls', validate: c => c.cmd === 'ls' && c.cwd.includes('/documents') },
+      { text:'Type <code>cd ..</code> to go back up to your home directory', hint:'Type: cd .. — the two dots mean "parent directory"', validate: c => c.cmd === 'cd ..' },
+      { text:'Navigate to <code>~/documents/projects/website</code> in one command', hint:'Type: cd documents/projects/website (or use the full path with ~)', validate: c => c.cwd.endsWith('/website') },
+      { text:'Type <code>cd -</code> to jump back to your previous location', hint:'Type: cd -', validate: c => c.cmd === 'cd -' },
+      { text:'Type <code>cd</code> (no arguments) to return home', hint:'Just type: cd', validate: c => c.cmd === 'cd' && c.cwd === '/home/player' },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 4: READING FILES
+  {
+    chapter: 4, title: 'Reading Files',
+    desc: 'Files are the building blocks of your computer. Let\'s learn to peek inside them:\n\n• <span class="highlight">cat</span> — print the entire file (short for "concatenate")\n• <span class="highlight">head</span> — show the first lines (default: 10)\n• <span class="highlight">tail</span> — show the last lines (default: 10)\n• <span class="highlight">wc</span> — count lines, words, and characters\n\nThese commands are non-destructive — they only READ, never modify.',
+    tasks: [
+      { text:'Use <code>cat</code> to read ~/documents/notes.txt', hint:'Type: cat documents/notes.txt (or use the full path)', validate: c => c.cmd.startsWith('cat ') && c.cmd.includes('notes.txt') },
+      { text:'Use <code>head -n 3</code> to see just the first 3 lines of notes.txt', hint:'Type: head -n 3 documents/notes.txt', validate: c => c.cmd.includes('head') && c.cmd.includes('-n') },
+      { text:'Use <code>tail -n 2</code> to see the last 2 lines of notes.txt', hint:'Type: tail -n 2 documents/notes.txt', validate: c => c.cmd.includes('tail') && c.cmd.includes('-n') },
+      { text:'Use <code>wc -l</code> to count lines in documents/todo.txt', hint:'Type: wc -l documents/todo.txt', validate: c => c.cmd.includes('wc') && c.cmd.includes('todo.txt') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 5: CREATING THINGS
+  {
+    chapter: 5, title: 'Creating Files and Directories',
+    desc: 'Time to create! Here are your tools:\n\n• <span class="highlight">touch</span> — create an empty file (or update timestamp of existing)\n• <span class="highlight">mkdir</span> — create a directory\n• <span class="highlight">mkdir -p</span> — create nested directories in one command\n• <span class="highlight">echo "text" > file</span> — write text into a file\n• <span class="highlight">echo "text" >> file</span> — APPEND text to a file',
+    tasks: [
+      { text:'Create a new file with <code>touch myfile.txt</code>', hint:'Type: touch myfile.txt', validate: (c,s) => c.cmd.startsWith('touch ') && getNode(s.fs, resolvePath(s.cwd, 'myfile.txt'))?.type === 'file' || getNode(s.fs, '/home/player/myfile.txt')?.type === 'file' },
+      { text:'Create a directory with <code>mkdir myproject</code>', hint:'Type: mkdir myproject', validate: (c,s) => c.cmd.startsWith('mkdir') && (getNode(s.fs, resolvePath(s.cwd, 'myproject'))?.type === 'dir' || getNode(s.fs, '/home/player/myproject')?.type === 'dir') },
+      { text:'Create nested directories with <code>mkdir -p myproject/src/components</code>', hint:'Type: mkdir -p myproject/src/components', validate: (c,s) => c.cmd.includes('mkdir -p') },
+      { text:'Write text to a file: <code>echo "Hello World" > myfile.txt</code>', hint:'Use > to write: echo "Hello World" > myfile.txt', validate: c => c.cmd.includes('echo ') && c.cmd.includes('>') && !c.cmd.includes('>>') },
+      { text:'Append text: <code>echo "Second line" >> myfile.txt</code>', hint:'Use >> to append: echo "Second line" >> myfile.txt', validate: c => c.cmd.includes('>>') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 6: FILE OPERATIONS
+  {
+    chapter: 6, title: 'Copying, Moving, and Deleting',
+    desc: 'Managing files from the terminal:\n\n• <span class="highlight">cp source dest</span> — copy a file\n• <span class="highlight">cp -r dir/ dest/</span> — copy a directory (recursive)\n• <span class="highlight">mv source dest</span> — move OR rename\n• <span class="highlight">rm file</span> — delete a file (permanent! no trash can!)\n• <span class="highlight">rm -r dir/</span> — delete a directory and everything in it\n\n⚠️ Be careful with rm — there\'s no undo!',
+    tasks: [
+      { text:'Copy a file: <code>cp documents/notes.txt documents/notes_backup.txt</code>', hint:'Type: cp documents/notes.txt documents/notes_backup.txt', validate: c => c.cmd.startsWith('cp ') && !c.cmd.includes('-r') },
+      { text:'Rename a file with mv: <code>mv myfile.txt renamed.txt</code>', hint:'mv with a new name in the same directory = rename', validate: c => c.cmd.startsWith('mv ') },
+      { text:'Delete the renamed file: <code>rm renamed.txt</code>', hint:'Type: rm renamed.txt', validate: c => c.cmd.startsWith('rm ') && !c.cmd.includes('-r') },
+      { text:'Delete a directory: <code>rm -r myproject</code>', hint:'Type: rm -r myproject — need -r for directories', validate: c => c.cmd.includes('rm -r') || c.cmd.includes('rm -rf') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 7: PIPES - THE SUPERPOWER
+  {
+    chapter: 7, title: 'Pipes — The Terminal Superpower',
+    desc: 'The <span class="highlight">pipe ( | )</span> is what makes the terminal magical. It takes the output of one command and feeds it as input to the next. The philosophy: small, simple tools that each do one thing well, combined to do powerful things.\n\n<code>command1 | command2 | command3</code>\n\nStdout of command1 → stdin of command2 → stdin of command3\n\nThis is the UNIX philosophy in action!',
+    tasks: [
+      { text:'Count lines in a file using a pipe: <code>cat documents/quotes.txt | wc -l</code>', hint:'cat prints the file, | passes it to wc, -l counts lines', validate: c => c.cmd.includes('|') && c.cmd.includes('wc') },
+      { text:'Sort the lines of a file: <code>cat documents/quotes.txt | sort</code>', hint:'Type: cat documents/quotes.txt | sort', validate: c => c.cmd.includes('|') && c.cmd.includes('sort') },
+      { text:'Chain 3 commands: get users, extract names, sort them: <code>cat documents/projects/data/users.csv | cut -d "," -f 1 | sort</code>', hint:'cat → cut (extract first column) → sort', validate: c => { const pipes = c.cmd.split('|'); return pipes.length >= 3; } },
+      { text:'Find unique products in sales data: <code>cat documents/projects/data/sales.csv | cut -d "," -f 2 | sort | uniq</code>', hint:'cat → cut (product column) → sort → uniq (remove duplicates)', validate: c => c.cmd.includes('uniq') && c.cmd.includes('|') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 8: GREP - SEARCH MASTER
+  {
+    chapter: 8, title: 'Searching with grep',
+    desc: '<span class="highlight">grep</span> searches for text patterns in files. The name stands for "Global Regular Expression Print." It\'s one of the most powerful and frequently-used terminal tools.\n\n• <span class="highlight">grep "pattern" file</span> — find lines matching pattern\n• <span class="highlight">grep -i</span> — case-insensitive\n• <span class="highlight">grep -n</span> — show line numbers\n• <span class="highlight">grep -r</span> — search recursively through directories\n• <span class="highlight">grep -c</span> — count matches',
+    tasks: [
+      { text:'Find errors in the log: <code>grep "ERROR" documents/projects/data/log.txt</code>', hint:'Type: grep "ERROR" documents/projects/data/log.txt', validate: c => c.cmd.includes('grep') && c.cmd.includes('ERROR') },
+      { text:'Case-insensitive search: <code>grep -i "warning" documents/projects/data/log.txt</code>', hint:'The -i flag ignores case (WARNING, warning, Warning all match)', validate: c => c.cmd.includes('grep') && c.cmd.includes('-i') },
+      { text:'Search with line numbers: <code>grep -n "INFO" documents/projects/data/log.txt</code>', hint:'The -n flag shows which line number each match is on', validate: c => c.cmd.includes('grep') && c.cmd.includes('-n') },
+      { text:'Search recursively through all project files: <code>grep -r "function" documents/projects/</code>', hint:'The -r flag searches all files in a directory and its subdirectories', validate: c => c.cmd.includes('grep') && c.cmd.includes('-r') },
+      { text:'Combine grep with pipes: <code>cat documents/projects/data/log.txt | grep "ERROR" | wc -l</code>', hint:'Count how many error lines there are using pipe + grep + wc', validate: c => c.cmd.includes('grep') && c.cmd.includes('|') && c.cmd.includes('wc') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 9: FIND
+  {
+    chapter: 9, title: 'Finding Files with find',
+    desc: 'While <span class="highlight">grep</span> searches INSIDE files, <span class="highlight">find</span> searches for files BY NAME.\n\n• <span class="highlight">find . -name "*.txt"</span> — find all .txt files from current directory\n• <span class="highlight">find /home -name "config*"</span> — find files starting with "config"\n\nAlso useful: <span class="highlight">which</span> tells you where a command\'s executable lives on disk.',
+    tasks: [
+      { text:'Find all .txt files: <code>find . -name "*.txt"</code>', hint:'The . means "start from current directory" and * is a wildcard', validate: c => c.cmd.includes('find') && c.cmd.includes('-name') && c.cmd.includes('*.txt') },
+      { text:'Find all .js files: <code>find . -name "*.js"</code>', hint:'Type: find . -name "*.js"', validate: c => c.cmd.includes('find') && c.cmd.includes('*.js') },
+      { text:'Find where bash lives: <code>which bash</code>', hint:'Type: which bash', validate: c => c.cmd.startsWith('which ') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 10: PERMISSIONS
+  {
+    chapter: 10, title: 'File Permissions',
+    desc: 'Every file has permissions controlling who can <span class="highlight">r</span>ead, <span class="highlight">w</span>rite, and e<span class="highlight">x</span>ecute it.\n\nPermissions shown as: <code>rwxrwxrwx</code> = owner | group | others\n\nCommon chmod values:\n• <span class="highlight">755</span> = rwxr-xr-x (scripts/programs)\n• <span class="highlight">644</span> = rw-r--r-- (regular files)\n• <span class="highlight">+x</span> = add execute permission\n\nLook at the first column in <code>ls -l</code> output to see permissions.',
+    tasks: [
+      { text:'View permissions: <code>ls -l scripts/</code>', hint:'The first column like "rwxr-xr-x" shows permissions', validate: c => c.cmd.includes('ls -l') && c.cmd.includes('scripts') },
+      { text:'Create a new script: <code>echo "#!/bin/bash" > test_script.sh</code>', hint:'The #!/bin/bash line (shebang) tells the system this is a bash script', validate: (c,s) => c.cmd.includes('test_script.sh') && c.cmd.includes('>') },
+      { text:'Make it executable: <code>chmod +x test_script.sh</code>', hint:'Without execute permission, you can\'t run a script', validate: c => c.cmd.includes('chmod') && c.cmd.includes('test_script.sh') },
+      { text:'Verify the permission changed: <code>ls -l test_script.sh</code>', hint:'Check if the x (execute) permission now appears', validate: c => c.cmd.includes('ls -l') && c.cmd.includes('test_script') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 11: ENVIRONMENT
+  {
+    chapter: 11, title: 'Environment Variables & Aliases',
+    desc: '<span class="highlight">Environment variables</span> are named values available to all programs. They configure how your shell and programs behave.\n\nKey variables:\n• <span class="highlight">HOME</span> — your home directory\n• <span class="highlight">PATH</span> — where the shell looks for programs\n• <span class="highlight">USER</span> — your username\n• <span class="highlight">EDITOR</span> — your preferred text editor\n\n<span class="highlight">Aliases</span> are custom shortcuts for commands.',
+    tasks: [
+      { text:'View all environment variables: <code>env</code>', hint:'Type: env', validate: c => c.cmd === 'env' },
+      { text:'Print a specific variable: <code>echo $HOME</code>', hint:'Use $ to reference a variable\'s value', validate: c => c.cmd.includes('echo $') },
+      { text:'Set your own variable: <code>export MYNAME="Terminal Cadet"</code>', hint:'export makes the variable available to child processes', validate: c => c.cmd.includes('export ') && c.cmd.includes('=') },
+      { text:'Create an alias: <code>alias ll="ls -la"</code>', hint:'Type: alias ll="ls -la" — then try typing ll!', validate: c => c.cmd.includes('alias ') },
+      { text:'Try your new alias: <code>ll</code>', hint:'Type: ll — it should run ls -la!', validate: c => c.cmd === 'll' || c.cmd.startsWith('ll ') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 12: POWER USER
+  {
+    chapter: 12, title: 'Power User Techniques',
+    desc: 'Time to level up! Real power users know these tricks:\n\n• <span class="highlight">history</span> — see all your past commands\n• <span class="highlight">clear</span> — clean the screen (Ctrl+L in real terminal)\n• <span class="highlight">man command</span> — read the manual for any command\n• <span class="highlight">command1 && command2</span> — run command2 only if command1 succeeds\n• <span class="highlight">command1 ; command2</span> — run both regardless\n\nType <span class="highlight">glossary</span> anytime to access the full encyclopedia!',
+    tasks: [
+      { text:'View your command history: <code>history</code>', hint:'Type: history — see everything you\'ve typed!', validate: c => c.cmd === 'history' },
+      { text:'Read the manual for grep: <code>man grep</code>', hint:'Type: man grep', validate: c => c.cmd.startsWith('man ') },
+      { text:'Chain commands: <code>mkdir final_test && cd final_test && pwd</code>', hint:'&& means "and then, if successful"', validate: c => c.cmd.includes('&&') },
+      { text:'Read a hidden file: <code>cat ~/.hidden_treasure</code>', hint:'Remember dotfiles? Try: cat ~/.hidden_treasure', validate: c => c.cmd.includes('.hidden_treasure') },
+      { text:'Clear the screen: <code>clear</code>', hint:'Type: clear', validate: c => c.cmd === 'clear' },
+    ],
+    xp: 100,
+  },
+];
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+const achievementDefs = [
+  { id:'first_cmd', name:'Hello World', desc:'Run your first command', icon:'🌟' },
+  { id:'explorer', name:'Explorer', desc:'Navigate to 5 different directories', icon:'🧭' },
+  { id:'reader', name:'Bookworm', desc:'Read 5 different files with cat', icon:'📖' },
+  { id:'creator', name:'Creator', desc:'Create your first file', icon:'✨' },
+  { id:'destroyer', name:'Cleanup Crew', desc:'Delete a file with rm', icon:'🧹' },
+  { id:'piper', name:'Plumber', desc:'Use your first pipe ( | )', icon:'🔧' },
+  { id:'detective', name:'Detective', desc:'Find something with grep', icon:'🔍' },
+  { id:'perm_master', name:'Permission Granted', desc:'Change permissions with chmod', icon:'🔐' },
+  { id:'historian', name:'Historian', desc:'Check your command history', icon:'📜' },
+  { id:'scholar', name:'Scholar', desc:'Read 5 man pages', icon:'🎓' },
+  { id:'chain', name:'Chain Master', desc:'Chain 3+ commands with pipes', icon:'⛓️' },
+  { id:'env_setter', name:'Configurator', desc:'Set an environment variable', icon:'⚙️' },
+  { id:'aliaser', name:'Shortcut King', desc:'Create a command alias', icon:'👑' },
+  { id:'speed_demon', name:'Speed Demon', desc:'Complete a lesson in under 90 seconds', icon:'⚡' },
+  { id:'halfway', name:'Halfway There', desc:'Complete 6 chapters', icon:'🏔️' },
+  { id:'graduate', name:'Graduate', desc:'Complete all 12 chapters', icon:'🎖️' },
+  { id:'centurion', name:'Centurion', desc:'Run 100 commands', icon:'💯' },
+  { id:'treasure', name:'Treasure Hunter', desc:'Find the hidden treasure file', icon:'🏆' },
+];
+
+// ============================================================
+// GAME STATE
+// ============================================================
+let state = {
+  fs: createFS(),
+  cwd: '/home/player',
+  prevDir: '/home/player',
+  history: [],
+  commandCount: 0,
+  xp: 0,
+  level: 1,
+  currentLesson: 0,
+  taskIndex: 0,
+  completedLessons: new Set(),
+  completedTasks: {}, // lessonIdx -> Set of taskIdx
+  achievements: new Set(),
+  aliases: {},
+  envVars: { HOME:'/home/player', USER:'player', PATH:'/usr/local/bin:/usr/bin:/bin', SHELL:'/bin/bash', EDITOR:'nano', TERM:'xterm-256color', LANG:'en_US.UTF-8', HOSTNAME:'academy' },
+  dirsVisited: new Set(['/home/player']),
+  filesRead: new Set(),
+  manPagesRead: new Set(),
+  lessonStartTime: null,
+};
+
+// ============================================================
+// COMMAND IMPLEMENTATIONS
+// ============================================================
+function execCommand(raw, stdinData) {
+  const trimmed = raw.trim();
+  if (!trimmed) return '';
+
+  // Handle && chaining
+  if (trimmed.includes('&&')) {
+    const parts = trimmed.split('&&').map(s => s.trim()).filter(Boolean);
+    let output = '';
+    for (const part of parts) {
+      const result = execCommand(part, null);
+      if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
+      // Simple: just continue (real shells check exit codes)
+    }
+    return output;
+  }
+
+  // Handle ; chaining
+  if (trimmed.includes(';')) {
+    const parts = trimmed.split(';').map(s => s.trim()).filter(Boolean);
+    let output = '';
+    for (const part of parts) {
+      const result = execCommand(part, null);
+      if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
+    }
+    return output;
+  }
+
+  // Handle pipes
+  if (trimmed.includes('|')) {
+    const segments = trimmed.split('|').map(s => s.trim()).filter(Boolean);
+    let data = null;
+    let output = '';
+    for (let i = 0; i < segments.length; i++) {
+      output = execCommand(segments[i], data);
+      data = output;
+    }
+    return output;
+  }
+
+  // Handle output redirection
+  let redirectFile = null;
+  let appendMode = false;
+  let cmdPart = trimmed;
+  if (trimmed.includes('>>')) {
+    const idx = trimmed.indexOf('>>');
+    cmdPart = trimmed.slice(0, idx).trim();
+    redirectFile = trimmed.slice(idx + 2).trim();
+    appendMode = true;
+  } else if (trimmed.includes('>')) {
+    const idx = trimmed.indexOf('>');
+    cmdPart = trimmed.slice(0, idx).trim();
+    redirectFile = trimmed.slice(idx + 1).trim();
+    appendMode = false;
+  }
+
+  // Parse command and arguments
+  const tokens = parseTokens(cmdPart);
+  if (tokens.length === 0) return '';
+
+  let cmdName = tokens[0];
+  let args = tokens.slice(1);
+
+  // Check aliases
+  if (state.aliases[cmdName]) {
+    const aliasTokens = parseTokens(state.aliases[cmdName]);
+    cmdName = aliasTokens[0];
+    args = [...aliasTokens.slice(1), ...args];
+  }
+
+  // Variable substitution in args
+  args = args.map(a => a.replace(/\$(\w+)/g, (_, name) => state.envVars[name] || ''));
+  if (cmdName === 'echo') {
+    // Rejoin for echo to handle $VAR in the whole string
+    let echoStr = args.join(' ');
+    echoStr = echoStr.replace(/\$(\w+)/g, (_, name) => state.envVars[name] || '');
+    args = [echoStr];
+  }
+
+  const output = runCommand(cmdName, args, stdinData);
+
+  if (redirectFile !== null && output !== null) {
+    const rPath = resolvePath(state.cwd, redirectFile);
+    const { parent, name } = getParentAndName(state.fs, rPath);
+    if (parent && parent.type === 'dir') {
+      if (appendMode && parent.children[name]) {
+        parent.children[name].content += output + '\n';
+      } else {
+        parent.children[name] = file('rw-r--r--', output + '\n');
+      }
+      return '';
+    }
+    return `<span class="error">Cannot redirect to ${redirectFile}</span>`;
+  }
+
+  return output;
+}
+
+function parseTokens(str) {
+  const tokens = [];
+  let i = 0;
+  while (i < str.length) {
+    if (str[i] === ' ') { i++; continue; }
+    if (str[i] === '"' || str[i] === "'") {
+      const quote = str[i]; i++;
+      let tok = '';
+      while (i < str.length && str[i] !== quote) tok += str[i++];
+      i++; // skip closing quote
+      tokens.push(tok);
+    } else {
+      let tok = '';
+      while (i < str.length && str[i] !== ' ') tok += str[i++];
+      tokens.push(tok);
+    }
+  }
+  return tokens;
+}
+
+function runCommand(cmd, args, stdin) {
+  state.commandCount++;
+  checkAchievement('first_cmd');
+  if (state.commandCount >= 100) checkAchievement('centurion');
+
+  switch(cmd) {
+    case 'pwd': return state.cwd;
+    case 'whoami': return 'player';
+    case 'hostname': return 'academy';
+    case 'date': return new Date().toString();
+    case 'clear': { document.getElementById('terminal').innerHTML = ''; return ''; }
+
+    case 'echo': return args.join(' ');
+
+    case 'ls': return cmdLs(args);
+    case 'cd': return cmdCd(args);
+    case 'cat': return cmdCat(args, stdin);
+    case 'head': return cmdHead(args, stdin);
+    case 'tail': return cmdTail(args, stdin);
+    case 'wc': return cmdWc(args, stdin);
+    case 'touch': return cmdTouch(args);
+    case 'mkdir': return cmdMkdir(args);
+    case 'cp': return cmdCp(args);
+    case 'mv': return cmdMv(args);
+    case 'rm': return cmdRm(args);
+    case 'grep': return cmdGrep(args, stdin);
+    case 'find': return cmdFind(args);
+    case 'sort': return cmdSort(args, stdin);
+    case 'uniq': return cmdUniq(args, stdin);
+    case 'cut': return cmdCut(args, stdin);
+    case 'chmod': return cmdChmod(args);
+    case 'env': case 'printenv': return Object.entries(state.envVars).map(([k,v])=>`${k}=${v}`).join('\n');
+    case 'export': return cmdExport(args);
+    case 'alias': return cmdAlias(args);
+    case 'history': { checkAchievement('historian'); return state.history.map((h,i)=>`  ${i+1}  ${h}`).join('\n'); }
+    case 'ps': return 'PID   TTY     TIME  CMD\n  1   tty1    0:00  bash\n  42  tty1    0:00  terminal-academy\n  99  tty1    0:00  ps';
+    case 'which': {
+      if (!args[0]) return '<span class="error">which: missing argument</span>';
+      const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl'};
+      return bins[args[0]] || `${args[0]} not found`;
+    }
+    case 'man': return cmdMan(args);
+    case 'glossary': return cmdGlossary(args);
+    case 'help': return cmdHelp();
+    case 'xp': return `Level ${state.level} — ${state.xp} XP total`;
+    case 'achievements': return 'Check the Achievements tab in the side panel! →';
+    default: return `<span class="error">Command not found: ${cmd}. Type <span class="info">help</span> for available commands.</span>`;
+  }
+}
+
+// --- ls ---
+function cmdLs(args) {
+  let showAll = false, showLong = false, target = null;
+  for (const a of args) {
+    if (a.startsWith('-')) {
+      if (a.includes('a')) showAll = true;
+      if (a.includes('l')) showLong = true;
+    } else target = a;
+  }
+  const path = resolvePath(state.cwd, target);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">ls: cannot access '${target}': No such file or directory</span>`;
+  if (node.type === 'file') {
+    return showLong ? formatLong(target || path.split('/').pop(), node) : (target || path.split('/').pop());
+  }
+  let entries = Object.keys(node.children);
+  if (showAll) entries = ['.', '..', ...entries];
+  else entries = entries.filter(e => !e.startsWith('.'));
+  entries.sort();
+
+  if (showLong) {
+    const lines = entries.map(name => {
+      if (name === '.' || name === '..') return formatLong(name, { type:'dir', permissions:'rwxr-xr-x' });
+      return formatLong(name, node.children[name]);
+    });
+    return `total ${entries.length}\n` + lines.join('\n');
+  }
+  return entries.map(name => {
+    if (name === '.' || name === '..') return `<span class="dir-color">${name}</span>`;
+    const child = node.children[name];
+    if (!child) return `<span class="dir-color">${name}</span>`;
+    if (child.type === 'dir') return `<span class="dir-color">${name}/</span>`;
+    if (child.permissions && child.permissions.includes('x')) return `<span class="exec-color">${name}</span>`;
+    if (name.startsWith('.')) return `<span class="hidden-color">${name}</span>`;
+    return `<span class="file-color">${name}</span>`;
+  }).join('  ');
+}
+
+function formatLong(name, node) {
+  const typeChar = node.type === 'dir' ? 'd' : '-';
+  const perms = node.permissions || 'rw-r--r--';
+  const size = node.content ? node.content.length : 4096;
+  const date = 'Mar 22 12:00';
+  const display = node.type === 'dir' ? `<span class="dir-color">${name}/</span>` :
+    (perms.includes('x') ? `<span class="exec-color">${name}</span>` : `<span class="file-color">${name}</span>`);
+  return `<span class="perm-color">${typeChar}${perms}</span>  1 player player  ${String(size).padStart(5)}  ${date}  ${display}`;
+}
+
+// --- cd ---
+function cmdCd(args) {
+  let target = args[0];
+  if (!target) target = '~';
+  if (target === '-') {
+    const tmp = state.cwd;
+    state.cwd = state.prevDir;
+    state.prevDir = tmp;
+    state.dirsVisited.add(state.cwd);
+    if (state.dirsVisited.size >= 5) checkAchievement('explorer');
+    updatePrompt();
+    return state.cwd;
+  }
+  const path = resolvePath(state.cwd, target);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">cd: no such directory: ${target}</span>`;
+  if (node.type !== 'dir') return `<span class="error">cd: not a directory: ${target}</span>`;
+  state.prevDir = state.cwd;
+  state.cwd = path;
+  state.dirsVisited.add(path);
+  if (state.dirsVisited.size >= 5) checkAchievement('explorer');
+  updatePrompt();
+  return '';
+}
+
+// --- cat ---
+function cmdCat(args, stdin) {
+  if (stdin) return stdin;
+  if (args.length === 0) return '<span class="error">cat: missing file operand</span>';
+  let output = '';
+  for (const a of args) {
+    const path = resolvePath(state.cwd, a);
+    const node = getNode(state.fs, path);
+    if (!node) { output += `<span class="error">cat: ${a}: No such file or directory</span>\n`; continue; }
+    if (node.type === 'dir') { output += `<span class="error">cat: ${a}: Is a directory</span>\n`; continue; }
+    output += node.content;
+    state.filesRead.add(path);
+    if (path.includes('.hidden_treasure')) checkAchievement('treasure');
+  }
+  if (state.filesRead.size >= 5) checkAchievement('reader');
+  return output.replace(/\n$/, '');
+}
+
+// --- head ---
+function cmdHead(args, stdin) {
+  let n = 10, filePath = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-n' && args[i+1]) { n = parseInt(args[++i]); }
+    else if (!args[i].startsWith('-')) filePath = args[i];
+  }
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">head: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+  return content.split('\n').slice(0, n).join('\n');
+}
+
+// --- tail ---
+function cmdTail(args, stdin) {
+  let n = 10, filePath = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-n' && args[i+1]) { n = parseInt(args[++i]); }
+    else if (!args[i].startsWith('-')) filePath = args[i];
+  }
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">tail: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+  const lines = content.split('\n');
+  return lines.slice(Math.max(0, lines.length - n)).join('\n');
+}
+
+// --- wc ---
+function cmdWc(args, stdin) {
+  let countLines = false, countWords = false, countChars = false;
+  let filePath = null;
+  for (const a of args) {
+    if (a === '-l') countLines = true;
+    else if (a === '-w') countWords = true;
+    else if (a === '-c') countChars = true;
+    else if (!a.startsWith('-')) filePath = a;
+  }
+  if (!countLines && !countWords && !countChars) { countLines = countWords = countChars = true; }
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">wc: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '0';
+  const lines = content.split('\n').length;
+  const words = content.split(/\s+/).filter(Boolean).length;
+  const chars = content.length;
+  const parts = [];
+  if (countLines) parts.push(String(lines).padStart(6));
+  if (countWords) parts.push(String(words).padStart(6));
+  if (countChars) parts.push(String(chars).padStart(6));
+  return parts.join(' ') + (filePath ? ` ${filePath}` : '');
+}
+
+// --- touch ---
+function cmdTouch(args) {
+  if (args.length === 0) return '<span class="error">touch: missing file operand</span>';
+  for (const a of args) {
+    const path = resolvePath(state.cwd, a);
+    const node = getNode(state.fs, path);
+    if (!node) {
+      const { parent, name } = getParentAndName(state.fs, path);
+      if (parent && parent.type === 'dir') {
+        parent.children[name] = file('rw-r--r--', '');
+        checkAchievement('creator');
+      } else return `<span class="error">touch: cannot create '${a}'</span>`;
+    }
+  }
+  return '';
+}
+
+// --- mkdir ---
+function cmdMkdir(args) {
+  let recursive = false;
+  const dirs = [];
+  for (const a of args) {
+    if (a === '-p') recursive = true;
+    else dirs.push(a);
+  }
+  for (const d of dirs) {
+    if (recursive) {
+      const path = resolvePath(state.cwd, d);
+      const parts = path.split('/').filter(Boolean);
+      let current = state.fs['/'];
+      for (const p of parts) {
+        if (!current.children[p]) current.children[p] = dir('rwxr-xr-x', {});
+        current = current.children[p];
+      }
+    } else {
+      const path = resolvePath(state.cwd, d);
+      const { parent, name } = getParentAndName(state.fs, path);
+      if (!parent) return `<span class="error">mkdir: cannot create directory '${d}': No such file or directory</span>`;
+      if (parent.children[name]) return `<span class="error">mkdir: cannot create directory '${d}': File exists</span>`;
+      parent.children[name] = dir('rwxr-xr-x', {});
+    }
+  }
+  return '';
+}
+
+// --- cp ---
+function cmdCp(args) {
+  let recursive = false;
+  const paths = [];
+  for (const a of args) {
+    if (a === '-r' || a === '-R') recursive = true;
+    else paths.push(a);
+  }
+  if (paths.length < 2) return '<span class="error">cp: missing destination</span>';
+  const srcPath = resolvePath(state.cwd, paths[0]);
+  const dstPath = resolvePath(state.cwd, paths[1]);
+  const srcNode = getNode(state.fs, srcPath);
+  if (!srcNode) return `<span class="error">cp: ${paths[0]}: No such file or directory</span>`;
+  if (srcNode.type === 'dir' && !recursive) return `<span class="error">cp: -r not specified; omitting directory '${paths[0]}'</span>`;
+  const { parent, name } = getParentAndName(state.fs, dstPath);
+  if (!parent) return `<span class="error">cp: cannot create '${paths[1]}'</span>`;
+  parent.children[name] = JSON.parse(JSON.stringify(srcNode));
+  return '';
+}
+
+// --- mv ---
+function cmdMv(args) {
+  if (args.length < 2) return '<span class="error">mv: missing destination</span>';
+  const srcPath = resolvePath(state.cwd, args[0]);
+  const dstPath = resolvePath(state.cwd, args[1]);
+  const srcNode = getNode(state.fs, srcPath);
+  if (!srcNode) return `<span class="error">mv: ${args[0]}: No such file or directory</span>`;
+  const { parent: srcParent, name: srcName } = getParentAndName(state.fs, srcPath);
+  const { parent: dstParent, name: dstName } = getParentAndName(state.fs, dstPath);
+  // If destination is an existing directory, move into it
+  const dstNode = getNode(state.fs, dstPath);
+  if (dstNode && dstNode.type === 'dir') {
+    dstNode.children[srcName] = srcNode;
+  } else if (dstParent) {
+    dstParent.children[dstName] = srcNode;
+  } else {
+    return `<span class="error">mv: cannot move to '${args[1]}'</span>`;
+  }
+  delete srcParent.children[srcName];
+  return '';
+}
+
+// --- rm ---
+function cmdRm(args) {
+  let recursive = false, force = false;
+  const targets = [];
+  for (const a of args) {
+    if (a.startsWith('-')) {
+      if (a.includes('r') || a.includes('R')) recursive = true;
+      if (a.includes('f')) force = true;
+    } else targets.push(a);
+  }
+  for (const t of targets) {
+    const path = resolvePath(state.cwd, t);
+    const node = getNode(state.fs, path);
+    if (!node) {
+      if (!force) return `<span class="error">rm: ${t}: No such file or directory</span>`;
+      continue;
+    }
+    if (node.type === 'dir' && !recursive) return `<span class="error">rm: ${t}: is a directory (use -r)</span>`;
+    const { parent, name } = getParentAndName(state.fs, path);
+    if (parent) {
+      delete parent.children[name];
+      checkAchievement('destroyer');
+    }
+  }
+  return '';
+}
+
+// --- grep ---
+function cmdGrep(args, stdin) {
+  let caseI = false, lineNums = false, recursive = false, countOnly = false;
+  let pattern = null, targets = [];
+  for (let i = 0; i < args.length; i++) {
+    if (args[i].startsWith('-') && !pattern) {
+      if (args[i].includes('i')) caseI = true;
+      if (args[i].includes('n')) lineNums = true;
+      if (args[i].includes('r')) recursive = true;
+      if (args[i].includes('c')) countOnly = true;
+    } else if (!pattern) pattern = args[i];
+    else targets.push(args[i]);
+  }
+  if (!pattern) return '<span class="error">grep: missing pattern</span>';
+  checkAchievement('detective');
+
+  function searchContent(content, filename) {
+    const regex = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseI ? 'i' : '');
+    const lines = content.split('\n');
+    const matches = [];
+    lines.forEach((line, idx) => {
+      if (regex.test(line)) {
+        const highlighted = line.replace(new RegExp(`(${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, caseI?'gi':'g'), '<span class="highlight">$1</span>');
+        let prefix = '';
+        if (filename) prefix = `<span class="info">${filename}</span>:`;
+        if (lineNums) prefix += `<span class="warning">${idx+1}</span>:`;
+        matches.push(prefix + highlighted);
+      }
+    });
+    return matches;
+  }
+
+  if (stdin) {
+    const matches = searchContent(stdin, null);
+    if (countOnly) return String(matches.length);
+    return matches.join('\n');
+  }
+
+  if (targets.length === 0) return '<span class="error">grep: no input files</span>';
+
+  let allMatches = [];
+  function searchPath(targetStr) {
+    const path = resolvePath(state.cwd, targetStr);
+    const node = getNode(state.fs, path);
+    if (!node) return;
+    if (node.type === 'file') {
+      allMatches.push(...searchContent(node.content, targets.length > 1 || recursive ? targetStr : null));
+    } else if (node.type === 'dir' && recursive) {
+      for (const [name, child] of Object.entries(node.children)) {
+        const childPath = targetStr.endsWith('/') ? targetStr + name : targetStr + '/' + name;
+        if (child.type === 'file') allMatches.push(...searchContent(child.content, childPath));
+        else if (child.type === 'dir') searchPath(childPath);
+      }
+    }
+  }
+  for (const t of targets) searchPath(t);
+  if (countOnly) return String(allMatches.length);
+  return allMatches.join('\n') || '';
+}
+
+// --- find ---
+function cmdFind(args) {
+  let searchPath = '.', namePattern = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-name' && args[i+1]) namePattern = args[++i];
+    else if (!args[i].startsWith('-')) searchPath = args[i];
+  }
+  if (!namePattern) return '<span class="error">find: missing -name argument</span>';
+
+  const regex = new RegExp('^' + namePattern.replace(/\./g, '\\.').replace(/\*/g, '.*') + '$');
+  const results = [];
+  function walk(dirPath, node) {
+    if (node.type !== 'dir') return;
+    for (const [name, child] of Object.entries(node.children)) {
+      const childPath = dirPath === '/' ? '/' + name : dirPath + '/' + name;
+      const displayPath = childPath.replace(resolvePath(state.cwd, searchPath), searchPath === '.' ? '.' : searchPath);
+      if (regex.test(name)) results.push(displayPath || './' + name);
+      if (child.type === 'dir') walk(childPath, child);
+    }
+  }
+  const basePath = resolvePath(state.cwd, searchPath);
+  const baseNode = getNode(state.fs, basePath);
+  if (!baseNode) return `<span class="error">find: '${searchPath}': No such file or directory</span>`;
+  walk(basePath, baseNode);
+  return results.join('\n');
+}
+
+// --- sort ---
+function cmdSort(args, stdin) {
+  let reverse = false, numeric = false, unique = false;
+  let filePath = null;
+  for (const a of args) {
+    if (a === '-r') reverse = true;
+    else if (a === '-n') numeric = true;
+    else if (a === '-u') unique = true;
+    else if (!a.startsWith('-')) filePath = a;
+  }
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">sort: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+  let lines = content.split('\n').filter(Boolean);
+  if (numeric) lines.sort((a,b) => parseFloat(a) - parseFloat(b));
+  else lines.sort();
+  if (reverse) lines.reverse();
+  if (unique) lines = [...new Set(lines)];
+  return lines.join('\n');
+}
+
+// --- uniq ---
+function cmdUniq(args, stdin) {
+  let countMode = false, dupsOnly = false;
+  let filePath = null;
+  for (const a of args) {
+    if (a === '-c') countMode = true;
+    else if (a === '-d') dupsOnly = true;
+    else if (!a.startsWith('-')) filePath = a;
+  }
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">uniq: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+  const lines = content.split('\n');
+  const result = [];
+  let i = 0;
+  while (i < lines.length) {
+    let count = 1;
+    while (i + count < lines.length && lines[i + count] === lines[i]) count++;
+    if (!dupsOnly || count > 1) {
+      result.push(countMode ? `${String(count).padStart(7)} ${lines[i]}` : lines[i]);
+    }
+    i += count;
+  }
+  return result.join('\n');
+}
+
+// --- cut ---
+function cmdCut(args, stdin) {
+  let delim = '\t', fields = null;
+  let filePath = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-d' && args[i+1]) delim = args[++i];
+    else if (args[i] === '-f' && args[i+1]) fields = args[++i];
+    else if (!args[i].startsWith('-')) filePath = args[i];
+  }
+  if (!fields) return '<span class="error">cut: missing -f</span>';
+  const fieldNums = fields.split(',').map(Number);
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">cut: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+  return content.split('\n').filter(Boolean).map(line => {
+    const parts = line.split(delim);
+    return fieldNums.map(n => parts[n-1] || '').join(delim);
+  }).join('\n');
+}
+
+// --- chmod ---
+function cmdChmod(args) {
+  if (args.length < 2) return '<span class="error">chmod: missing operand</span>';
+  const mode = args[0];
+  const target = args[1];
+  const path = resolvePath(state.cwd, target);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">chmod: ${target}: No such file or directory</span>`;
+
+  if (/^\d{3}$/.test(mode)) {
+    const octalToRwx = n => { const d = parseInt(n); return (d&4?'r':'-')+(d&2?'w':'-')+(d&1?'x':'-'); };
+    node.permissions = octalToRwx(mode[0]) + octalToRwx(mode[1]) + octalToRwx(mode[2]);
+  } else if (mode === '+x') {
+    const p = node.permissions.split('');
+    p[2] = 'x'; p[5] = 'x'; p[8] = 'x';
+    node.permissions = p.join('');
+  } else if (mode === '-x') {
+    const p = node.permissions.split('');
+    p[2] = '-'; p[5] = '-'; p[8] = '-';
+    node.permissions = p.join('');
+  } else if (mode === '+w') {
+    const p = node.permissions.split('');
+    p[1] = 'w';
+    node.permissions = p.join('');
+  }
+  checkAchievement('perm_master');
+  return '';
+}
+
+// --- export ---
+function cmdExport(args) {
+  for (const a of args) {
+    const eq = a.indexOf('=');
+    if (eq > 0) {
+      const name = a.slice(0, eq);
+      let val = a.slice(eq + 1);
+      if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+      state.envVars[name] = val;
+      checkAchievement('env_setter');
+    }
+  }
+  return '';
+}
+
+// --- alias ---
+function cmdAlias(args) {
+  if (args.length === 0) {
+    return Object.entries(state.aliases).map(([k,v]) => `alias ${k}='${v}'`).join('\n') || 'No aliases defined.';
+  }
+  const raw = args.join(' ');
+  const eq = raw.indexOf('=');
+  if (eq > 0) {
+    const name = raw.slice(0, eq);
+    let val = raw.slice(eq + 1);
+    if ((val.startsWith('"') && val.endsWith('"')) || (val.startsWith("'") && val.endsWith("'"))) val = val.slice(1, -1);
+    state.aliases[name] = val;
+    checkAchievement('aliaser');
+    return '';
+  }
+  return `<span class="error">alias: usage: alias name="command"</span>`;
+}
+
+// --- man ---
+function cmdMan(args) {
+  if (!args[0]) return 'What manual page do you want?\nUsage: man <command>';
+  const page = manPages[args[0]];
+  state.manPagesRead.add(args[0]);
+  if (state.manPagesRead.size >= 5) checkAchievement('scholar');
+  if (!page) return `<span class="error">No manual entry for ${args[0]}</span>\n<span class="info">Available: ${Object.keys(manPages).join(', ')}</span>`;
+  let out = `\n<span class="info">━━━ MAN: ${page.name.toUpperCase()} ━━━</span>\n\n`;
+  out += `<span class="warning">NAME</span>\n    ${page.name}\n\n`;
+  out += `<span class="warning">SYNOPSIS</span>\n    ${page.synopsis}\n\n`;
+  out += `<span class="warning">DESCRIPTION</span>\n    ${page.desc}\n`;
+  if (page.options) {
+    out += `\n<span class="warning">OPTIONS</span>\n`;
+    for (const o of page.options) out += `    ${o}\n`;
+  }
+  if (page.examples) {
+    out += `\n<span class="warning">EXAMPLES</span>\n`;
+    for (const e of page.examples) out += `    <span class="success">$ ${e}</span>\n`;
+  }
+  out += `\n<span class="dim">Press help for game commands, or glossary for the encyclopedia.</span>`;
+  return out;
+}
+
+// --- glossary ---
+function cmdGlossary(args) {
+  if (args[0]) {
+    const key = args[0].toLowerCase();
+    const entry = glossary[key];
+    if (!entry) return `<span class="error">No glossary entry for "${args[0]}".</span>\n<span class="info">Type glossary to see all terms.</span>`;
+    return `\n<span class="info">━━━ ${entry.term.toUpperCase()} ━━━</span>\n\n${entry.def}\n`;
+  }
+  let out = '<span class="info">━━━ TERMINAL ENCYCLOPEDIA ━━━</span>\n\nType <span class="success">glossary &lt;term&gt;</span> for details. Available terms:\n\n';
+  const keys = Object.keys(glossary).sort();
+  const perRow = 3;
+  for (let i = 0; i < keys.length; i += perRow) {
+    out += keys.slice(i, i + perRow).map(k => `  <span class="success">${glossary[k].term.padEnd(28)}</span>`).join('') + '\n';
+  }
+  return out;
+}
+
+// --- help ---
+function cmdHelp() {
+  return `
+<span class="info">━━━ TERMINAL ACADEMY COMMANDS ━━━</span>
+
+<span class="warning">Navigation:</span>       pwd, cd, ls
+<span class="warning">File Reading:</span>     cat, head, tail, wc
+<span class="warning">File Creation:</span>    touch, mkdir, echo (with > or >>)
+<span class="warning">File Management:</span>  cp, mv, rm
+<span class="warning">Search:</span>           grep, find, which
+<span class="warning">Text Processing:</span>  sort, uniq, cut
+<span class="warning">Permissions:</span>      chmod
+<span class="warning">Environment:</span>      env, export, alias
+<span class="warning">System:</span>           whoami, hostname, date, ps, history, clear
+<span class="warning">Learning:</span>         man &lt;cmd&gt;, glossary [term], help
+
+<span class="warning">Special Syntax:</span>
+  command1 <span class="highlight">|</span> command2    Pipe output to next command
+  command <span class="highlight">&gt;</span> file         Write output to file
+  command <span class="highlight">&gt;&gt;</span> file        Append output to file
+  cmd1 <span class="highlight">&&</span> cmd2           Run cmd2 if cmd1 succeeds
+  cmd1 <span class="highlight">;</span> cmd2            Run both commands
+
+<span class="dim">Tip: Use ↑/↓ arrow keys to cycle through command history!</span>`;
+}
+
+// ============================================================
+// TERMINAL UI
+// ============================================================
+const terminalEl = document.getElementById('terminal');
+const inputEl = document.getElementById('cmd-input');
+let historyIdx = -1;
+
+function updatePrompt() {
+  document.getElementById('prompt').textContent = `player@academy:${shortPath(state.cwd)}$ `;
+}
+
+function printToTerminal(html, className) {
+  const div = document.createElement('div');
+  div.className = 'line ' + (className || '');
+  div.innerHTML = html;
+  terminalEl.appendChild(div);
+  terminalEl.scrollTop = terminalEl.scrollHeight;
+}
+
+function handleCommand(raw) {
+  const promptText = `player@academy:${shortPath(state.cwd)}$ `;
+  printToTerminal(`<span class="prompt-text">${promptText}</span><span class="cmd-text">${escapeHtml(raw)}</span>`);
+
+  state.history.push(raw);
+  historyIdx = state.history.length;
+
+  const output = execCommand(raw);
+  if (output) printToTerminal(output, 'output');
+
+  // Check pipes for achievement
+  if (raw.includes('|')) {
+    checkAchievement('piper');
+    if (raw.split('|').length >= 3) checkAchievement('chain');
+  }
+
+  // Validate current lesson task
+  validateTask(raw);
+  // Validate active challenge
+  validateChallenge(raw);
+  // Validate adventure quest
+  validateAdventure(raw);
+}
+
+function escapeHtml(str) {
+  return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+inputEl.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    const val = inputEl.value;
+    inputEl.value = '';
+    if (val.trim()) handleCommand(val.trim());
+  } else if (e.key === 'ArrowUp') {
+    e.preventDefault();
+    if (historyIdx > 0) { historyIdx--; inputEl.value = state.history[historyIdx]; }
+  } else if (e.key === 'ArrowDown') {
+    e.preventDefault();
+    if (historyIdx < state.history.length - 1) { historyIdx++; inputEl.value = state.history[historyIdx]; }
+    else { historyIdx = state.history.length; inputEl.value = ''; }
+  } else if (e.key === 'l' && e.ctrlKey) {
+    e.preventDefault();
+    terminalEl.innerHTML = '';
+  } else if (e.key === 'Tab') {
+    e.preventDefault();
+    tabComplete();
+  }
+});
+
+// Simple tab completion
+function tabComplete() {
+  const val = inputEl.value;
+  const parts = val.split(' ');
+  const last = parts[parts.length - 1];
+  if (!last) return;
+
+  const dir = last.includes('/') ? last.slice(0, last.lastIndexOf('/') + 1) : '';
+  const prefix = last.includes('/') ? last.slice(last.lastIndexOf('/') + 1) : last;
+  const lookupDir = dir ? resolvePath(state.cwd, dir) : state.cwd;
+  const node = getNode(state.fs, lookupDir);
+  if (!node || node.type !== 'dir') return;
+
+  const matches = Object.keys(node.children).filter(n => n.startsWith(prefix));
+  if (matches.length === 1) {
+    parts[parts.length - 1] = dir + matches[0];
+    if (node.children[matches[0]].type === 'dir') parts[parts.length - 1] += '/';
+    inputEl.value = parts.join(' ');
+  } else if (matches.length > 1) {
+    printToTerminal(matches.join('  '), 'info');
+  }
+}
+
+// ============================================================
+// LESSON SYSTEM
+// ============================================================
+function renderLesson() {
+  const lesson = lessons[state.currentLesson];
+  if (!lesson) return;
+  const panel = document.getElementById('panel-lessons');
+  const completed = state.completedTasks[state.currentLesson] || new Set();
+
+  let html = `<div class="chapter-label">Chapter ${lesson.chapter} of ${lessons.length}</div>`;
+  html += `<div class="lesson-title">${lesson.title}</div>`;
+  html += `<div class="lesson-desc">${lesson.desc.replace(/\n/g, '<br>')}</div>`;
+  html += `<h3>Missions (${completed.size}/${lesson.tasks.length})</h3>`;
+  html += '<ul class="task-list">';
+  for (let i = 0; i < lesson.tasks.length; i++) {
+    const task = lesson.tasks[i];
+    const done = completed.has(i);
+    const active = !done && i === state.taskIndex;
+    html += `<li class="task-item ${done ? 'done' : ''} ${active ? 'active' : ''}">`;
+    html += `<span class="task-check">${done ? '✓' : '○'}</span>`;
+    html += `<div class="task-text">${task.text}`;
+    if (!done && task.hint) {
+      html += `<br><button class="hint-btn" onclick="toggleHint(${i})">💡 Hint</button>`;
+      html += `<div class="hint-text" id="hint-${i}">${task.hint}</div>`;
+    }
+    html += '</div></li>';
+  }
+  html += '</ul>';
+
+  html += '<div class="nav-btns">';
+  html += `<button ${state.currentLesson === 0 ? 'disabled' : ''} onclick="prevLesson()">← Previous</button>`;
+  html += `<button ${state.currentLesson >= lessons.length - 1 ? 'disabled' : ''} onclick="nextLesson()">Next →</button>`;
+  html += '</div>';
+
+  // Progress bar for all lessons
+  html += `<div style="margin-top:16px"><div class="chapter-label">Overall Progress: ${state.completedLessons.size}/${lessons.length} chapters</div>`;
+  html += `<div class="xp-bar-outer" style="margin-top:4px"><div class="xp-bar-inner" style="width:${(state.completedLessons.size/lessons.length)*100}%"></div></div></div>`;
+
+  panel.innerHTML = html;
+}
+
+function validateTask(rawCmd) {
+  const lesson = lessons[state.currentLesson];
+  if (!lesson) return;
+  if (!state.completedTasks[state.currentLesson]) state.completedTasks[state.currentLesson] = new Set();
+  const completed = state.completedTasks[state.currentLesson];
+
+  const ctx = { cmd: rawCmd, cwd: state.cwd, output: '', history: state.history };
+
+  // Check current task and any skipped tasks
+  for (let i = 0; i < lesson.tasks.length; i++) {
+    if (completed.has(i)) continue;
+    const task = lesson.tasks[i];
+    let valid = false;
+    try { valid = task.validate(ctx, state); } catch(e) {}
+    if (valid) {
+      completed.add(i);
+      addXP(15);
+      showToast(`✓ Mission complete!`, 'xp');
+
+      // Move to next incomplete task
+      const nextIncomplete = lesson.tasks.findIndex((_, idx) => !completed.has(idx));
+      state.taskIndex = nextIncomplete >= 0 ? nextIncomplete : lesson.tasks.length;
+
+      // Check if lesson is complete
+      if (completed.size === lesson.tasks.length) {
+        state.completedLessons.add(state.currentLesson);
+        addXP(lesson.xp);
+        showToast(`🎉 Chapter ${lesson.chapter} Complete! +${lesson.xp} XP`, 'ach');
+
+        // Check time-based achievement
+        if (state.lessonStartTime && (Date.now() - state.lessonStartTime) < 90000) {
+          checkAchievement('speed_demon');
+        }
+
+        if (state.completedLessons.size >= 6) checkAchievement('halfway');
+        if (state.completedLessons.size >= lessons.length) checkAchievement('graduate');
+
+        // Auto-advance after a moment
+        if (state.currentLesson < lessons.length - 1) {
+          setTimeout(() => {
+            printToTerminal(`\n<span class="success">━━━ Chapter ${lesson.chapter} Complete! ━━━</span>`, 'success');
+            printToTerminal(`<span class="info">Moving to Chapter ${lesson.chapter + 1}...</span>\n`, 'info');
+            nextLesson();
+          }, 1000);
+        } else {
+          printToTerminal(`\n<span class="success">🎓 CONGRATULATIONS! You've completed Terminal Academy!</span>`, 'success');
+          printToTerminal(`<span class="info">You're now a terminal power user. The real terminal awaits!</span>`, 'info');
+        }
+      }
+      break; // Only complete one task per command
+    }
+  }
+  renderLesson();
+}
+
+function toggleHint(idx) {
+  const el = document.getElementById(`hint-${idx}`);
+  if (el) el.classList.toggle('show');
+}
+
+function nextLesson() {
+  if (state.currentLesson < lessons.length - 1) {
+    state.currentLesson++;
+    state.taskIndex = 0;
+    state.lessonStartTime = Date.now();
+    // Find first incomplete task
+    const completed = state.completedTasks[state.currentLesson] || new Set();
+    const nextIncomplete = lessons[state.currentLesson].tasks.findIndex((_, idx) => !completed.has(idx));
+    state.taskIndex = nextIncomplete >= 0 ? nextIncomplete : 0;
+    renderLesson();
+  }
+}
+
+function prevLesson() {
+  if (state.currentLesson > 0) {
+    state.currentLesson--;
+    state.taskIndex = 0;
+    state.lessonStartTime = Date.now();
+    renderLesson();
+  }
+}
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+function checkAchievement(id) {
+  if (state.achievements.has(id)) return;
+  state.achievements.add(id);
+  const ach = achievementDefs.find(a => a.id === id);
+  if (ach) {
+    showToast(`${ach.icon} Achievement: ${ach.name}!`, 'ach');
+    addXP(25);
+  }
+  renderAchievements();
+}
+
+function renderAchievements() {
+  const panel = document.getElementById('panel-achievements');
+  let html = `<h2>Achievements (${state.achievements.size}/${achievementDefs.length})</h2>`;
+  for (const ach of achievementDefs) {
+    const unlocked = state.achievements.has(ach.id);
+    html += `<div class="achievement ${unlocked ? 'unlocked' : ''}">`;
+    html += `<span class="ach-icon">${unlocked ? ach.icon : '🔒'}</span>`;
+    html += `<div class="ach-info"><div class="ach-name">${ach.name}</div><div class="ach-desc">${ach.desc}</div></div>`;
+    html += '</div>';
+  }
+  panel.innerHTML = html;
+}
+
+// ============================================================
+// GLOSSARY PANEL
+// ============================================================
+function renderGlossaryPanel() {
+  const panel = document.getElementById('panel-glossary');
+  let html = '<h2>Terminal Encyclopedia</h2>';
+  html += '<p style="margin-bottom:12px;color:var(--dim)">Also accessible via the <code style="color:var(--green)">glossary</code> command in the terminal!</p>';
+  const sorted = Object.values(glossary).sort((a,b) => a.term.localeCompare(b.term));
+  for (const entry of sorted) {
+    html += `<div class="glossary-item"><dt>${entry.term}</dt><dd>${entry.def.replace(/\n/g, '<br>')}</dd></div>`;
+  }
+  panel.innerHTML = html;
+}
+
+// ============================================================
+// XP / LEVELING
+// ============================================================
+function addXP(amount) {
+  state.xp += amount;
+  const xpForLevel = level => level * 100;
+  while (state.xp >= xpForLevel(state.level)) {
+    state.xp -= xpForLevel(state.level);
+    state.level++;
+    showToast(`⬆ Level Up! You're now Level ${state.level}!`, 'level');
+  }
+  updateXPBar();
+}
+
+function updateXPBar() {
+  const xpNeeded = state.level * 100;
+  const pct = (state.xp / xpNeeded) * 100;
+  document.getElementById('xp-bar').style.width = pct + '%';
+  document.getElementById('xp-text').textContent = `${state.xp} / ${xpNeeded} XP`;
+  document.getElementById('level-badge').textContent = `LVL ${state.level}`;
+}
+
+// ============================================================
+// TABS & PANEL
+// ============================================================
+function showTab(tab) {
+  ['lessons', 'adventure', 'challenges', 'quiz', 'achievements', 'glossary'].forEach(t => {
+    document.getElementById('panel-' + t).style.display = (t === tab) ? 'block' : 'none';
+    document.querySelectorAll(`.panel-tabs button[data-tab="${t}"]`).forEach(b => b.classList.toggle('active', t === tab));
+  });
+  document.querySelectorAll('.top-btns button').forEach(b => {
+    if (b.id === 'btn-' + tab) b.classList.add('active');
+    else if (b.id !== 'btn-toggle-panel') b.classList.remove('active');
+  });
+  if (tab === 'adventure') renderAdventure();
+  if (tab === 'challenges') renderChallenges();
+  if (tab === 'quiz') renderQuizMenu();
+}
+
+function togglePanel() {
+  document.getElementById('side-panel').classList.toggle('hidden');
+}
+
+// ============================================================
+// TOASTS
+// ============================================================
+function showToast(message, type) {
+  const container = document.getElementById('toast');
+  const el = document.createElement('div');
+  el.className = `toast-msg ${type || ''}`;
+  el.textContent = message;
+  container.appendChild(el);
+  setTimeout(() => el.remove(), 3000);
+}
+
+// ============================================================
+// SAVE / LOAD
+// ============================================================
+function saveState() {
+  const save = {
+    cwd: state.cwd,
+    xp: state.xp,
+    level: state.level,
+    currentLesson: state.currentLesson,
+    completedLessons: [...state.completedLessons],
+    completedTasks: {},
+    achievements: [...state.achievements],
+    aliases: state.aliases,
+    envVars: state.envVars,
+    commandCount: state.commandCount,
+    // Challenge state
+    challengeCompleted: {},
+    challengeTotalCompleted: challengeState.totalCompleted,
+    challengeBestStreak: challengeState.bestStreak,
+    challengeDailyStreak: challengeState.dailyStreak,
+    challengeLastDailyDate: challengeState.lastDailyDate,
+    // Adventure state
+    advStarted: adventureState.started,
+    advCurrentQuest: adventureState.currentQuest,
+    advCompletedQuests: [...adventureState.completedQuests],
+    advQuestProgress: {},
+    // Quiz state
+    quizAllTimeCorrect: quizState.allTimeCorrect,
+    quizAllTimeTotal: quizState.allTimeTotal,
+    quizSessionHistory: quizState.sessionHistory,
+  };
+  for (const [k, v] of Object.entries(state.completedTasks)) {
+    save.completedTasks[k] = [...v];
+  }
+  for (const [k, v] of Object.entries(challengeState.completed)) {
+    save.challengeCompleted[k] = [...v];
+  }
+  for (const [k, v] of Object.entries(adventureState.questProgress)) {
+    save.advQuestProgress[k] = [...v];
+  }
+  localStorage.setItem('terminalAcademy', JSON.stringify(save));
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem('terminalAcademy');
+    if (!raw) return false;
+    const save = JSON.parse(raw);
+    state.cwd = save.cwd || '/home/player';
+    state.xp = save.xp || 0;
+    state.level = save.level || 1;
+    state.currentLesson = save.currentLesson || 0;
+    state.completedLessons = new Set(save.completedLessons || []);
+    state.achievements = new Set(save.achievements || []);
+    state.aliases = save.aliases || {};
+    state.envVars = { ...state.envVars, ...(save.envVars || {}) };
+    state.commandCount = save.commandCount || 0;
+    if (save.completedTasks) {
+      for (const [k, v] of Object.entries(save.completedTasks)) {
+        state.completedTasks[k] = new Set(v);
+      }
+    }
+    // Restore challenge state
+    if (save.challengeCompleted) {
+      for (const [k, v] of Object.entries(save.challengeCompleted)) {
+        challengeState.completed[k] = new Set(v);
+      }
+    }
+    challengeState.totalCompleted = save.challengeTotalCompleted || 0;
+    challengeState.bestStreak = save.challengeBestStreak || 0;
+    challengeState.dailyStreak = save.challengeDailyStreak || 0;
+    challengeState.lastDailyDate = save.challengeLastDailyDate || null;
+    // Check if daily streak should reset
+    if (challengeState.lastDailyDate) {
+      const last = new Date(challengeState.lastDailyDate);
+      const now = new Date();
+      const diffDays = Math.floor((now - last) / 86400000);
+      if (diffDays > 1) challengeState.dailyStreak = 0;
+    }
+    // Restore adventure state
+    adventureState.started = save.advStarted || false;
+    adventureState.currentQuest = save.advCurrentQuest || 0;
+    adventureState.completedQuests = new Set(save.advCompletedQuests || []);
+    if (save.advQuestProgress) {
+      for (const [k, v] of Object.entries(save.advQuestProgress)) {
+        adventureState.questProgress[k] = new Set(v);
+      }
+    }
+    // Restore quiz state
+    quizState.allTimeCorrect = save.quizAllTimeCorrect || 0;
+    quizState.allTimeTotal = save.quizAllTimeTotal || 0;
+    quizState.sessionHistory = save.quizSessionHistory || {};
+    // Restore taskIndex
+    const completed = state.completedTasks[state.currentLesson] || new Set();
+    const lesson = lessons[state.currentLesson];
+    if (lesson) {
+      const nextIncomplete = lesson.tasks.findIndex((_, idx) => !completed.has(idx));
+      state.taskIndex = nextIncomplete >= 0 ? nextIncomplete : 0;
+    }
+    return true;
+  } catch(e) { return false; }
+}
+
+// Auto-save every 10 seconds
+setInterval(saveState, 10000);
+
+// ============================================================
+// ADVENTURE MODE — "The Ghost in the Machine"
+// ============================================================
+const adventureQuests = [
+  {
+    id: 'q1', title: 'The Briefing', num: 1,
+    narrative: 'You\'re a new recruit at NEXUS Cyber Agency. Your handler, Agent_K, has been missing for 72 hours. Director Chen has given you access to the system to trace Agent_K\'s steps. Start by entering the nexus/ directory and reading your briefing.',
+    location: 'nexus/',
+    objectives: [
+      { text: 'Enter the nexus directory: <code>cd nexus</code>', validate: c => c.cwd.includes('/nexus'), done: false },
+      { text: 'Read the README briefing: <code>cat README.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('README'), done: false },
+      { text: 'Explore the lobby: <code>cd lobby</code> then <code>ls</code>', validate: c => c.cwd.includes('/lobby') || (c.cmd === 'ls' && c.cwd.includes('/lobby')), done: false },
+      { text: 'Read the notice board for intel: <code>cat notice_board.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('notice_board'), done: false },
+    ],
+    reward: 'You learn that Agent_K missed briefings for 3 days and there was unusual server room activity.',
+    xp: 40,
+  },
+  {
+    id: 'q2', title: 'Agent K\'s Office', num: 2,
+    narrative: 'The notice board mentions Agent_K has been missing. Time to check their office for clues. Agents often hide sensitive info in dotfiles (hidden files starting with a period). Use ls -a to reveal them.',
+    location: 'nexus/agent_k_office/',
+    objectives: [
+      { text: 'Go to Agent K\'s office: <code>cd</code> to agent_k_office', validate: c => c.cwd.includes('/agent_k_office'), done: false },
+      { text: 'Look for hidden files: <code>ls -a</code>', validate: c => c.cmd.includes('ls') && c.cmd.includes('-a') && c.cwd.includes('/agent_k_office'), done: false },
+      { text: 'Read the hidden note: <code>cat .hidden_note</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('.hidden_note'), done: false },
+      { text: 'Check their bookmarks for leads: <code>cat bookmarks.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('bookmarks'), done: false },
+    ],
+    reward: 'Agent_K\'s hidden note mentions a backdoor in the server room and a classified project called ORACLE in the archives.',
+    xp: 50,
+  },
+  {
+    id: 'q3', title: 'The Case Files', num: 3,
+    narrative: 'Agent_K was investigating a security breach. Their case files contain a breach report, suspect list, and timeline. Dig into the details — use grep to search for key info.',
+    location: 'nexus/agent_k_office/case_files/',
+    objectives: [
+      { text: 'Read the breach report: <code>cat breach_report.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('breach_report'), done: false },
+      { text: 'View the suspects: <code>cat suspects.csv</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('suspects'), done: false },
+      { text: 'Find unverified alibis: <code>grep "no" suspects.csv</code>', validate: c => c.cmd.includes('grep') && c.cmd.includes('suspects'), done: false },
+      { text: 'Read the investigation timeline: <code>cat timeline.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('timeline'), done: false },
+    ],
+    reward: 'Two suspects have unverified alibis: Diana Frost (ECHO) and the mysterious LYNX. Data was stolen from the archives on Jan 8.',
+    xp: 60,
+  },
+  {
+    id: 'q4', title: 'Server Room Investigation', num: 4,
+    narrative: 'The breach happened in the server room. The access log is huge — you\'ll need grep, head, and tail to efficiently search through it. Look for the suspicious Jan 8 activity and the unregistered badge.',
+    location: 'nexus/server_room/',
+    objectives: [
+      { text: 'Navigate to the server room', validate: c => c.cwd.includes('/server_room'), done: false },
+      { text: 'Search the access log for the unregistered badge: <code>grep "UNREGISTERED" access.log</code>', validate: c => c.cmd.includes('grep') && c.cmd.includes('access.log'), done: false },
+      { text: 'Check the firewall rules: <code>cat firewall_rules.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('firewall'), done: false },
+      { text: 'Find Agent K\'s last activity: <code>tail access.log</code>', validate: c => c.cmd.includes('tail') && c.cmd.includes('access.log'), done: false },
+    ],
+    reward: 'An unregistered badge was used at 02:13 on Jan 8. The firewall was modified to allow data exfiltration to 198.51.100.42.',
+    xp: 60,
+  },
+  {
+    id: 'q5', title: 'The Hidden Backdoor', num: 5,
+    narrative: 'Agent_K mentioned a backdoor hidden in the server room. Remember — hidden files start with a dot and won\'t show up with a normal "ls". You need to use ls -a to find them.',
+    location: 'nexus/server_room/',
+    objectives: [
+      { text: 'Reveal hidden files in the server room: <code>ls -a</code>', validate: c => c.cmd.includes('ls') && c.cmd.includes('-a') && c.cwd.includes('/server_room'), done: false },
+      { text: 'Read the backdoor: <code>cat .backdoor</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('.backdoor'), done: false },
+      { text: 'Compare database backups to see what changed: <code>cat backups/db_users_jan7.csv</code> and <code>cat backups/db_users_jan9.csv</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('db_users') && c.cmd.includes('jan'), done: false },
+    ],
+    reward: 'The backdoor is a reverse shell to the attacker\'s server. The svc_legacy_admin account was reactivated between Jan 7 and Jan 9. Only 3 people had those credentials.',
+    xp: 60,
+  },
+  {
+    id: 'q6', title: 'Intercepted Communications', num: 6,
+    narrative: 'Check the comms center. Agent_K received messages — including a threat from an unknown sender. But the most critical clue might be in their outbox... look for hidden files.',
+    location: 'nexus/comms/',
+    objectives: [
+      { text: 'Navigate to the comms center', validate: c => c.cwd.includes('/comms'), done: false },
+      { text: 'Read the threatening message: <code>cat inbox/msg_002_from_unknown.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('msg_002'), done: false },
+      { text: 'Read Yuki\'s analysis: <code>cat inbox/msg_003_from_analyst.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('msg_003'), done: false },
+      { text: 'Check outbox for hidden drafts: <code>ls -a outbox/</code> then read it', validate: c => (c.cmd.includes('ls -a') && c.cmd.includes('outbox')) || (c.cmd.includes('cat') && c.cmd.includes('unsent')), done: false },
+      { text: 'Read Agent K\'s unsent message: <code>cat outbox/.unsent_draft.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('unsent_draft'), done: false },
+    ],
+    reward: 'Agent_K identified the mole as Diana Frost (ECHO) but was caught before they could send the report. The suspect codenames spell "REVEAL" — she was taunting everyone.',
+    xp: 70,
+  },
+  {
+    id: 'q7', title: 'Archive Diving', num: 7,
+    narrative: 'Agent_K said there\'s a hidden classified directory in the archives. Use find to locate hidden directories, and search the personnel files for intel on the suspects.',
+    location: 'nexus/archives/',
+    objectives: [
+      { text: 'Navigate to archives', validate: c => c.cwd.includes('/archives'), done: false },
+      { text: 'Search personnel for Agent_K: <code>grep "Agent_K" personnel/agents.csv</code>', validate: c => c.cmd.includes('grep') && c.cmd.includes('agents.csv'), done: false },
+      { text: 'Find hidden directories: <code>find . -name ".*"</code> or <code>ls -a</code>', validate: c => (c.cmd.includes('find') && c.cwd.includes('/archives')) || (c.cmd.includes('ls -a') && c.cwd.includes('/archives')), done: false },
+      { text: 'Read the classified Project Oracle file: <code>cat .classified/project_oracle.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('project_oracle'), done: false },
+    ],
+    reward: 'Project Oracle — the insider threat detector — was built by Diana Frost herself, with a deliberate blind spot for her own activity. She designed the system to be unable to detect her.',
+    xp: 70,
+  },
+  {
+    id: 'q8', title: 'Lab Analysis', num: 8,
+    narrative: 'The lab has Yuki Tanaka\'s malware analysis and some tools. The decoder script can reveal a hidden message in the suspect codenames — but you need to make it executable first with chmod.',
+    location: 'nexus/lab/',
+    objectives: [
+      { text: 'Navigate to the lab', validate: c => c.cwd.includes('/lab'), done: false },
+      { text: 'Read the malware report: <code>cat analysis/malware_report.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('malware_report'), done: false },
+      { text: 'Make the decoder executable: <code>chmod +x tools/decoder.sh</code>', validate: c => c.cmd.includes('chmod') && c.cmd.includes('decoder'), done: false },
+      { text: 'Read the decoder output: <code>cat tools/decoder.sh</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('decoder'), done: false },
+    ],
+    reward: 'The malware matches Diana Frost\'s coding style with 92% confidence. The suspect codenames (RAVEN, ECHO, VIPER, EMBER, LYNX, ATLAS, LOTUS) spell R-E-V-E-A-L — "REVEAL."',
+    xp: 60,
+  },
+  {
+    id: 'q9', title: 'Cracking the Vault', num: 9,
+    narrative: 'The vault contains the physical evidence that ties everything together. But the access key has restricted permissions. You\'ll need to use chmod to change the permissions so you can read it.',
+    location: 'nexus/vault/',
+    objectives: [
+      { text: 'Navigate to the vault', validate: c => c.cwd.includes('/vault'), done: false },
+      { text: 'Try to find the access key: <code>ls -a</code>', validate: c => c.cmd.includes('ls -a') && c.cwd.includes('/vault'), done: false },
+      { text: 'Fix permissions on the key: <code>chmod 644 .access_key</code>', validate: c => c.cmd.includes('chmod') && c.cmd.includes('access_key'), done: false },
+      { text: 'Read the access key: <code>cat .access_key</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('access_key'), done: false },
+      { text: 'Read the badge analysis: <code>cat evidence/badge_analysis.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('badge_analysis'), done: false },
+      { text: 'Read the photo evidence: <code>cat evidence/photo_metadata.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('photo_metadata'), done: false },
+    ],
+    reward: 'The cloned badge traces back to Diana Frost. Security camera footage shows someone matching her description entering the server room the night Agent_K disappeared.',
+    xp: 80,
+  },
+  {
+    id: 'q10', title: 'Case Closed', num: 10,
+    narrative: 'You\'ve gathered all the evidence. Now write your final report to close the case. Use echo with >> to append your conclusion to the final report in the vault. Name the mole and summarize the evidence chain.',
+    location: 'nexus/vault/',
+    objectives: [
+      { text: 'Read the database comparison: <code>cat evidence/database_diff.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('database_diff'), done: false },
+      { text: 'Write your conclusion to the report: <code>echo "your findings" >> final_report.txt</code>', validate: c => c.cmd.includes('>>') && c.cmd.includes('final_report'), done: false },
+      { text: 'Read the complete report: <code>cat final_report.txt</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('final_report'), done: false },
+    ],
+    reward: 'CASE CLOSED. Diana Frost (codename ECHO) is the mole. She used Project Oracle\'s blind spot, a cloned badge, a reactivated service account, and a custom backdoor to steal classified data — then silenced Agent_K when they got too close.',
+    xp: 100,
+  },
+];
+
+let adventureState = {
+  started: false,
+  currentQuest: 0,
+  questProgress: {}, // questId -> Set of completed objective indices
+  completedQuests: new Set(),
+  cluesFound: [],
+};
+
+function renderAdventure() {
+  const panel = document.getElementById('panel-adventure');
+  let html = '';
+
+  if (!adventureState.started) {
+    html += `<div style="text-align:center;padding:20px 0">
+      <h2 style="color:var(--cyan);font-size:18px">🕵️ The Ghost in the Machine</h2>
+      <div class="quest-narrative" style="text-align:left;margin:16px 0">
+        Agent_K has been missing for 72 hours. As NEXUS Cyber Agency's newest recruit, you've been tasked with tracing their steps through the system. Navigate the filesystem, find hidden clues, search through logs, and uncover the truth behind the security breach — and Agent_K's disappearance.
+        <br><br>
+        Every terminal skill you've learned will be tested. Hidden files, grep searches, file permissions, pipes — this is what they were all building toward.
+      </div>
+      <div style="color:var(--dim);font-size:12px;margin:12px 0">10 Quests · Full mystery storyline · Uses real terminal skills</div>
+      <button class="challenge-btn" onclick="beginAdventure()" style="font-size:14px;padding:12px 32px;margin-top:8px">
+        🕵️ Begin Investigation
+      </button>
+    </div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  // Progress bar
+  const totalQuests = adventureQuests.length;
+  const doneQuests = adventureState.completedQuests.size;
+  html += `<h2 style="margin-bottom:4px">🕵️ The Ghost in the Machine</h2>`;
+  html += `<div style="color:var(--dim);font-size:11px;margin-bottom:8px">Investigation Progress: ${doneQuests}/${totalQuests} quests</div>`;
+  html += `<div class="quest-progress-bar"><div class="quest-progress-fill" style="width:${(doneQuests/totalQuests)*100}%"></div></div>`;
+
+  // Current quest detail
+  const quest = adventureQuests[adventureState.currentQuest];
+  if (quest) {
+    const progress = adventureState.questProgress[quest.id] || new Set();
+    const isComplete = adventureState.completedQuests.has(quest.id);
+
+    html += `<div class="quest-narrative">${quest.narrative}</div>`;
+    html += `<div style="display:flex;justify-content:space-between;align-items:center">
+      <h3 style="margin:0">Quest ${quest.num}: ${quest.title}</h3>
+      <span class="location-tag">📍 ${quest.location}</span>
+    </div>`;
+
+    // Objectives
+    html += `<div style="margin:8px 0">`;
+    quest.objectives.forEach((obj, i) => {
+      const done = progress.has(i);
+      const current = !done && i === [...Array(quest.objectives.length).keys()].find(idx => !progress.has(idx));
+      html += `<div class="quest-objective ${done ? 'done' : ''} ${current ? 'current' : ''}">
+        <span>${done ? '✅' : current ? '➡️' : '⬜'}</span>
+        <span>${obj.text}</span>
+      </div>`;
+    });
+    html += '</div>';
+
+    if (isComplete) {
+      html += `<div style="padding:10px;background:rgba(0,255,136,.08);border:1px solid var(--green);border-radius:6px;margin:8px 0">
+        <div style="color:var(--green);font-weight:bold;font-size:12px;margin-bottom:4px">✓ Quest Complete! +${quest.xp} XP</div>
+        <div style="color:#bbb;font-size:11px;line-height:1.6">${quest.reward}</div>
+      </div>`;
+    }
+  }
+
+  // Completion screen
+  if (doneQuests === totalQuests) {
+    html += `<div style="text-align:center;padding:20px;margin-top:12px;background:var(--panel2);border:1px solid var(--yellow);border-radius:8px">
+      <div style="font-size:24px;margin-bottom:8px">🎖️</div>
+      <div style="color:var(--yellow);font-size:16px;font-weight:bold">INVESTIGATION COMPLETE</div>
+      <div style="color:#bbb;font-size:12px;margin-top:8px;line-height:1.6">
+        You've solved the case. Diana Frost (ECHO) has been identified as the mole.
+        Agent_K's work wasn't in vain — you finished what they started.<br><br>
+        <span style="color:var(--green)">You've proven yourself as a true terminal power user.</span>
+      </div>
+    </div>`;
+  }
+
+  // Quest list
+  html += '<h3 style="margin-top:16px">All Quests</h3>';
+  adventureQuests.forEach((q, i) => {
+    const done = adventureState.completedQuests.has(q.id);
+    const active = i === adventureState.currentQuest && !done;
+    const locked = i > adventureState.currentQuest && !done;
+    html += `<div class="quest-card ${done ? 'completed' : ''} ${active ? 'active' : ''} ${locked ? 'locked' : ''}" onclick="${!locked ? `selectQuest(${i})` : ''}">
+      <div class="quest-num">Quest ${q.num}</div>
+      <div class="quest-title">${done ? '✓ ' : locked ? '🔒 ' : ''}${q.title}</div>
+      <div class="quest-desc">${locked ? 'Complete previous quests to unlock' : q.narrative.slice(0, 80) + '...'}</div>
+    </div>`;
+  });
+
+  panel.innerHTML = html;
+}
+
+function beginAdventure() {
+  adventureState.started = true;
+  adventureState.currentQuest = 0;
+  showTab('adventure');
+  printToTerminal('\n<span class="warning">━━━ ADVENTURE MODE: THE GHOST IN THE MACHINE ━━━</span>', 'warning');
+  printToTerminal('<span class="info">Agent_K is missing. Your investigation starts in ~/nexus/</span>', 'info');
+  printToTerminal('<span class="dim">Type: cd nexus</span>\n', 'dim');
+}
+
+function selectQuest(idx) {
+  if (idx <= adventureState.currentQuest || adventureState.completedQuests.has(adventureQuests[idx].id)) {
+    adventureState.currentQuest = idx;
+    renderAdventure();
+  }
+}
+
+function validateAdventure(rawCmd) {
+  if (!adventureState.started) return;
+  const quest = adventureQuests[adventureState.currentQuest];
+  if (!quest || adventureState.completedQuests.has(quest.id)) return;
+
+  if (!adventureState.questProgress[quest.id]) adventureState.questProgress[quest.id] = new Set();
+  const progress = adventureState.questProgress[quest.id];
+  const ctx = { cmd: rawCmd, cwd: state.cwd, history: state.history };
+
+  let updated = false;
+  for (let i = 0; i < quest.objectives.length; i++) {
+    if (progress.has(i)) continue;
+    let valid = false;
+    try { valid = quest.objectives[i].validate(ctx); } catch(e) {}
+    if (valid) {
+      progress.add(i);
+      updated = true;
+      showToast(`🕵️ Objective complete!`, 'xp');
+      break;
+    }
+  }
+
+  // Check if quest is complete
+  if (progress.size === quest.objectives.length && !adventureState.completedQuests.has(quest.id)) {
+    adventureState.completedQuests.add(quest.id);
+    addXP(quest.xp);
+    showToast(`🏆 Quest ${quest.num} Complete: ${quest.title}! +${quest.xp} XP`, 'ach');
+    printToTerminal(`\n<span class="success">━━━ QUEST COMPLETE: ${quest.title} ━━━</span>`, 'success');
+    printToTerminal(`<span class="info">${quest.reward}</span>\n`, 'info');
+
+    // Auto-advance to next quest
+    if (adventureState.currentQuest < adventureQuests.length - 1) {
+      adventureState.currentQuest++;
+      const next = adventureQuests[adventureState.currentQuest];
+      printToTerminal(`<span class="warning">Next Quest: ${next.title}</span>`, 'warning');
+      printToTerminal(`<span class="dim">${next.narrative.slice(0, 100)}...</span>\n`, 'dim');
+    } else if (adventureState.completedQuests.size === adventureQuests.length) {
+      printToTerminal(`\n<span class="success">🎖️ INVESTIGATION COMPLETE — You solved the case!</span>`, 'success');
+      printToTerminal(`<span class="info">Diana Frost (ECHO) is the mole. Agent_K's work is finished. You are a true terminal detective.</span>\n`, 'info');
+    }
+  }
+
+  if (updated) renderAdventure();
+}
+
+// ============================================================
+// CHALLENGE ARENA
+// ============================================================
+const challenges = {
+  easy: [
+    { title:'Where Am I?', desc:'Print your current working directory.', validate:c=>c.cmd==='pwd', xp:10 },
+    { title:'Who Am I?', desc:'Display your username.', validate:c=>c.cmd==='whoami', xp:10 },
+    { title:'List It', desc:'List the contents of your home directory.', validate:c=>c.cmd==='ls'&&c.cwd==='/home/player', xp:10 },
+    { title:'Hidden Secrets', desc:'Show all files including hidden ones in your home directory.', validate:c=>c.cmd.includes('ls')&&c.cmd.includes('-a'), xp:15 },
+    { title:'Go Home', desc:'Navigate to your home directory from anywhere.', validate:c=>(c.cmd==='cd'||c.cmd==='cd ~')&&c.cwd==='/home/player', xp:10 },
+    { title:'Read the Notes', desc:'Display the contents of ~/documents/notes.txt', validate:c=>c.cmd.includes('cat')&&c.cmd.includes('notes.txt'), xp:15 },
+    { title:'Make a File', desc:'Create a new empty file called challenge.txt', validate:(c,s)=>c.cmd.includes('touch')&&c.cmd.includes('challenge.txt'), xp:15 },
+    { title:'Make a Folder', desc:'Create a new directory called test-dir', validate:c=>c.cmd.includes('mkdir')&&c.cmd.includes('test-dir'), xp:15 },
+    { title:'Echo Chamber', desc:'Use echo to print "I love the terminal"', validate:c=>c.cmd.startsWith('echo ')&&c.cmd.toLowerCase().includes('terminal'), xp:10 },
+    { title:'First Lines', desc:'Show only the first 5 lines of ~/documents/quotes.txt', validate:c=>c.cmd.includes('head')&&c.cmd.includes('-n')&&c.cmd.includes('5'), xp:15 },
+    { title:'Last Lines', desc:'Show only the last 3 lines of ~/documents/projects/data/log.txt', validate:c=>c.cmd.includes('tail')&&c.cmd.includes('-n')&&c.cmd.includes('3'), xp:15 },
+    { title:'Into the Projects', desc:'Navigate into ~/documents/projects/', validate:c=>c.cwd.includes('/projects'), xp:10 },
+    { title:'Count the Lines', desc:'Count the number of lines in ~/documents/todo.txt using wc', validate:c=>c.cmd.includes('wc')&&c.cmd.includes('todo.txt'), xp:15 },
+    { title:'What is Bash?', desc:'Look up "bash" in the glossary command.', validate:c=>c.cmd==='glossary bash', xp:10 },
+    { title:'Read the Manual', desc:'Read the man page for the ls command.', validate:c=>c.cmd==='man ls', xp:10 },
+  ],
+  medium: [
+    { title:'Deep Dive', desc:'Navigate to ~/documents/projects/data/ and list files with details (-l).', validate:c=>c.cmd.includes('ls')&&c.cmd.includes('-l')&&c.cwd.includes('/data'), xp:25 },
+    { title:'Copy That', desc:'Make a backup of notes.txt called notes_backup.txt in the documents folder.', validate:c=>c.cmd.includes('cp')&&c.cmd.includes('notes')&&c.cmd.includes('backup'), xp:25 },
+    { title:'Pipe Dream', desc:'Use cat and wc with a pipe to count lines in any file.', validate:c=>c.cmd.includes('cat')&&c.cmd.includes('|')&&c.cmd.includes('wc'), xp:30 },
+    { title:'Error Hunter', desc:'Use grep to find all ERROR lines in the log file.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('ERROR')&&c.cmd.includes('log'), xp:25 },
+    { title:'Case Closed', desc:'Use grep with -i flag for a case-insensitive search in any file.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('-i'), xp:25 },
+    { title:'File Finder', desc:'Use find to locate all .css files starting from your home directory.', validate:c=>c.cmd.includes('find')&&c.cmd.includes('-name')&&c.cmd.includes('.css'), xp:25 },
+    { title:'Sort It Out', desc:'Sort the contents of any file using sort (with or without pipe).', validate:c=>c.cmd.includes('sort'), xp:20 },
+    { title:'Write It Down', desc:'Use echo with > to write any text into a new file.', validate:c=>c.cmd.includes('echo')&&c.cmd.includes('>')&&!c.cmd.includes('>>'), xp:20 },
+    { title:'Append Mode', desc:'Use echo with >> to append text to an existing file.', validate:c=>c.cmd.includes('echo')&&c.cmd.includes('>>'), xp:20 },
+    { title:'Permission Check', desc:'View file permissions using ls -l on the scripts/ directory.', validate:c=>c.cmd.includes('ls -l')&&c.cmd.includes('scripts'), xp:20 },
+    { title:'Rename Game', desc:'Rename any file using the mv command.', validate:c=>c.cmd.startsWith('mv '), xp:25 },
+    { title:'Nested Builder', desc:'Create a deeply nested directory structure using mkdir -p.', validate:c=>c.cmd.includes('mkdir -p'), xp:25 },
+    { title:'Line Numbers', desc:'Use grep -n to search with line numbers shown.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('-n'), xp:25 },
+    { title:'Shortcut Creator', desc:'Create an alias for any command.', validate:c=>c.cmd.includes('alias')&&c.cmd.includes('='), xp:25 },
+    { title:'Variable Setter', desc:'Set a custom environment variable using export.', validate:c=>c.cmd.includes('export')&&c.cmd.includes('='), xp:20 },
+  ],
+  hard: [
+    { title:'Three-Pipe Problem', desc:'Chain 3 or more commands together using pipes.', validate:c=>(c.cmd.match(/\|/g)||[]).length>=2, xp:40 },
+    { title:'CSV Surgeon', desc:'Extract just the names (first column) from users.csv using cut.', validate:c=>c.cmd.includes('cut')&&c.cmd.includes('-f')&&c.cmd.includes('users.csv'), xp:40 },
+    { title:'Unique Finder', desc:'Find unique values in any dataset using sort | uniq.', validate:c=>c.cmd.includes('sort')&&c.cmd.includes('uniq')&&c.cmd.includes('|'), xp:40 },
+    { title:'Recursive Search', desc:'Use grep -r to search through an entire directory tree.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('-r'), xp:35 },
+    { title:'Permission Wizard', desc:'Change file permissions using chmod with octal notation (e.g. 755).', validate:c=>c.cmd.includes('chmod')&&/\d{3}/.test(c.cmd), xp:40 },
+    { title:'Multi-Chain', desc:'Use && to chain two or more commands that run only on success.', validate:c=>c.cmd.includes('&&'), xp:35 },
+    { title:'Count the Errors', desc:'Count how many ERROR lines are in the log using grep and wc -l with a pipe.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('ERROR')&&c.cmd.includes('wc')&&c.cmd.includes('|'), xp:45 },
+    { title:'Data Pipeline', desc:'Extract a column from a CSV, sort it, and get unique values — all in one pipeline.', validate:c=>c.cmd.includes('cut')&&c.cmd.includes('sort')&&c.cmd.includes('uniq')&&(c.cmd.match(/\|/g)||[]).length>=2, xp:50 },
+    { title:'Log Detective', desc:'Find all WARNING entries in the log and show their line numbers.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('-n')&&c.cmd.toLowerCase().includes('warning')&&c.cmd.includes('log'), xp:40 },
+    { title:'Script Maker', desc:'Create a file with a shebang line: echo "#!/bin/bash" > myscript.sh then chmod +x it.', validate:c=>c.cmd.includes('chmod')&&c.cmd.includes('+x'), xp:45 },
+    { title:'Full Audit', desc:'List ALL files (including hidden) with full details in your home directory.', validate:c=>(c.cmd==='ls -la'||c.cmd==='ls -al')&&c.cwd==='/home/player', xp:35 },
+    { title:'Reverse Sort', desc:'Sort any file in reverse order using sort -r.', validate:c=>c.cmd.includes('sort')&&c.cmd.includes('-r'), xp:35 },
+  ],
+  expert: [
+    { title:'Sales Report', desc:'Using the sales CSV: extract product names, sort, count unique occurrences. Pipeline: cat → cut → sort → uniq -c', validate:c=>c.cmd.includes('sales')&&c.cmd.includes('uniq -c')&&(c.cmd.match(/\|/g)||[]).length>=2, xp:60 },
+    { title:'Admin Analysis', desc:'Find all admin users in users.csv using grep, then count them with wc -l.', validate:c=>c.cmd.includes('grep')&&c.cmd.includes('admin')&&c.cmd.includes('wc')&&c.cmd.includes('users.csv'), xp:55 },
+    { title:'Log Forensics', desc:'Get the last 5 log entries, search them for INFO, and count matches.', validate:c=>c.cmd.includes('tail')&&c.cmd.includes('grep')&&c.cmd.includes('wc')&&(c.cmd.match(/\|/g)||[]).length>=2, xp:60 },
+    { title:'Full System Scan', desc:'Find all .txt files from root (/), pipe to wc -l to count them.', validate:c=>c.cmd.includes('find')&&c.cmd.includes('*.txt'), xp:55 },
+    { title:'Config Extractor', desc:'Read the JSON config file and grep for "port" to find port settings.', validate:c=>c.cmd.includes('cat')&&c.cmd.includes('config.json')&&c.cmd.includes('grep')&&c.cmd.includes('port')&&c.cmd.includes('|'), xp:60 },
+    { title:'Build & Verify', desc:'Create a directory, create a file inside it, write content to it, then cat it — all with && chaining.', validate:c=>{const p=c.cmd.split('&&');return p.length>=3&&c.cmd.includes('mkdir')&&(c.cmd.includes('echo')||c.cmd.includes('touch'));}, xp:65 },
+  ],
+};
+
+let challengeState = {
+  current: null,
+  difficulty: 'easy',
+  completed: { easy:new Set(), medium:new Set(), hard:new Set(), expert:new Set() },
+  totalCompleted: 0,
+  streak: 0,
+  bestStreak: 0,
+  lastPlayedDate: null,
+  dailyStreak: 0,
+  lastDailyDate: null,
+};
+
+function getRandomChallenge(diff) {
+  const pool = challenges[diff];
+  const done = challengeState.completed[diff];
+  const available = pool.filter((_,i) => !done.has(i));
+  if (available.length === 0) {
+    // Reset pool
+    challengeState.completed[diff] = new Set();
+    return { challenge: pool[Math.floor(Math.random()*pool.length)], index: Math.floor(Math.random()*pool.length) };
+  }
+  const indices = pool.map((_,i)=>i).filter(i=>!done.has(i));
+  const idx = indices[Math.floor(Math.random()*indices.length)];
+  return { challenge: pool[idx], index: idx };
+}
+
+function startChallenge(diff) {
+  challengeState.difficulty = diff || challengeState.difficulty;
+  const { challenge, index } = getRandomChallenge(challengeState.difficulty);
+  challengeState.current = { ...challenge, index, startTime: Date.now(), attempts: 0 };
+  renderChallenges();
+  printToTerminal(`\n<span class="warning">━━━ CHALLENGE: ${challenge.title} ━━━</span>`, 'warning');
+  printToTerminal(`<span class="info">${challenge.desc}</span>\n`, 'info');
+}
+
+function validateChallenge(rawCmd) {
+  if (!challengeState.current) return;
+  const ctx = { cmd: rawCmd, cwd: state.cwd, output: '', history: state.history };
+  challengeState.current.attempts++;
+  let valid = false;
+  try { valid = challengeState.current.validate(ctx, state); } catch(e) {}
+  if (valid) {
+    const ch = challengeState.current;
+    const timeBonus = (Date.now() - ch.startTime) < 15000 ? Math.floor(ch.xp * 0.5) : 0;
+    const totalXP = ch.xp + timeBonus;
+    challengeState.completed[challengeState.difficulty].add(ch.index);
+    challengeState.totalCompleted++;
+    challengeState.streak++;
+    if (challengeState.streak > challengeState.bestStreak) challengeState.bestStreak = challengeState.streak;
+    addXP(totalXP);
+    showToast(`✓ Challenge Complete! +${totalXP} XP${timeBonus ? ' (speed bonus!)' : ''}`, 'xp');
+    printToTerminal(`<span class="success">✓ Challenge "${ch.title}" completed!${timeBonus ? ' ⚡ Speed bonus!' : ''}</span>`, 'success');
+    challengeState.current = null;
+    // Update daily streak
+    const today = new Date().toDateString();
+    if (challengeState.lastDailyDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toDateString();
+      if (challengeState.lastDailyDate === yesterday) challengeState.dailyStreak++;
+      else challengeState.dailyStreak = 1;
+      challengeState.lastDailyDate = today;
+    }
+    renderChallenges();
+  }
+}
+
+function skipChallenge() {
+  challengeState.current = null;
+  challengeState.streak = 0;
+  startChallenge();
+}
+
+function renderChallenges() {
+  const panel = document.getElementById('panel-challenges');
+  const today = new Date().toDateString();
+  let html = '';
+
+  // Streak display
+  html += `<div class="streak-display">
+    <span class="streak-fire">${challengeState.dailyStreak >= 3 ? '🔥' : '📅'}</span>
+    <div>
+      <div class="streak-num">${challengeState.dailyStreak} day${challengeState.dailyStreak!==1?'s':''}</div>
+      <div class="streak-label">Daily streak${challengeState.dailyStreak >= 7 ? ' — Amazing!' : challengeState.dailyStreak >= 3 ? ' — Keep it up!' : ''}</div>
+    </div>
+  </div>`;
+
+  // Stats
+  html += `<div class="stats-grid">
+    <div class="stat-box"><div class="stat-val">${challengeState.totalCompleted}</div><div class="stat-label">Completed</div></div>
+    <div class="stat-box"><div class="stat-val">${challengeState.bestStreak}</div><div class="stat-label">Best Streak</div></div>
+  </div>`;
+
+  // Difficulty selector
+  html += '<h3>Difficulty</h3><div style="display:flex;gap:6px;margin:8px 0">';
+  for (const d of ['easy','medium','hard','expert']) {
+    const count = challenges[d].length;
+    const done = challengeState.completed[d].size;
+    const active = challengeState.difficulty === d;
+    html += `<button class="challenge-btn${active?' active':''}" style="flex:1;font-size:11px;${active?'border:2px solid var(--cyan)':''}" onclick="challengeState.difficulty='${d}';renderChallenges()">
+      ${d.charAt(0).toUpperCase()+d.slice(1)}<br><span style="font-size:9px;opacity:.6">${done}/${count}</span>
+    </button>`;
+  }
+  html += '</div>';
+
+  // Current challenge or start button
+  if (challengeState.current) {
+    const ch = challengeState.current;
+    html += `<div class="challenge-card active-challenge">
+      <span class="ch-diff ${challengeState.difficulty}">${challengeState.difficulty.toUpperCase()}</span>
+      <h4>${ch.title}</h4>
+      <p>${ch.desc}</p>
+      <p class="ch-xp">🏆 ${ch.xp} XP ${challengeState.streak > 0 ? `· 🔥 ${challengeState.streak} streak` : ''}</p>
+      <div style="margin-top:8px">
+        <button class="challenge-btn skip" onclick="skipChallenge()">Skip (breaks streak)</button>
+      </div>
+    </div>`;
+  } else {
+    html += `<div style="text-align:center;margin:20px 0">
+      <button class="challenge-btn" onclick="startChallenge()" style="font-size:14px;padding:12px 32px">
+        ⚔️ Start Challenge
+      </button>
+    </div>`;
+  }
+
+  // Challenge log of available challenges in current difficulty
+  const pool = challenges[challengeState.difficulty];
+  const done = challengeState.completed[challengeState.difficulty];
+  html += `<h3 style="margin-top:16px">${challengeState.difficulty.charAt(0).toUpperCase()+challengeState.difficulty.slice(1)} Challenges</h3>`;
+  for (let i = 0; i < pool.length; i++) {
+    const completed = done.has(i);
+    html += `<div class="challenge-card" style="opacity:${completed?'.5':'1'}">
+      <h4>${completed?'✓ ':''} ${pool[i].title}</h4>
+      <p>${pool[i].desc}</p>
+      <p class="ch-xp">${pool[i].xp} XP</p>
+    </div>`;
+  }
+
+  panel.innerHTML = html;
+}
+
+// ============================================================
+// QUIZ MODE
+// ============================================================
+const quizQuestions = {
+  basics: [
+    { q:'What does "Bash" stand for?', options:['Big Awesome Shell Handler','Bourne Again Shell','Basic Application Shell','Binary Access Shell Helper'], correct:1, explain:'Bash = Bourne Again Shell. It\'s a pun on "born again" — it was created as a free replacement for the Bourne Shell (sh) in 1989.' },
+    { q:'What is a "shell"?', options:['The terminal window itself','A type of programming language','A program that interprets your commands','The computer\'s operating system'], correct:2, explain:'The shell is the program running INSIDE the terminal that interprets your commands. Common shells: Bash, Zsh, Fish. The terminal is just the window.' },
+    { q:'What does "pwd" stand for?', options:['Password','Print Working Directory','Path to Working Disk','Present Working Data'], correct:1, explain:'pwd = Print Working Directory. It shows the full path of where you currently are in the filesystem.' },
+    { q:'What does the ~ (tilde) represent in a path?', options:['The root directory','The previous directory','Your home directory','The temp directory'], correct:2, explain:'~ is a shortcut for your home directory (/home/username on Linux, /Users/username on macOS). So ~/documents means /home/you/documents.' },
+    { q:'What is the "root" directory?', options:['Your home folder','The / at the very top of the filesystem','The admin user\'s folder','Where programs are installed'], correct:1, explain:'/ (forward slash) is the root directory — the very top of the filesystem tree. Everything on your computer is inside / somewhere.' },
+    { q:'What does CLI stand for?', options:['Computer Language Interface','Command List Integration','Command Line Interface','Common Linux Installer'], correct:2, explain:'CLI = Command Line Interface. It\'s any program you interact with by typing text commands, as opposed to a GUI (Graphical User Interface).' },
+    { q:'What is the default shell on modern macOS?', options:['Bash','Fish','Zsh','sh'], correct:2, explain:'Since macOS Catalina (2019), the default shell is Zsh (Z Shell). Before that it was Bash. They\'re very similar in daily use.' },
+    { q:'What key do you press to run a command?', options:['Space','Tab','Enter/Return','Escape'], correct:2, explain:'Enter (or Return) submits your command to the shell for execution.' },
+  ],
+  files: [
+    { q:'What does "cat" stand for?', options:['Category','Concatenate','Catalog','Catch'], correct:1, explain:'cat = concatenate. It was originally meant to join multiple files together, but it\'s most commonly used to simply display a file\'s contents.' },
+    { q:'What does "touch" do if the file already exists?', options:['Overwrites it with empty content','Deletes it','Updates its timestamp','Shows an error'], correct:2, explain:'If the file exists, touch just updates its "last modified" timestamp without changing the content. If the file doesn\'t exist, it creates an empty one.' },
+    { q:'What flag do you need to delete a directory with rm?', options:['-d','-f','-r','-x'], correct:2, explain:'-r means "recursive" — it deletes the directory and everything inside it. Without -r, rm refuses to delete directories.' },
+    { q:'What\'s the difference between > and >>?', options:['> is faster than >>','> overwrites, >> appends','> is for text, >> is for binary','No difference'], correct:1, explain:'> overwrites the file (replaces all content). >> appends (adds to the end). Be careful with > — it will destroy existing content!' },
+    { q:'What are "dotfiles"?', options:['System configuration files','Files with the .dot extension','Hidden files whose names start with a period','Encrypted files'], correct:2, explain:'Files starting with a dot (.) are hidden — they don\'t show up in regular "ls" output. Use "ls -a" to see them. Config files like .bashrc, .gitconfig are dotfiles.' },
+    { q:'What does "mkdir -p" do differently than "mkdir"?', options:['Creates the directory with full permissions','Creates parent directories as needed','Creates a protected directory','Creates a portable directory'], correct:1, explain:'mkdir -p creates the full path, making any parent directories that don\'t exist yet. "mkdir -p a/b/c" creates a, then b inside a, then c inside b.' },
+    { q:'Which command shows only the last lines of a file?', options:['head','bottom','tail','end'], correct:2, explain:'tail shows the last lines (default 10). head shows the first lines. tail is especially useful for checking the latest entries in log files.' },
+    { q:'What does "wc -l" count?', options:['Words','Characters','Lines','Links'], correct:2, explain:'wc = word count. With -l it counts lines, -w counts words, -c counts characters/bytes. Without flags it shows all three.' },
+  ],
+  navigation: [
+    { q:'What does "cd .." do?', options:['Goes to the root directory','Goes up one directory level','Goes to the previous directory','Lists the parent directory'], correct:1, explain:'.. always means "parent directory." cd .. moves you up one level. You can chain them: cd ../.. goes up two levels.' },
+    { q:'What does "cd -" do?', options:['Goes to the root directory','Goes to your home directory','Goes to the previous directory you were in','Reverses the last cd'], correct:2, explain:'cd - takes you back to wherever you were before your last cd. It\'s like an "undo" for navigation — great for toggling between two directories.' },
+    { q:'What\'s the difference between an absolute and relative path?', options:['Absolute uses letters, relative uses numbers','Absolute starts with /, relative starts from current dir','Absolute is longer, relative is shorter','No real difference'], correct:1, explain:'Absolute paths start from root (/home/player/docs). Relative paths start from wherever you are now (docs/file.txt). Absolute always works regardless of your current directory.' },
+    { q:'What does "cd" with no arguments do?', options:['Shows an error','Stays in the current directory','Goes to your home directory','Goes to root /'], correct:2, explain:'cd with no arguments takes you to your home directory (~). It\'s the same as "cd ~" or "cd $HOME".' },
+    { q:'What does the "." (single dot) represent in a path?', options:['The parent directory','The root directory','The current directory','A hidden file'], correct:2, explain:'. means "current directory." It\'s used in commands like "./script.sh" (run a script in the current directory) or "find . -name *.txt" (search from here).' },
+  ],
+  pipes: [
+    { q:'What does the pipe symbol ( | ) do?', options:['Writes output to a file','Sends stdout of one command to stdin of the next','Runs commands in parallel','Compares two commands'], correct:1, explain:'The pipe takes the standard output (stdout) of one command and feeds it as standard input (stdin) to the next. This lets you chain simple tools into powerful workflows.' },
+    { q:'In "cat file | grep error | wc -l", what does wc -l receive?', options:['The entire file','Only lines containing "error"','The word "error"','The file name'], correct:1, explain:'cat outputs the whole file → grep filters to only lines containing "error" → wc -l receives those filtered lines and counts them.' },
+    { q:'What is "stdout"?', options:['A type of file','Standard output — where a program sends its results','A networking protocol','A shell variable'], correct:1, explain:'stdout (standard output) is the default stream where programs write their results. By default it goes to your screen, but pipes and redirection can send it elsewhere.' },
+    { q:'Why does "sort | uniq" work but "uniq" alone might miss duplicates?', options:['uniq is buggy','uniq only removes ADJACENT duplicate lines','sort is required for uniq to run','uniq doesn\'t read files'], correct:1, explain:'uniq only removes consecutive/adjacent duplicates. If "apple" appears on lines 3 and 7, uniq won\'t catch it unless the lines are sorted together first.' },
+    { q:'What does /dev/null do?', options:['Stores null values','It\'s a "black hole" that discards any data sent to it','Resets a device','Null-terminates strings'], correct:1, explain:'/dev/null is a special file that discards everything written to it. Redirect there to silence output: command > /dev/null. Useful for hiding output you don\'t care about.' },
+    { q:'What does 2>&1 mean?', options:['Run command 2 and command 1','Redirect stderr (2) to the same place as stdout (1)','Pipe between two programs','Go to the second directory'], correct:1, explain:'2 is stderr (error output), 1 is stdout (normal output). 2>&1 merges error messages into the normal output stream. Useful when piping or redirecting to catch everything.' },
+  ],
+  search: [
+    { q:'What does grep search?', options:['File names','File contents (text inside files)','File permissions','File sizes'], correct:1, explain:'grep searches inside files for lines matching a pattern. To search file names, use "find" instead.' },
+    { q:'What does "grep -i" do?', options:['Inverts the search','Case-insensitive search','Shows file info','Interactive mode'], correct:1, explain:'-i makes grep case-insensitive. "grep -i error" matches ERROR, Error, error, eRRor, etc.' },
+    { q:'What does "grep -r" do?', options:['Reverse search','Search recursively through directories','Show results in reverse','Use regex mode'], correct:1, explain:'-r (recursive) makes grep search through all files in a directory and its subdirectories. Without -r, grep only searches the specific files you name.' },
+    { q:'What is the difference between grep and find?', options:['grep is newer','grep searches file CONTENTS, find searches file NAMES','grep is for text, find is for binary','They do the same thing'], correct:1, explain:'grep looks at what\'s INSIDE files (searching text content). find looks at file NAMES and properties (like size, type, modification date). Both are essential.' },
+    { q:'What does "grep -c" output?', options:['Colored results','The count of matching lines','Case-sensitive results','The command that was run'], correct:1, explain:'-c makes grep output just the count (number) of matching lines instead of showing the actual lines. Equivalent to grep pattern | wc -l.' },
+  ],
+  permissions: [
+    { q:'What do the letters "rwx" stand for?', options:['Run, Write, eXit','Read, Write, eXecute','Read, Work, eXpress','Rename, Write, eXtract'], correct:1, explain:'r = read (view contents), w = write (modify), x = execute (run as a program). These three permissions apply separately to: owner, group, and others.' },
+    { q:'What does chmod 755 mean?', options:['rwxrwxrwx','rwxr-xr-x','rwx------','rw-r--r--'], correct:1, explain:'7=rwx (owner), 5=r-x (group), 5=r-x (others). In octal: 4=read, 2=write, 1=execute. Add them up: 7=4+2+1, 5=4+0+1.' },
+    { q:'Why do you need to run "chmod +x script.sh" before running a script?', options:['To compress it','To add execute permission so the system can run it','To mark it as a shell file','To open it'], correct:1, explain:'Without execute (x) permission, the system won\'t run the file as a program. chmod +x adds this permission. This is a security feature — not everything should be executable.' },
+    { q:'In "ls -l" output, what does "d" at the start of permissions mean?', options:['Deleted','Dangerous','Directory','Default'], correct:2, explain:'The first character shows the type: d = directory, - = regular file, l = symbolic link. So "drwxr-xr-x" means it\'s a directory with rwxr-xr-x permissions.' },
+    { q:'What is "sudo" short for?', options:['Super Duper','Super User Do','System Utility Daemon Operations','Switch User Directory Override'], correct:1, explain:'sudo = Super User Do. It runs a command with root (administrator) privileges. Required for system-level operations. Your Mac will ask for your password.' },
+  ],
+  environment: [
+    { q:'What is the PATH environment variable?', options:['The current directory you\'re in','A list of directories where the shell looks for programs','The path to your home directory','A log of directories you\'ve visited'], correct:1, explain:'PATH is a colon-separated list of directories. When you type "ls", the shell searches each PATH directory until it finds an "ls" executable. That\'s how it knows where programs live!' },
+    { q:'What does "export" do?', options:['Saves a file to disk','Makes a variable available to child processes','Sends data to another computer','Creates a backup'], correct:1, explain:'export makes an environment variable available to programs you run from the shell. Without export, the variable only exists in the current shell session.' },
+    { q:'Where are permanent aliases typically stored?', options:['In /etc/aliases','In ~/.bashrc or ~/.zshrc','In /usr/bin/aliases','In the PATH variable'], correct:1, explain:'Aliases defined in the terminal are temporary. To make them permanent, add them to your shell config file: ~/.bashrc (Bash) or ~/.zshrc (Zsh). These files run every time you open a new terminal.' },
+    { q:'What is a "shebang" (#!) line?', options:['A comment in a script','The first line that tells the system which interpreter to use','An error message','A type of variable'], correct:1, explain:'#!/bin/bash at the top of a script tells the OS "run this with Bash." Without it, the system doesn\'t know which program should interpret the script. It\'s called "shebang" from "hash-bang" (# !).' },
+    { q:'What does "echo $HOME" print?', options:['The word $HOME','Your home directory path','An error','The echo command itself'], correct:1, explain:'The $ prefix tells the shell to substitute the variable\'s value. $HOME contains your home directory path (e.g., /home/player). Without $, it would literally print "HOME".' },
+    { q:'What is the difference between .bashrc and .profile?', options:['.bashrc is for Bash, .profile is for Zsh','.bashrc runs on every new shell, .profile runs once at login','They are the same thing','.bashrc is for aliases, .profile is for variables'], correct:1, explain:'.profile runs once when you log in. .bashrc runs every time you open a new Bash shell (including subshells). Most people put their customizations in .bashrc since it always runs.' },
+  ],
+};
+
+let quizState = {
+  category: null,
+  currentQ: null,
+  qIndex: 0,
+  score: 0,
+  total: 0,
+  answered: false,
+  sessionHistory: {}, // category -> {correct, total}
+  allTimeCorrect: 0,
+  allTimeTotal: 0,
+};
+
+function renderQuizMenu() {
+  const panel = document.getElementById('panel-quiz');
+  let html = '<h2>Quiz Mode</h2>';
+  html += '<p style="margin-bottom:12px;color:var(--dim)">Test your knowledge! Questions are randomized each time.</p>';
+
+  // All-time stats
+  if (quizState.allTimeTotal > 0) {
+    const pct = Math.round((quizState.allTimeCorrect / quizState.allTimeTotal) * 100);
+    html += `<div class="streak-display">
+      <div class="quiz-score"><div class="qs-ring">${pct}%</div></div>
+      <div>
+        <div style="color:var(--green);font-weight:bold">${quizState.allTimeCorrect}/${quizState.allTimeTotal} correct</div>
+        <div class="streak-label">All-time accuracy</div>
+      </div>
+    </div>`;
+  }
+
+  html += '<h3>Choose a Category</h3>';
+  const categoryNames = {
+    basics:'🖥️ Terminal Basics',
+    files:'📁 Files & Directories',
+    navigation:'🧭 Navigation',
+    pipes:'🔧 Pipes & Redirection',
+    search:'🔍 Search (grep & find)',
+    permissions:'🔐 Permissions',
+    environment:'⚙️ Environment & Config',
+  };
+  for (const [cat, label] of Object.entries(categoryNames)) {
+    const qs = quizQuestions[cat];
+    if (!qs) continue;
+    const hist = quizState.sessionHistory[cat];
+    const progress = hist ? ` — ${hist.correct}/${hist.total} correct` : '';
+    html += `<button class="quiz-category-btn" onclick="startQuiz('${cat}')">
+      ${label} <span class="cat-count">${qs.length} questions${progress}</span>
+    </button>`;
+  }
+
+  // Random mix option
+  html += `<button class="quiz-category-btn" style="border-color:var(--yellow);margin-top:12px" onclick="startQuiz('random')">
+    🎲 Random Mix <span class="cat-count">All categories</span>
+  </button>`;
+
+  panel.innerHTML = html;
+}
+
+function startQuiz(category) {
+  quizState.category = category;
+  quizState.score = 0;
+  quizState.total = 0;
+
+  if (category === 'random') {
+    // Gather all questions from all categories
+    quizState.pool = [];
+    for (const [cat, qs] of Object.entries(quizQuestions)) {
+      qs.forEach((q,i) => quizState.pool.push({...q, cat}));
+    }
+    shuffle(quizState.pool);
+    quizState.pool = quizState.pool.slice(0, 10);
+  } else {
+    quizState.pool = [...quizQuestions[category]];
+    shuffle(quizState.pool);
+  }
+  quizState.qIndex = 0;
+  showQuizQuestion();
+}
+
+function shuffle(arr) {
+  for (let i = arr.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [arr[i], arr[j]] = [arr[j], arr[i]];
+  }
+}
+
+function showQuizQuestion() {
+  const panel = document.getElementById('panel-quiz');
+  if (quizState.qIndex >= quizState.pool.length) {
+    // Quiz complete
+    const pct = Math.round((quizState.score / quizState.total) * 100);
+    const grade = pct >= 90 ? 'A+' : pct >= 80 ? 'A' : pct >= 70 ? 'B' : pct >= 60 ? 'C' : 'Keep practicing!';
+    let html = '<h2>Quiz Complete!</h2>';
+    html += `<div style="text-align:center;margin:24px 0">
+      <div class="quiz-score" style="justify-content:center">
+        <div class="qs-ring" style="width:80px;height:80px;font-size:24px;${pct>=70?'':'border-color:var(--red);color:var(--red)'}">${pct}%</div>
+      </div>
+      <div style="margin-top:12px;font-size:16px;color:var(--${pct>=70?'green':'red'})">${grade}</div>
+      <div style="color:var(--dim);margin-top:4px">${quizState.score} out of ${quizState.total} correct</div>
+    </div>`;
+    const xpEarned = quizState.score * 10;
+    if (xpEarned > 0) {
+      addXP(xpEarned);
+      html += `<div style="text-align:center;color:var(--yellow);margin:8px">+${xpEarned} XP earned!</div>`;
+    }
+    html += `<div style="text-align:center;margin-top:20px">
+      <button class="challenge-btn" onclick="renderQuizMenu()">← Back to Categories</button>
+      <button class="challenge-btn" onclick="startQuiz('${quizState.category}')" style="margin-left:8px">🔄 Retry</button>
+    </div>`;
+    panel.innerHTML = html;
+    return;
+  }
+
+  quizState.answered = false;
+  const q = quizState.pool[quizState.qIndex];
+  let html = `<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+    <h2>Question ${quizState.qIndex + 1} of ${quizState.pool.length}</h2>
+    <span style="color:var(--green);font-size:12px">${quizState.score}/${quizState.total} correct</span>
+  </div>`;
+  html += `<div class="quiz-question">
+    <h4>${q.q}</h4>`;
+  q.options.forEach((opt, i) => {
+    html += `<button class="quiz-option" id="qopt-${i}" onclick="answerQuiz(${i})">${String.fromCharCode(65+i)}. ${opt}</button>`;
+  });
+  html += `<div class="quiz-explanation" id="quiz-explain" style="display:none">${q.explain}</div>`;
+  html += '</div>';
+  html += `<div style="text-align:right;margin-top:8px">
+    <button class="challenge-btn skip" onclick="renderQuizMenu()">Quit Quiz</button>
+  </div>`;
+  panel.innerHTML = html;
+}
+
+function answerQuiz(choice) {
+  if (quizState.answered) return;
+  quizState.answered = true;
+  quizState.total++;
+  quizState.allTimeTotal++;
+  const q = quizState.pool[quizState.qIndex];
+  const correct = choice === q.correct;
+
+  if (correct) {
+    quizState.score++;
+    quizState.allTimeCorrect++;
+  }
+
+  // Track per-category stats
+  const cat = q.cat || quizState.category;
+  if (!quizState.sessionHistory[cat]) quizState.sessionHistory[cat] = {correct:0, total:0};
+  quizState.sessionHistory[cat].total++;
+  if (correct) quizState.sessionHistory[cat].correct++;
+
+  // Update UI
+  for (let i = 0; i < q.options.length; i++) {
+    const btn = document.getElementById(`qopt-${i}`);
+    btn.disabled = true;
+    if (i === q.correct) btn.classList.add('correct');
+    else if (i === choice && !correct) btn.classList.add('wrong');
+  }
+  document.getElementById('quiz-explain').style.display = 'block';
+
+  // Auto-advance after delay
+  setTimeout(() => {
+    quizState.qIndex++;
+    showQuizQuestion();
+  }, 2500);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function startGame() {
+  document.getElementById('welcome-overlay').classList.add('hidden');
+  inputEl.focus();
+  state.lessonStartTime = Date.now();
+
+  const hasProgress = loadState();
+
+  printToTerminal('<span class="info">Welcome to Terminal Academy!</span>', 'info');
+  if (hasProgress) {
+    printToTerminal('<span class="dim">Progress restored. Picking up where you left off!</span>');
+  } else {
+    printToTerminal('<span class="dim">Type commands below. Check the Missions panel on the right. →</span>');
+    printToTerminal('<span class="dim">Type <span class="success">help</span> for commands, <span class="success">man &lt;cmd&gt;</span> for manuals, <span class="success">glossary</span> for the encyclopedia.</span>');
+  }
+  printToTerminal('');
+
+  updatePrompt();
+  updateXPBar();
+  renderLesson();
+  renderAdventure();
+  renderChallenges();
+  renderQuizMenu();
+  renderAchievements();
+  renderGlossaryPanel();
+}
+
+// Click anywhere on terminal focuses input
+document.getElementById('terminal-pane').addEventListener('click', () => inputEl.focus());
+
+// Check for saved progress and skip welcome if exists
+if (localStorage.getItem('terminalAcademy')) {
+  document.getElementById('welcome-overlay').classList.add('hidden');
+  startGame();
+}
+</script>
+</body>
+</html>
