@@ -320,6 +320,86 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
   cursor:pointer; transition:all .2s;
 }
 #welcome-box button:hover { background:var(--cyan); }
+/* ===== MOBILE RESPONSIVE ===== */
+@media (max-width: 900px) {
+  #main { flex-direction:column; }
+  #side-panel {
+    width:100%; border-left:none; border-top:1px solid var(--border);
+    max-height:50vh; min-height:200px;
+  }
+  #terminal-pane { min-height:40vh; }
+  .panel-tabs button { padding:8px 4px; font-size:10px; }
+  #top-bar { padding:6px 10px; gap:8px; flex-wrap:wrap; }
+  #top-bar .logo { font-size:13px; }
+  .xp-area { max-width:200px; }
+  .top-btns { flex-wrap:wrap; gap:4px; }
+  .top-btns button { padding:3px 6px; font-size:10px; }
+}
+
+@media (max-width: 600px) {
+  body { height:100vh; height:100dvh; }
+  #top-bar {
+    padding:4px 8px; min-height:auto; flex-wrap:wrap;
+    justify-content:center; gap:4px;
+  }
+  #top-bar .logo { display:none; }
+  .xp-area { max-width:none; flex:1; min-width:120px; }
+  .level-badge { font-size:10px; padding:1px 6px; }
+  .xp-bar-outer { height:8px; }
+  .xp-text { font-size:9px; }
+  .top-btns { width:100%; justify-content:center; }
+  .top-btns button { padding:3px 5px; font-size:9px; }
+
+  #main { flex-direction:column; }
+
+  /* Mobile: panel becomes a slide-up drawer */
+  #side-panel {
+    width:100%; border-left:none; border-top:2px solid var(--green);
+    max-height:55vh; min-height:180px;
+    order:1;
+  }
+  #side-panel.hidden { display:none; }
+  #terminal-pane { flex:1; min-height:35vh; order:2; }
+
+  .panel-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; flex-wrap:nowrap; }
+  .panel-tabs button { padding:7px 6px; font-size:9px; white-space:nowrap; flex-shrink:0; min-width:auto; }
+  .panel-content { padding:10px; }
+  .panel-content h2 { font-size:13px; }
+  .panel-content h3 { font-size:12px; }
+  .lesson-title { font-size:14px; }
+  .lesson-desc { font-size:11px; padding:8px; }
+  .task-item { font-size:11px; padding:6px 8px; }
+  .challenge-card { padding:10px; }
+  .quiz-option { padding:8px 10px; font-size:11px; }
+  .quest-narrative { font-size:11px; padding:8px; }
+  .quest-objective { font-size:11px; padding:5px 8px; }
+  .glossary-item dt { font-size:12px; }
+  .glossary-item dd { font-size:11px; }
+
+  #terminal { font-size:12px; padding:8px; }
+  #input-line { padding:6px 8px; }
+  #input-line .prompt { font-size:12px; }
+  #input-line input { font-size:16px; } /* 16px prevents iOS zoom on focus */
+
+  /* Welcome overlay mobile */
+  #welcome-box { padding:20px; margin:10px; }
+  #welcome-box h1 { font-size:20px; }
+  #welcome-box .ascii-art { font-size:6px; line-height:1.2; }
+  #welcome-box p { font-size:12px; }
+  #welcome-box button { padding:10px 24px; font-size:13px; }
+
+  .stats-grid { grid-template-columns:1fr 1fr; gap:6px; }
+  .nav-btns { gap:6px; }
+  .nav-btns button { font-size:11px; padding:6px; }
+}
+
+/* Extra small phones */
+@media (max-width: 380px) {
+  .top-btns button { font-size:8px; padding:2px 4px; }
+  .panel-tabs button { font-size:8px; padding:5px 4px; }
+  #welcome-box .ascii-art { display:none; }
+  .xp-area { gap:6px; }
+}
 </style>
 </head>
 <body>
