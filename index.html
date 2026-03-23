@@ -81,12 +81,30 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
 #input-line {
   display:flex; align-items:center; padding:8px 12px;
   background:#0d0d0d; border-top:1px solid var(--border); flex-shrink:0;
+  position:relative;
 }
 #input-line .prompt { color:var(--green); white-space:pre; font-size:13px; }
-#input-line input {
-  flex:1; background:transparent; border:none; color:#fff;
-  font-family:var(--font); font-size:13px; outline:none; caret-color:var(--green);
+#input-line .input-wrapper {
+  flex:1; position:relative; display:flex; align-items:center;
 }
+#input-line input {
+  flex:1; background:transparent; border:none; color:transparent;
+  font-family:var(--font); font-size:13px; outline:none; caret-color:var(--green);
+  position:relative; z-index:2;
+}
+#input-line .syntax-overlay {
+  position:absolute; left:0; top:0; bottom:0; display:flex; align-items:center;
+  font-family:var(--font); font-size:13px; pointer-events:none; z-index:1;
+  white-space:pre; overflow:hidden;
+}
+#input-line .syntax-overlay .cmd-valid { color:var(--green); text-shadow:0 0 6px rgba(0,255,136,.3); }
+#input-line .syntax-overlay .cmd-invalid { color:var(--red); text-shadow:0 0 6px rgba(255,56,96,.3); }
+#input-line .syntax-overlay .cmd-neutral { color:#fff; }
+#input-line .syntax-overlay .arg-text { color:#ccc; }
+#input-line .syntax-overlay .flag-text { color:var(--yellow); }
+#input-line .syntax-overlay .string-text { color:var(--cyan); }
+#input-line .syntax-overlay .pipe-text { color:var(--pink); font-weight:bold; }
+#input-line .syntax-overlay .redirect-text { color:var(--orange); font-weight:bold; }
 
 /* ===== SIDE PANEL ===== */
 #side-panel {
@@ -433,6 +451,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
   #input-line { padding:6px 8px; }
   #input-line .prompt { font-size:12px; }
   #input-line input { font-size:16px; } /* 16px prevents iOS zoom on focus */
+  #input-line .syntax-overlay { font-size:16px; }
 
   /* Welcome overlay mobile */
   #welcome-box { padding:20px; margin:10px; }
@@ -509,7 +528,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
     <h1>Terminal <span>Academy</span></h1>
     <p class="subtitle">Master the command line, one command at a time</p>
     <p>Welcome, cadet! You're about to learn how to wield the most powerful tool in computing — the terminal. Through hands-on missions, you'll go from zero to power user.</p>
-    <p style="color:var(--yellow);font-size:12px;">12 Chapters · 50+ Missions · Endless Challenges · 45+ Quiz Questions · Achievements · Encyclopedia</p>
+    <p style="color:var(--yellow);font-size:12px;">18 Chapters · 70+ Missions · Endless Challenges · 60+ Quiz Questions · Achievements · Encyclopedia</p>
     <button onclick="startGame()">BEGIN TRAINING →</button>
   </div>
 </div>
@@ -548,7 +567,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
     <div id="terminal"></div>
     <div id="input-line">
       <span class="prompt" id="prompt">player@academy:~$ </span>
-      <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+      <div class="input-wrapper">
+        <div class="syntax-overlay" id="syntax-overlay"></div>
+        <input type="text" id="cmd-input" autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" autofocus>
+      </div>
     </div>
   </div>
 
@@ -987,6 +1009,83 @@ const lessons = [
     ],
     xp: 100,
   },
+  // CHAPTER 13: KEYBOARD SHORTCUTS
+  {
+    chapter: 13, title: 'Keyboard Shortcuts — Terminal Essentials',
+    desc: 'Real terminal power users rarely reach for the mouse. <span class="highlight">Keyboard shortcuts</span> let you control the terminal at the speed of thought. These shortcuts work in Bash, Zsh, and most shells because they come from a library called <span class="highlight">readline</span>.\n\nSince we can\'t capture real key combos in this simulator, use the <code>shortcut</code> command to learn each one. In a real terminal, you\'d press the actual key combination.',
+    tasks: [
+      { text:'Learn to interrupt a process: <code>shortcut ctrl-c</code>', hint:'Type: shortcut ctrl-c — this is the most important shortcut!', validate: c => c.cmd === 'shortcut ctrl-c' },
+      { text:'Learn to suspend a process: <code>shortcut ctrl-z</code>', hint:'Type: shortcut ctrl-z — sends a process to the background', validate: c => c.cmd === 'shortcut ctrl-z' },
+      { text:'Learn to clear the screen: <code>shortcut ctrl-l</code>', hint:'Type: shortcut ctrl-l — faster than typing "clear"', validate: c => c.cmd === 'shortcut ctrl-l' },
+      { text:'Learn to jump to start of line: <code>shortcut ctrl-a</code>', hint:'Type: shortcut ctrl-a — jumps cursor to the beginning', validate: c => c.cmd === 'shortcut ctrl-a' },
+      { text:'Learn reverse search: <code>shortcut ctrl-r</code>', hint:'Type: shortcut ctrl-r — search your command history', validate: c => c.cmd === 'shortcut ctrl-r' },
+      { text:'Learn tab completion: <code>shortcut tab</code>', hint:'Type: shortcut tab — auto-complete is a huge time saver', validate: c => c.cmd === 'shortcut tab' },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 14: PROCESS CONTROL & JOB MANAGEMENT
+  {
+    chapter: 14, title: 'Process Control & Job Management',
+    desc: 'Every program running on your computer is a <span class="highlight">process</span> with a unique PID (Process ID). The terminal lets you manage these processes — list them, pause them, resume them, or kill them.\n\n• <span class="highlight">ps</span> — list running processes\n• <span class="highlight">jobs</span> — list background jobs in the current shell\n• <span class="highlight">bg / fg</span> — resume a stopped job in background / foreground\n• <span class="highlight">kill PID</span> — send a signal to terminate a process\n• <span class="highlight">top</span> — live view of system processes and resource usage',
+    tasks: [
+      { text:'List running processes: <code>ps</code>', hint:'Type: ps — shows your current processes', validate: c => c.cmd === 'ps' },
+      { text:'View background jobs: <code>jobs</code>', hint:'Type: jobs — shows jobs started from this shell', validate: c => c.cmd === 'jobs' },
+      { text:'Kill a process by PID: <code>kill 42</code>', hint:'Type: kill 42 — sends SIGTERM to process 42', validate: c => c.cmd.startsWith('kill ') && /\d+/.test(c.cmd) },
+      { text:'View system resource usage: <code>top</code>', hint:'Type: top — shows CPU and memory usage (press q to quit in real terminal)', validate: c => c.cmd === 'top' },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 15: NETWORKING & DOWNLOADING
+  {
+    chapter: 15, title: 'Networking & Downloading',
+    desc: 'The terminal is a powerful networking tool. You can download files, test connections, transfer data, and even log into remote servers — all from the command line.\n\n• <span class="highlight">curl</span> — transfer data from/to a URL (the Swiss Army knife of HTTP)\n• <span class="highlight">wget</span> — download files from the web\n• <span class="highlight">ping</span> — test if a host is reachable\n• <span class="highlight">ssh</span> — securely log into a remote machine\n\nThese are simulated here, but the output matches what you\'d see in a real terminal.',
+    tasks: [
+      { text:'Fetch a webpage: <code>curl https://example.com</code>', hint:'Type: curl https://example.com — makes an HTTP GET request', validate: c => c.cmd.startsWith('curl ') },
+      { text:'Ping a host: <code>ping academy.local</code>', hint:'Type: ping academy.local — tests network connectivity', validate: c => c.cmd.startsWith('ping ') },
+      { text:'Connect to a remote server: <code>ssh user@server</code>', hint:'Type: ssh user@server — opens a secure shell connection', validate: c => c.cmd.startsWith('ssh ') },
+      { text:'Download a file: <code>wget https://example.com/file.txt</code>', hint:'Type: wget https://example.com/file.txt — saves a file from the web', validate: c => c.cmd.startsWith('wget ') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 16: SHELL SCRIPTING BASICS
+  {
+    chapter: 16, title: 'Shell Scripting Basics',
+    desc: 'A <span class="highlight">shell script</span> is a text file containing a sequence of commands that the shell executes automatically. Scripts let you automate repetitive tasks.\n\nKey concepts:\n• <span class="highlight">#!/bin/bash</span> — the "shebang" line tells the OS which interpreter to use\n• <span class="highlight">Variables</span> — store values: <code>NAME="world"</code>\n• <span class="highlight">echo</span> — print output: <code>echo "Hello $NAME"</code>\n• <span class="highlight">chmod +x</span> — make a script executable\n• <span class="highlight">for loops</span> — repeat commands: <code>for i in 1 2 3; do echo $i; done</code>',
+    tasks: [
+      { text:'Create a script with a shebang: <code>echo "#!/bin/bash" > hello.sh</code>', hint:'The shebang line must be the very first line of the script', validate: (c,s) => c.cmd.includes('#!/bin/bash') && c.cmd.includes('hello.sh') && c.cmd.includes('>') },
+      { text:'Add content to the script: <code>echo \'echo "Hello from script!"\'  >> hello.sh</code>', hint:'Use >> to append (don\'t overwrite the shebang!)', validate: c => c.cmd.includes('>>') && c.cmd.includes('hello.sh') },
+      { text:'Make it executable: <code>chmod +x hello.sh</code>', hint:'Without +x permission, the OS won\'t run your script', validate: c => c.cmd.includes('chmod') && c.cmd.includes('hello.sh') },
+      { text:'View your script: <code>cat hello.sh</code>', hint:'Type: cat hello.sh — verify the shebang and echo are there', validate: c => c.cmd.startsWith('cat ') && c.cmd.includes('hello.sh') },
+      { text:'Add a for loop: <code>echo \'for i in 1 2 3; do echo $i; done\' >> loop.sh</code>', hint:'For loops repeat a command for each item in a list', validate: c => c.cmd.includes('for') && c.cmd.includes('loop.sh') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 17: CLAUDE CODE POWER USER
+  {
+    chapter: 17, title: 'Claude Code Power User',
+    desc: '<span class="highlight">Claude Code</span> is Anthropic\'s official CLI for Claude — an AI coding assistant that lives in your terminal. It can read your codebase, make edits, run commands, and manage git workflows.\n\nUse the simulated <code>claude</code> command to explore its features. In the real world, you install it with <code>npm install -g @anthropic-ai/claude-code</code> and run <code>claude</code> to start.',
+    tasks: [
+      { text:'Get an overview: <code>claude help</code>', hint:'Type: claude help — see what Claude Code can do', validate: c => c.cmd === 'claude help' },
+      { text:'Learn slash commands: <code>claude slash</code>', hint:'Type: claude slash — slash commands are powerful shortcuts', validate: c => c.cmd === 'claude slash' },
+      { text:'Learn about MCP: <code>claude mcp</code>', hint:'Type: claude mcp — MCP extends Claude\'s capabilities', validate: c => c.cmd === 'claude mcp' },
+      { text:'Learn about skills: <code>claude skills</code>', hint:'Type: claude skills — skills are specialized capabilities', validate: c => c.cmd === 'claude skills' },
+      { text:'Learn about hooks: <code>claude hooks</code>', hint:'Type: claude hooks — hooks automate workflows', validate: c => c.cmd === 'claude hooks' },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 18: WARP TERMINAL POWER USER
+  {
+    chapter: 18, title: 'Warp Terminal Power User',
+    desc: '<span class="highlight">Warp</span> is a modern, GPU-accelerated terminal built for developers. It reimagines the terminal with features like blocks, AI command search, collaborative workflows, and a modern text editor.\n\nUse the simulated <code>warp</code> command to explore its features. Download the real thing at <code>warp.dev</code>.',
+    tasks: [
+      { text:'Learn about Warp blocks: <code>warp blocks</code>', hint:'Type: warp blocks — blocks are Warp\'s signature feature', validate: c => c.cmd === 'warp blocks' },
+      { text:'Learn about workflows: <code>warp workflows</code>', hint:'Type: warp workflows — save and share command sequences', validate: c => c.cmd === 'warp workflows' },
+      { text:'Learn about Warp AI: <code>warp ai</code>', hint:'Type: warp ai — natural language command assistance', validate: c => c.cmd === 'warp ai' },
+      { text:'Learn about Warp Drive: <code>warp drive</code>', hint:'Type: warp drive — share knowledge with your team', validate: c => c.cmd === 'warp drive' },
+      { text:'Learn navigation tips: <code>warp tips</code>', hint:'Type: warp tips — keyboard shortcuts specific to Warp', validate: c => c.cmd === 'warp tips' },
+    ],
+    xp: 80,
+  },
 ];
 
 // ============================================================
@@ -1007,10 +1106,14 @@ const achievementDefs = [
   { id:'env_setter', name:'Configurator', desc:'Set an environment variable', icon:'⚙️' },
   { id:'aliaser', name:'Shortcut King', desc:'Create a command alias', icon:'👑' },
   { id:'speed_demon', name:'Speed Demon', desc:'Complete a lesson in under 90 seconds', icon:'⚡' },
-  { id:'halfway', name:'Halfway There', desc:'Complete 6 chapters', icon:'🏔️' },
-  { id:'graduate', name:'Graduate', desc:'Complete all 12 chapters', icon:'🎖️' },
+  { id:'halfway', name:'Halfway There', desc:'Complete 9 chapters', icon:'🏔️' },
+  { id:'graduate', name:'Graduate', desc:'Complete all 18 chapters', icon:'🎖️' },
   { id:'centurion', name:'Centurion', desc:'Run 100 commands', icon:'💯' },
   { id:'treasure', name:'Treasure Hunter', desc:'Find the hidden treasure file', icon:'🏆' },
+  { id:'shortcut_pro', name:'Shortcut Pro', desc:'Learn 5 keyboard shortcuts', icon:'⌨️' },
+  { id:'networker', name:'Networker', desc:'Use curl or ping', icon:'🌐' },
+  { id:'claude_master', name:'Claude Master', desc:'Explore all Claude Code features', icon:'🤖' },
+  { id:'warp_pilot', name:'Warp Pilot', desc:'Explore all Warp features', icon:'🚀' },
 ];
 
 // ============================================================
@@ -1035,6 +1138,9 @@ let state = {
   filesRead: new Set(),
   manPagesRead: new Set(),
   lessonStartTime: null,
+  shortcutsLearned: new Set(),
+  claudeFeaturesExplored: new Set(),
+  warpFeaturesExplored: new Set(),
 };
 
 // ============================================================
@@ -1193,6 +1299,18 @@ function runCommand(cmd, args, stdin) {
     case 'alias': return cmdAlias(args);
     case 'history': { checkAchievement('historian'); return state.history.map((h,i)=>`  ${i+1}  ${h}`).join('\n'); }
     case 'ps': return 'PID   TTY     TIME  CMD\n  1   tty1    0:00  bash\n  42  tty1    0:00  terminal-academy\n  99  tty1    0:00  ps';
+    case 'jobs': return '[1]+  Stopped                 vim notes.txt\n[2]-  Running                 node server.js &\n[3]   Running                 python3 train.py &';
+    case 'fg': return args[0] ? `Resuming job ${args[0]} in foreground...` : 'fg: current: no such job\n<span class="dim">Usage: fg %job_number (e.g., fg %1 to resume job 1)</span>';
+    case 'bg': return args[0] ? `Resuming job ${args[0]} in background...` : 'bg: current: no such job\n<span class="dim">Usage: bg %job_number (e.g., bg %1 to resume job 1 in background)</span>';
+    case 'kill': return cmdKill(args);
+    case 'top': return cmdTop();
+    case 'shortcut': return cmdShortcut(args);
+    case 'curl': return cmdCurl(args);
+    case 'ping': return cmdPing(args);
+    case 'ssh': return cmdSsh(args);
+    case 'wget': return cmdWget(args);
+    case 'claude': return cmdClaude(args);
+    case 'warp': return cmdWarp(args);
     case 'which': {
       if (!args[0]) return '<span class="error">which: missing argument</span>';
       const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl'};
@@ -1709,6 +1827,437 @@ function cmdAlias(args) {
   return `<span class="error">alias: usage: alias name="command"</span>`;
 }
 
+// --- shortcut ---
+function cmdShortcut(args) {
+  if (!args[0]) return '<span class="error">Usage: shortcut &lt;key-combo&gt;</span>\n<span class="dim">Examples: shortcut ctrl-c, shortcut ctrl-z, shortcut tab</span>';
+  const key = args[0].toLowerCase();
+  const shortcuts = {
+    'ctrl-c': { name:'Ctrl+C — Interrupt / Kill Process', desc:'Sends SIGINT to the running process, killing it immediately. Use this when a command is stuck, running too long, or you want to cancel something.\n\n<span class="dim">Real-world example: You accidentally ran "cat /dev/urandom" and your terminal is spewing garbage. Ctrl+C saves the day.</span>\n<span class="highlight">This is the #1 most important shortcut to know.</span>' },
+    'ctrl-z': { name:'Ctrl+Z — Suspend Process', desc:'Sends SIGTSTP to pause/suspend the current process and return you to the shell. The process is NOT killed — it\'s stopped in the background.\n\n<span class="dim">Use "jobs" to see suspended processes, "fg" to resume in foreground, "bg" to resume in background.</span>\n<span class="highlight">Think of it as a "pause button" for any program.</span>' },
+    'ctrl-l': { name:'Ctrl+L — Clear Screen', desc:'Clears the terminal screen instantly. Same as typing "clear" but faster — your fingers never leave the home row.\n\n<span class="dim">The scrollback buffer is preserved — you can still scroll up to see previous output.</span>\n<span class="highlight">Pro tip: Much faster than typing "clear" every time.</span>' },
+    'ctrl-a': { name:'Ctrl+A — Jump to Start of Line', desc:'Moves the cursor to the very beginning of the current line. Essential when you\'ve typed a long command and need to change something at the start.\n\n<span class="dim">Mnemonic: A is the first letter of the alphabet = start of line.</span>\n<span class="highlight">Pair with Ctrl+E to jump between start and end.</span>' },
+    'ctrl-e': { name:'Ctrl+E — Jump to End of Line', desc:'Moves the cursor to the end of the current line. Useful after using Ctrl+A or arrow keys to navigate.\n\n<span class="dim">Mnemonic: E = End of line.</span>\n<span class="highlight">These come from Emacs keybindings, which readline uses by default.</span>' },
+    'ctrl-r': { name:'Ctrl+R — Reverse History Search', desc:'Opens an interactive reverse search through your command history. Start typing any part of a previous command and it finds matches.\n\n<span class="dim">Press Ctrl+R again to cycle through older matches. Press Enter to run the found command, or Ctrl+C to cancel.</span>\n<span class="highlight">This is a MASSIVE time saver. Never retype long commands again.</span>' },
+    'ctrl-d': { name:'Ctrl+D — Exit / EOF', desc:'Sends an EOF (End Of File) signal. On an empty prompt, it exits the shell (same as typing "exit"). Also used to end input in programs that read from stdin.\n\n<span class="dim">If you\'re stuck in a "cat" or "python" prompt reading input, Ctrl+D ends the input.</span>\n<span class="highlight">Be careful: on an empty prompt, this closes your terminal!</span>' },
+    'ctrl-u': { name:'Ctrl+U — Clear to Start of Line', desc:'Deletes everything from the cursor position to the beginning of the line. Useful for quickly clearing a mistyped command without pressing backspace 50 times.\n\n<span class="dim">The deleted text is saved in a "kill ring" — you can paste it back with Ctrl+Y.</span>\n<span class="highlight">Perfect for when you realize you need a completely different command.</span>' },
+    'ctrl-w': { name:'Ctrl+W — Delete Previous Word', desc:'Deletes the word before the cursor (back to the nearest whitespace). Useful for fixing just the last part of a command without clearing the whole line.\n\n<span class="dim">Much faster than holding backspace. Also saved in the kill ring (Ctrl+Y to paste back).</span>\n<span class="highlight">Combine with Ctrl+U for surgical editing.</span>' },
+    'ctrl-k': { name:'Ctrl+K — Clear to End of Line', desc:'Deletes everything from the cursor to the end of the line. The complement of Ctrl+U.\n\n<span class="dim">Useful when you want to keep the beginning of a command but change the arguments.</span>\n<span class="highlight">Saved in the kill ring — retrieve with Ctrl+Y.</span>' },
+    'tab': { name:'Tab — Auto-Complete', desc:'The shell automatically completes file names, directory names, and command names. Press Tab once for a unique match, twice to see all possibilities.\n\n<span class="dim">Examples:\n  "cd doc" + Tab → "cd documents/"\n  "git com" + Tab → "git commit"\n  "ls /usr/lo" + Tab → "ls /usr/local/"</span>\n<span class="highlight">Tab completion prevents typos and saves massive amounts of typing. Use it constantly!</span>' },
+  };
+  const sc = shortcuts[key];
+  if (!sc) return `<span class="error">Unknown shortcut: ${key}</span>\n<span class="dim">Available: ${Object.keys(shortcuts).join(', ')}</span>`;
+  state.shortcutsLearned.add(key);
+  if (state.shortcutsLearned.size >= 5) checkAchievement('shortcut_pro');
+  return `\n<span class="info">━━━ ${sc.name} ━━━</span>\n\n${sc.desc}\n`;
+}
+
+// --- kill ---
+function cmdKill(args) {
+  if (!args[0]) return '<span class="error">kill: usage: kill PID</span>';
+  const pid = args[args.length - 1];
+  const signal = args.length > 1 ? args[0] : '-TERM';
+  return `<span class="success">Sent signal ${signal.replace('-','SIG')} to process ${pid}</span>\n<span class="dim">Common signals:\n  kill PID      — SIGTERM (graceful shutdown, process can clean up)\n  kill -9 PID   — SIGKILL (force kill, immediate, cannot be caught)\n  kill -STOP PID — SIGSTOP (pause the process)\n  kill -CONT PID — SIGCONT (resume a paused process)</span>`;
+}
+
+// --- top ---
+function cmdTop() {
+  return `<span class="info">top - 12:00:00 up 42 days,  3:14,  1 user,  load average: 0.42, 0.38, 0.35</span>
+Tasks: 128 total,   2 running, 126 sleeping,   0 stopped
+%Cpu(s):  8.3 us,  2.1 sy,  0.0 ni, 88.4 id,  1.2 wa
+MiB Mem:  16384.0 total,   8192.0 free,   5120.0 used,   3072.0 cache
+MiB Swap:  2048.0 total,   2048.0 free,      0.0 used.  10240.0 avail
+
+<span class="warning">  PID USER      PR  NI    VIRT    RES    SHR S  %CPU  %MEM     TIME+ COMMAND</span>
+   42 player    20   0  512000  64000  32000 S  12.3   0.4   2:15.42 terminal-academy
+  101 player    20   0  256000  48000  16000 S   4.5   0.3   0:45.12 node
+  205 player    20   0  128000  32000   8000 S   2.1   0.2   0:12.33 python3
+    1 root      20   0   16000   4000   2000 S   0.0   0.0   0:08.55 init
+  300 player    20   0    8000   2000   1000 S   0.0   0.0   0:00.01 bash
+
+<span class="dim">In a real terminal: press q to quit, k to kill a process, M to sort by memory, P to sort by CPU.</span>`;
+}
+
+// --- curl ---
+function cmdCurl(args) {
+  if (!args[0]) return '<span class="error">curl: no URL specified</span>\n<span class="dim">Usage: curl [options] URL</span>';
+  const url = args[args.length - 1];
+  checkAchievement('networker');
+  return `<span class="dim">  % Total    % Received  Time     Time    Current
+                         Total   Elapsed  Speed</span>
+<span class="dim">100  1256  100  1256    0     0   12560      0 --:--:-- --:--:--  12560</span>
+
+<span class="info">&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;head&gt;&lt;title&gt;Example Domain&lt;/title&gt;&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Example Domain&lt;/h1&gt;
+  &lt;p&gt;This domain is for use in examples. You may use this domain
+  without prior coordination or asking for permission.&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</span>
+
+<span class="dim">Useful curl flags:
+  curl -o file.html URL     — save output to a file
+  curl -I URL               — show only response headers
+  curl -X POST -d "data" URL — send a POST request
+  curl -H "Authorization: Bearer token" URL — add a header</span>`;
+}
+
+// --- ping ---
+function cmdPing(args) {
+  if (!args[0]) return '<span class="error">ping: missing host</span>\n<span class="dim">Usage: ping hostname</span>';
+  const host = args[0];
+  checkAchievement('networker');
+  return `PING ${host} (93.184.216.34): 56 data bytes
+64 bytes from 93.184.216.34: icmp_seq=0 ttl=56 time=11.632 ms
+64 bytes from 93.184.216.34: icmp_seq=1 ttl=56 time=11.726 ms
+64 bytes from 93.184.216.34: icmp_seq=2 ttl=56 time=10.683 ms
+64 bytes from 93.184.216.34: icmp_seq=3 ttl=56 time=12.109 ms
+
+--- ${host} ping statistics ---
+4 packets transmitted, 4 packets received, 0.0% packet loss
+round-trip min/avg/max/stddev = 10.683/11.538/12.109/0.521 ms
+
+<span class="dim">In a real terminal, ping runs forever until you press Ctrl+C.
+Use "ping -c 4 host" to send exactly 4 pings and stop.</span>`;
+}
+
+// --- ssh ---
+function cmdSsh(args) {
+  if (!args[0]) return '<span class="error">usage: ssh [user@]hostname</span>';
+  const target = args[args.length - 1];
+  return `<span class="info">Connecting to ${target}...</span>
+The authenticity of host '${target.split('@').pop()} (10.0.1.42)' can't be established.
+ED25519 key fingerprint is SHA256:xR4jKl9mQ2pN7vBwZ8tH3yF6uA0cE5dG1iO9sLkMnWp.
+Are you sure you want to continue connecting (yes/no/[fingerprint])?
+
+<span class="dim">SSH (Secure Shell) creates an encrypted tunnel to a remote machine.
+Key concepts:
+  ssh user@host           — connect with password
+  ssh -i key.pem user@host — connect with a private key (e.g., AWS EC2)
+  ssh-keygen              — generate a key pair (~/.ssh/id_ed25519)
+  ~/.ssh/config           — save connection shortcuts
+  scp file user@host:path — copy files over SSH</span>`;
+}
+
+// --- wget ---
+function cmdWget(args) {
+  if (!args[0]) return '<span class="error">wget: missing URL</span>\n<span class="dim">Usage: wget URL</span>';
+  const url = args[0];
+  const filename = url.split('/').pop() || 'index.html';
+  return `--  https://example.com/${filename}
+Resolving example.com (example.com)... 93.184.216.34
+Connecting to example.com|93.184.216.34|:443... connected.
+HTTP request sent, awaiting response... 200 OK
+Length: 1256 (1.2K) [text/html]
+Saving to: '${filename}'
+
+<span class="success">${filename}           100%[==================>]   1.23K  --.-KB/s    in 0s</span>
+
+'${filename}' saved [1256/1256]
+
+<span class="dim">wget vs curl:
+  wget — best for downloading files (auto-saves, supports recursive download)
+  curl — best for APIs and custom HTTP requests (more flexible, doesn't save by default)
+
+Useful wget flags:
+  wget -O custom_name.html URL  — save with a custom filename
+  wget -r URL                   — recursive download (whole sites)
+  wget -c URL                   — continue a partial download</span>`;
+}
+
+// --- claude ---
+function cmdClaude(args) {
+  if (!args[0]) return '<span class="dim">Usage: claude &lt;subcommand&gt;\nSubcommands: help, slash, mcp, keybindings, skills, hooks</span>';
+  const sub = args[0].toLowerCase();
+  const features = {
+    help: {
+      title: 'Claude Code — Overview',
+      content: `<span class="highlight">Claude Code</span> is an agentic AI coding tool that lives in your terminal.
+
+<span class="warning">What it can do:</span>
+  • Read and understand your entire codebase
+  • Edit files across your project with precision
+  • Run terminal commands and interpret output
+  • Search code with grep, glob, and semantic understanding
+  • Manage git workflows (commit, PR, review)
+  • Explain complex code and architecture
+
+<span class="warning">Getting started:</span>
+  npm install -g @anthropic-ai/claude-code
+  cd your-project
+  claude
+
+<span class="warning">How it works:</span>
+  Claude reads your project files, understands context, and makes changes.
+  It uses tools like Read, Edit, Bash, Grep, and Glob to navigate your code.
+  You describe what you want in natural language — Claude figures out the rest.`
+    },
+    slash: {
+      title: 'Claude Code — Slash Commands',
+      content: `Slash commands are typed inside Claude Code\'s interactive prompt.
+
+<span class="warning">Key Slash Commands:</span>
+  <span class="highlight">/help</span>          — show available commands and tips
+  <span class="highlight">/compact</span>       — compress conversation context to free up tokens
+  <span class="highlight">/clear</span>         — clear conversation and start fresh
+  <span class="highlight">/cost</span>          — show token usage and cost for this session
+  <span class="highlight">/doctor</span>        — diagnose Claude Code configuration issues
+  <span class="highlight">/init</span>          — create a CLAUDE.md project memory file
+  <span class="highlight">/review</span>        — review a pull request
+  <span class="highlight">/terminal-setup</span> — install Shift+Enter keybinding for newlines
+  <span class="highlight">/vim</span>           — enable vim keybindings for the input field
+
+<span class="dim">Tip: /compact is your best friend in long sessions — it summarizes the
+conversation so Claude stays fast and doesn\'t lose important context.</span>`
+    },
+    mcp: {
+      title: 'Claude Code — MCP (Model Context Protocol)',
+      content: `<span class="highlight">MCP</span> = Model Context Protocol. It\'s a standard that lets Claude connect to external services and tools.
+
+<span class="warning">What MCP does:</span>
+  MCP servers are like "plugins" for Claude. They give Claude new abilities:
+  • Read/write to databases
+  • Interact with APIs (GitHub, Slack, Figma, etc.)
+  • Access specialized tools
+
+<span class="warning">How to use MCP:</span>
+  Configure MCP servers in your project\'s .mcp.json or ~/.claude.json:
+  {
+    "mcpServers": {
+      "my-server": {
+        "command": "npx",
+        "args": ["my-mcp-server"]
+      }
+    }
+  }
+
+<span class="warning">Popular MCP servers:</span>
+  • Filesystem — read/write files outside the project
+  • GitHub — manage issues, PRs, reviews
+  • Postgres/SQLite — query databases
+  • Slack — send messages
+  • Puppeteer — browser automation`
+    },
+    keybindings: {
+      title: 'Claude Code — Keybindings',
+      content: `<span class="warning">Inside Claude Code\'s prompt:</span>
+  <span class="highlight">Enter</span>          — submit your message
+  <span class="highlight">Shift+Enter</span>    — new line (after /terminal-setup)
+  <span class="highlight">Ctrl+C</span>         — cancel current generation
+  <span class="highlight">Ctrl+C (twice)</span> — exit Claude Code
+  <span class="highlight">Up/Down</span>        — cycle through message history
+  <span class="highlight">Tab</span>            — accept autocomplete suggestion
+  <span class="highlight">Esc</span>            — dismiss autocomplete / cancel edit
+
+<span class="warning">During tool use:</span>
+  <span class="highlight">y</span>              — approve the pending tool call
+  <span class="highlight">n</span>              — reject the pending tool call
+  <span class="highlight">a</span>              — approve all tool calls for this session
+
+<span class="dim">Run /terminal-setup to install the Shift+Enter keybinding
+for multi-line input in your terminal.</span>`
+    },
+    skills: {
+      title: 'Claude Code — Skills',
+      content: `<span class="highlight">Skills</span> are specialized capabilities that extend Claude Code.
+
+<span class="warning">What skills do:</span>
+  Skills are like pre-built recipes for common tasks. They combine
+  Claude\'s tools with domain-specific knowledge and workflows.
+
+<span class="warning">Examples of skills:</span>
+  <span class="highlight">/commit</span>        — analyze changes and create a well-formatted git commit
+  <span class="highlight">/review-pr</span>     — review a pull request for issues and improvements
+  <span class="highlight">/pdf</span>           — read and analyze PDF documents
+
+<span class="warning">How skills work:</span>
+  When you invoke a skill (e.g., type "/commit"), Claude loads a
+  specialized instruction set that guides it through the task step by
+  step — reading files, running commands, and producing output.
+
+<span class="dim">Skills are defined in project config or installed via MCP servers.
+Think of them as "macros with intelligence."</span>`
+    },
+    hooks: {
+      title: 'Claude Code — Hooks',
+      content: `<span class="highlight">Hooks</span> are shell commands that run automatically at specific points in Claude\'s workflow.
+
+<span class="warning">Available hook events:</span>
+  <span class="highlight">PreToolUse</span>     — runs before Claude uses a tool (e.g., before editing a file)
+  <span class="highlight">PostToolUse</span>    — runs after a tool completes
+  <span class="highlight">Notification</span>   — runs when Claude sends a notification
+  <span class="highlight">Stop</span>           — runs when Claude finishes a response
+
+<span class="warning">Use cases:</span>
+  • Auto-format code after every file edit (PostToolUse)
+  • Run linting before committing (PreToolUse)
+  • Send a Slack message when a task completes (Stop)
+  • Log all tool usage for auditing (PreToolUse + PostToolUse)
+
+<span class="warning">Configuration (in .claude/settings.json):</span>
+  "hooks": {
+    "PostToolUse": [{
+      "matcher": "Edit",
+      "hooks": [{ "command": "prettier --write $CLAUDE_FILE_PATH" }]
+    }]
+  }
+
+<span class="dim">Hooks let you integrate Claude into your existing dev workflow seamlessly.</span>`
+    },
+  };
+  const feat = features[sub];
+  if (!feat) return `<span class="error">Unknown subcommand: ${sub}</span>\n<span class="dim">Available: help, slash, mcp, keybindings, skills, hooks</span>`;
+  state.claudeFeaturesExplored.add(sub);
+  if (state.claudeFeaturesExplored.size >= 5) checkAchievement('claude_master');
+  return `\n<span class="info">━━━ ${feat.title} ━━━</span>\n\n${feat.content}\n`;
+}
+
+// --- warp ---
+function cmdWarp(args) {
+  if (!args[0]) return '<span class="dim">Usage: warp &lt;subcommand&gt;\nSubcommands: blocks, workflows, ai, drive, themes, tips</span>';
+  const sub = args[0].toLowerCase();
+  const features = {
+    blocks: {
+      title: 'Warp — Blocks',
+      content: `<span class="highlight">Blocks</span> are Warp\'s signature feature — each command and its output is a separate, selectable block.
+
+<span class="warning">What blocks give you:</span>
+  • Click any block to select just that command\'s output
+  • Copy a block\'s output with one click (no more careful mouse selection!)
+  • Share a block\'s output as a permalink
+  • Collapse/expand blocks to manage screen space
+  • Scroll within a single block without losing your place
+
+<span class="warning">Block navigation:</span>
+  <span class="highlight">Cmd+Up/Down</span>   — jump between blocks
+  <span class="highlight">Cmd+Shift+C</span>   — copy current block\'s output
+  <span class="highlight">Click</span>          — select a block
+
+<span class="dim">In a traditional terminal, all output is one continuous stream of text.
+Blocks bring structure and clarity to terminal output.</span>`
+    },
+    workflows: {
+      title: 'Warp — Workflows',
+      content: `<span class="highlight">Workflows</span> are parameterized, saved command sequences you can share with your team.
+
+<span class="warning">What workflows do:</span>
+  • Save complex commands as reusable templates
+  • Add parameters with descriptions and defaults
+  • Share workflows across your team via Warp Drive
+  • Search workflows with natural language
+
+<span class="warning">Example workflow:</span>
+  Name: "Deploy to staging"
+  Command: docker build -t \${image_name} . && docker push \${image_name} && kubectl apply -f k8s/staging.yaml
+  Parameters:
+    image_name: "The Docker image tag" (default: "myapp:staging")
+
+<span class="warning">How to use:</span>
+  Open command palette (Cmd+P) → search for a workflow → fill in parameters → run
+
+<span class="dim">Think of workflows as "smart aliases" that your whole team can use,
+with built-in documentation and parameters.</span>`
+    },
+    ai: {
+      title: 'Warp — AI Features',
+      content: `<span class="highlight">Warp AI</span> is built directly into the terminal, providing natural language command assistance.
+
+<span class="warning">AI capabilities:</span>
+  <span class="highlight"># natural language</span> — type # followed by what you want to do
+    Example: # find all files larger than 100MB
+    Warp suggests: find / -type f -size +100M
+
+  <span class="highlight">AI Command Search</span> — describe what you want in plain English
+  <span class="highlight">Error Explanation</span> — when a command fails, AI explains what went wrong
+  <span class="highlight">Command Correction</span> — suggests fixes for mistyped commands
+
+<span class="warning">How to use:</span>
+  • Type <span class="highlight">#</span> at the prompt to start an AI query
+  • Click "Explain" on any error message
+  • Open AI panel: <span class="highlight">Ctrl+Shift+Space</span>
+
+<span class="dim">The AI understands your context — your OS, your shell, and the commands
+you\'ve recently run — so suggestions are tailored to your situation.</span>`
+    },
+    drive: {
+      title: 'Warp — Warp Drive',
+      content: `<span class="highlight">Warp Drive</span> is a shared workspace for your team\'s terminal knowledge.
+
+<span class="warning">What\'s in Warp Drive:</span>
+  • <span class="highlight">Shared Workflows</span> — team command templates everyone can use
+  • <span class="highlight">Shared Environments</span> — environment variable sets for different projects
+  • <span class="highlight">Shared Notebooks</span> — runnable documentation with commands + notes
+
+<span class="warning">Why it matters:</span>
+  Every team has tribal knowledge: "How do I deploy to staging?" "What\'s
+  the command to reset the dev database?" Warp Drive captures these as
+  searchable, shareable, runnable resources.
+
+<span class="warning">How to use:</span>
+  • Open Warp Drive: <span class="highlight">Cmd+D</span>
+  • Create a workflow → share with your team
+  • Browse your team\'s shared resources
+
+<span class="dim">No more "Hey, what\'s that command for..." messages in Slack.
+Put it in Warp Drive and everyone can find it.</span>`
+    },
+    themes: {
+      title: 'Warp — Themes & Customization',
+      content: `<span class="highlight">Warp</span> supports deep visual customization.
+
+<span class="warning">Built-in themes:</span>
+  • Dracula, Solarized Dark/Light, One Dark, Nord, Monokai
+  • GitHub Dark/Light, Gruvbox, Tokyo Night, and many more
+
+<span class="warning">Custom themes:</span>
+  Create your own theme with a YAML file:
+  accent:  "#00e5ff"
+  background: "#0c0c1d"
+  foreground: "#e0e0e0"
+
+  Place in: ~/.warp/themes/my_theme.yaml
+
+<span class="warning">Other customization:</span>
+  • Font family and size
+  • Cursor style (block, bar, underline)
+  • Opacity and blur (macOS)
+  • Custom prompt (PS1) — or use Starship prompt
+
+<span class="dim">Settings → Appearance to browse and apply themes.
+Warp also supports compact mode for smaller screens.</span>`
+    },
+    tips: {
+      title: 'Warp — Navigation & Productivity Tips',
+      content: `<span class="warning">Essential Warp keyboard shortcuts:</span>
+  <span class="highlight">Cmd+T</span>          — new tab
+  <span class="highlight">Cmd+D</span>          — split pane right
+  <span class="highlight">Cmd+Shift+D</span>    — split pane down
+  <span class="highlight">Cmd+W</span>          — close current pane
+  <span class="highlight">Cmd+[/]</span>        — switch between panes
+  <span class="highlight">Cmd+P</span>          — command palette (search anything!)
+  <span class="highlight">Cmd+K</span>          — clear terminal (better than Ctrl+L)
+  <span class="highlight">Cmd+Shift+F</span>    — search across all terminal output
+  <span class="highlight">Ctrl+R</span>         — search command history
+
+<span class="warning">Productivity features:</span>
+  • <span class="highlight">Clickable links</span> — file paths and URLs are clickable
+  • <span class="highlight">Sticky header</span> — see the running command as you scroll
+  • <span class="highlight">Input editor</span> — multi-line editing with syntax highlighting
+  • <span class="highlight">Completions</span> — rich autocomplete with descriptions
+  • <span class="highlight">Markdown rendering</span> — man pages and help text look beautiful
+
+<span class="dim">Pro tip: Cmd+P (command palette) is Warp\'s Swiss Army knife.
+Search commands, files, workflows, settings — all in one place.</span>`
+    },
+  };
+  const feat = features[sub];
+  if (!feat) return `<span class="error">Unknown subcommand: ${sub}</span>\n<span class="dim">Available: blocks, workflows, ai, drive, themes, tips</span>`;
+  state.warpFeaturesExplored.add(sub);
+  if (state.warpFeaturesExplored.size >= 5) checkAchievement('warp_pilot');
+  return `\n<span class="info">━━━ ${feat.title} ━━━</span>\n\n${feat.content}\n`;
+}
+
 // --- man ---
 function cmdMan(args) {
   if (!args[0]) return 'What manual page do you want?\nUsage: man <command>';
@@ -1763,6 +2312,11 @@ function cmdHelp() {
 <span class="warning">Permissions:</span>      chmod
 <span class="warning">Environment:</span>      env, export, alias
 <span class="warning">System:</span>           whoami, hostname, date, ps, history, clear
+<span class="warning">Process Control:</span>  jobs, fg, bg, kill, top
+<span class="warning">Networking:</span>       curl, ping, ssh, wget
+<span class="warning">Shortcuts:</span>        shortcut &lt;key&gt; (e.g., shortcut ctrl-c)
+<span class="warning">Claude Code:</span>      claude &lt;topic&gt; (help, slash, mcp, skills, hooks)
+<span class="warning">Warp Terminal:</span>    warp &lt;topic&gt; (blocks, workflows, ai, drive, tips)
 <span class="warning">Learning:</span>         man &lt;cmd&gt;, glossary [term], help
 
 <span class="warning">Special Syntax:</span>
@@ -1826,22 +2380,27 @@ inputEl.addEventListener('keydown', e => {
   if (e.key === 'Enter') {
     const val = inputEl.value;
     inputEl.value = '';
+    updateSyntaxHighlight();
     if (val.trim()) handleCommand(val.trim());
   } else if (e.key === 'ArrowUp') {
     e.preventDefault();
     if (historyIdx > 0) { historyIdx--; inputEl.value = state.history[historyIdx]; }
+    updateSyntaxHighlight();
   } else if (e.key === 'ArrowDown') {
     e.preventDefault();
     if (historyIdx < state.history.length - 1) { historyIdx++; inputEl.value = state.history[historyIdx]; }
     else { historyIdx = state.history.length; inputEl.value = ''; }
+    updateSyntaxHighlight();
   } else if (e.key === 'l' && e.ctrlKey) {
     e.preventDefault();
     terminalEl.innerHTML = '';
   } else if (e.key === 'Tab') {
     e.preventDefault();
     tabComplete();
+    updateSyntaxHighlight();
   }
 });
+inputEl.addEventListener('input', updateSyntaxHighlight);
 
 // Simple tab completion
 function tabComplete() {
@@ -1864,6 +2423,86 @@ function tabComplete() {
   } else if (matches.length > 1) {
     printToTerminal(matches.join('  '), 'info');
   }
+}
+
+// ============================================================
+// LIVE SYNTAX HIGHLIGHTING
+// ============================================================
+const validCommands = new Set([
+  'pwd','whoami','hostname','date','clear','echo','ls','cd','cat','head','tail','wc',
+  'touch','mkdir','cp','mv','rm','grep','find','sort','uniq','cut','chmod','env','printenv',
+  'export','alias','history','ps','jobs','fg','bg','kill','top','shortcut','curl','ping',
+  'ssh','wget','claude','warp','which','man','glossary','help','xp','achievements'
+]);
+
+function updateSyntaxHighlight() {
+  const overlay = document.getElementById('syntax-overlay');
+  const val = inputEl.value;
+  if (!val) { overlay.innerHTML = ''; return; }
+
+  // Tokenize for highlighting
+  let html = '';
+  let i = 0;
+  let isFirstCmd = true;
+
+  // Split on pipes and redirects visually
+  while (i < val.length) {
+    // Pipes
+    if (val[i] === '|') {
+      html += '<span class="pipe-text">|</span>';
+      i++; isFirstCmd = true; continue;
+    }
+    // Redirects
+    if (val[i] === '>' && val[i+1] === '>') {
+      html += '<span class="redirect-text">&gt;&gt;</span>';
+      i += 2; continue;
+    }
+    if (val[i] === '>') {
+      html += '<span class="redirect-text">&gt;</span>';
+      i++; continue;
+    }
+    // && and ;
+    if (val[i] === '&' && val[i+1] === '&') {
+      html += '<span class="pipe-text">&amp;&amp;</span>';
+      i += 2; isFirstCmd = true; continue;
+    }
+    if (val[i] === ';') {
+      html += '<span class="pipe-text">;</span>';
+      i++; isFirstCmd = true; continue;
+    }
+    // Spaces
+    if (val[i] === ' ') {
+      html += ' ';
+      i++; continue;
+    }
+    // Quoted strings
+    if (val[i] === '"' || val[i] === "'") {
+      const q = val[i]; let tok = q; i++;
+      while (i < val.length && val[i] !== q) { tok += val[i]; i++; }
+      if (i < val.length) { tok += val[i]; i++; }
+      html += `<span class="string-text">${escapeHtml(tok)}</span>`;
+      isFirstCmd = false; continue;
+    }
+    // Words
+    let word = '';
+    while (i < val.length && val[i] !== ' ' && val[i] !== '|' && val[i] !== '>' && val[i] !== ';' && !(val[i]==='&'&&val[i+1]==='&')) {
+      word += val[i]; i++;
+    }
+    if (isFirstCmd) {
+      // Check if it's a valid command or alias
+      const cmdBase = word.split('/').pop(); // handle ./script
+      const isValid = validCommands.has(cmdBase) || state.aliases[cmdBase];
+      html += `<span class="${isValid ? 'cmd-valid' : 'cmd-invalid'}">${escapeHtml(word)}</span>`;
+      isFirstCmd = false;
+    } else if (word.startsWith('-')) {
+      html += `<span class="flag-text">${escapeHtml(word)}</span>`;
+    } else if (word.startsWith('$')) {
+      html += `<span class="string-text">${escapeHtml(word)}</span>`;
+    } else {
+      html += `<span class="arg-text">${escapeHtml(word)}</span>`;
+    }
+  }
+  overlay.innerHTML = html;
 }
 
 // ============================================================
@@ -1941,7 +2580,7 @@ function validateTask(rawCmd) {
           checkAchievement('speed_demon');
         }
 
-        if (state.completedLessons.size >= 6) checkAchievement('halfway');
+        if (state.completedLessons.size >= 9) checkAchievement('halfway');
         if (state.completedLessons.size >= lessons.length) checkAchievement('graduate');
 
         // Auto-advance after a moment
@@ -1952,7 +2591,7 @@ function validateTask(rawCmd) {
             nextLesson();
           }, 1000);
         } else {
-          printToTerminal(`\n<span class="success">🎓 CONGRATULATIONS! You've completed Terminal Academy!</span>`, 'success');
+          printToTerminal(`\n<span class="success">🎓 CONGRATULATIONS! You've completed all 18 chapters of Terminal Academy!</span>`, 'success');
           printToTerminal(`<span class="info">You're now a terminal power user. The real terminal awaits!</span>`, 'info');
         }
       }
@@ -2753,6 +3392,30 @@ const quizQuestions = {
     { q:'What does "echo $HOME" print?', options:['The word $HOME','Your home directory path','An error','The echo command itself'], correct:1, explain:'The $ prefix tells the shell to substitute the variable\'s value. $HOME contains your home directory path (e.g., /home/player). Without $, it would literally print "HOME".' },
     { q:'What is the difference between .bashrc and .profile?', options:['.bashrc is for Bash, .profile is for Zsh','.bashrc runs on every new shell, .profile runs once at login','They are the same thing','.bashrc is for aliases, .profile is for variables'], correct:1, explain:'.profile runs once when you log in. .bashrc runs every time you open a new Bash shell (including subshells). Most people put their customizations in .bashrc since it always runs.' },
   ],
+  shortcuts: [
+    { q:'What does Ctrl+C do in the terminal?', options:['Copy text to clipboard','Interrupt/kill the running process','Close the terminal','Clear the screen'], correct:1, explain:'Ctrl+C sends SIGINT to the running process, killing it. This is NOT copy — that\'s Cmd+C on macOS or Ctrl+Shift+C in some terminals. Ctrl+C is used to cancel stuck commands.' },
+    { q:'What does Ctrl+Z do in the terminal?', options:['Undo the last command','Close the terminal','Suspend the current process','Delete everything'], correct:2, explain:'Ctrl+Z sends SIGTSTP to suspend (pause) the current process. Use "fg" to resume in the foreground or "bg" to resume in the background. The process is NOT killed.' },
+    { q:'What does Ctrl+R do?', options:['Refresh the terminal','Reverse search through command history','Restart the shell','Redo the last action'], correct:1, explain:'Ctrl+R opens an interactive reverse search. Start typing any part of a previous command and it finds matches from your history. Press Ctrl+R again for older matches.' },
+    { q:'What does Tab do at the terminal prompt?', options:['Inserts 4 spaces','Auto-completes file names and commands','Switches to the next tab','Opens a new window'], correct:1, explain:'Tab triggers auto-completion. The shell completes file names, directory names, and commands. Press Tab once for a unique match, twice to see all possibilities.' },
+    { q:'What does Ctrl+A do?', options:['Select all text','Jump cursor to the start of the line','Open a new terminal','Abort the current command'], correct:1, explain:'Ctrl+A moves the cursor to the very beginning of the current line. This comes from Emacs keybindings, which readline uses. Pair with Ctrl+E (end of line).' },
+    { q:'What is the difference between Ctrl+C and Ctrl+Z?', options:['No difference','Ctrl+C kills the process, Ctrl+Z suspends it','Ctrl+C suspends, Ctrl+Z kills','Ctrl+C copies, Ctrl+Z undoes'], correct:1, explain:'Ctrl+C sends SIGINT (kill). Ctrl+Z sends SIGTSTP (suspend/pause). A suspended process can be resumed with fg or bg, but a killed process is gone.' },
+  ],
+  claudeCode: [
+    { q:'What is Claude Code?', options:['A code editor like VS Code','An AI coding CLI tool from Anthropic','A terminal emulator','A programming language'], correct:1, explain:'Claude Code is Anthropic\'s official CLI for Claude. It\'s an agentic AI coding tool that lives in your terminal, can read your codebase, make edits, and run commands.' },
+    { q:'What does MCP stand for in Claude Code?', options:['Machine Code Protocol','Model Context Protocol','Multi-Channel Processing','Managed Code Pipeline'], correct:1, explain:'MCP = Model Context Protocol. It\'s a standard that lets Claude connect to external services like databases, APIs, and tools through "MCP servers."' },
+    { q:'What does the /compact slash command do?', options:['Compresses files on disk','Summarizes the conversation to free up context space','Minimizes the terminal window','Compiles code'], correct:1, explain:'/compact compresses the conversation context, summarizing it so Claude stays fast and doesn\'t lose important context in long sessions.' },
+    { q:'What are Claude Code hooks?', options:['Git hooks for commits','Shell commands that run at specific points in Claude\'s workflow','Ways to connect to external APIs','Keyboard shortcuts'], correct:1, explain:'Hooks are shell commands configured to run at events like PreToolUse, PostToolUse, Notification, and Stop. For example, auto-formatting after every file edit.' },
+    { q:'How do you install Claude Code?', options:['brew install claude','pip install claude-code','npm install -g @anthropic-ai/claude-code','Download from App Store'], correct:2, explain:'Claude Code is installed via npm: npm install -g @anthropic-ai/claude-code. Then run "claude" in any project directory to start.' },
+    { q:'What is a "skill" in Claude Code?', options:['A difficulty level','A specialized pre-built task recipe (like /commit or /review-pr)','A programming language Claude knows','A certification'], correct:1, explain:'Skills are specialized capabilities that combine Claude\'s tools with domain-specific knowledge. Examples include /commit (git commits) and /review-pr (pull request reviews).' },
+  ],
+  warpTerminal: [
+    { q:'What are "blocks" in Warp?', options:['Code blocks in a file','Separate, selectable command+output groupings','Ad blockers','Workflow templates'], correct:1, explain:'In Warp, each command and its output is a separate "block" you can click, copy, or share. This brings structure to terminal output instead of one continuous stream.' },
+    { q:'What is Warp Drive?', options:['A speed setting','A shared workspace for team terminal knowledge','A file manager','A backup feature'], correct:1, explain:'Warp Drive is a shared workspace where teams store workflows, environments, and notebooks. It captures tribal knowledge like deployment commands and common tasks.' },
+    { q:'How do you trigger Warp AI suggestions?', options:['Type "ai" and press Enter','Type # followed by a natural language description','Press F1','Right-click and select AI'], correct:1, explain:'Type # at the Warp prompt followed by what you want to do (e.g., "# find files larger than 100MB") and Warp AI suggests the right command.' },
+    { q:'What is a Warp Workflow?', options:['A CI/CD pipeline','A parameterized, saved command sequence you can share','A type of shell script','A keyboard macro'], correct:1, explain:'Workflows are saved command templates with parameters, descriptions, and defaults. They can be shared with your team via Warp Drive and searched with natural language.' },
+    { q:'What does Cmd+P do in Warp?', options:['Print the screen','Open the command palette','Paste from clipboard','Open preferences'], correct:1, explain:'Cmd+P opens Warp\'s command palette — a universal search for commands, files, workflows, and settings. It\'s Warp\'s Swiss Army knife.' },
+    { q:'What keyboard shortcut splits a pane in Warp?', options:['Cmd+S','Cmd+D','Ctrl+P','Alt+Tab'], correct:1, explain:'Cmd+D splits the current pane to the right. Cmd+Shift+D splits downward. This lets you run multiple terminal sessions side by side.' },
+  ],
 };
 
 let quizState = {
@@ -2793,6 +3456,9 @@ function renderQuizMenu() {
     search:'🔍 Search (grep & find)',
     permissions:'🔐 Permissions',
     environment:'⚙️ Environment & Config',
+    shortcuts:'⌨️ Keyboard Shortcuts',
+    claudeCode:'🤖 Claude Code',
+    warpTerminal:'🚀 Warp Terminal',
   };
   for (const [cat, label] of Object.entries(categoryNames)) {
     const qs = quizQuestions[cat];
