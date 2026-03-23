@@ -893,7 +893,7 @@ const lessons = [
     chapter: 5, title: 'Creating Files and Directories',
     desc: 'Time to create! Here are your tools:\n\n• <span class="highlight">touch</span> — create an empty file (or update timestamp of existing)\n• <span class="highlight">mkdir</span> — create a directory\n• <span class="highlight">mkdir -p</span> — create nested directories in one command\n• <span class="highlight">echo "text" > file</span> — write text into a file\n• <span class="highlight">echo "text" >> file</span> — APPEND text to a file',
     tasks: [
-      { text:'Create a new file with <code>touch myfile.txt</code>', hint:'Type: touch myfile.txt', validate: (c,s) => c.cmd.startsWith('touch ') && getNode(s.fs, resolvePath(s.cwd, 'myfile.txt'))?.type === 'file' || getNode(s.fs, '/home/player/myfile.txt')?.type === 'file' },
+      { text:'Create a new file with <code>touch myfile.txt</code>', hint:'Type: touch myfile.txt', validate: (c,s) => c.cmd.startsWith('touch ') && (getNode(s.fs, resolvePath(s.cwd, 'myfile.txt'))?.type === 'file' || getNode(s.fs, '/home/player/myfile.txt')?.type === 'file') },
       { text:'Create a directory with <code>mkdir myproject</code>', hint:'Type: mkdir myproject', validate: (c,s) => c.cmd.startsWith('mkdir') && (getNode(s.fs, resolvePath(s.cwd, 'myproject'))?.type === 'dir' || getNode(s.fs, '/home/player/myproject')?.type === 'dir') },
       { text:'Create nested directories with <code>mkdir -p myproject/src/components</code>', hint:'Type: mkdir -p myproject/src/components', validate: (c,s) => c.cmd.includes('mkdir -p') },
       { text:'Write text to a file: <code>echo "Hello World" > myfile.txt</code>', hint:'Use > to write: echo "Hello World" > myfile.txt', validate: c => c.cmd.includes('echo ') && c.cmd.includes('>') && !c.cmd.includes('>>') },
@@ -1044,14 +1044,14 @@ function execCommand(raw, stdinData) {
   const trimmed = raw.trim();
   if (!trimmed) return '';
 
-  // Handle && chaining
-  if (trimmed.includes('&&')) {
+  // Handle && chaining (stops on error, like real shells)
+  if (trimmed.includes('&&') && !trimmed.match(/"[^"]*&&[^"]*"|'[^']*&&[^']*'/)) {
     const parts = trimmed.split('&&').map(s => s.trim()).filter(Boolean);
     let output = '';
     for (const part of parts) {
       const result = execCommand(part, null);
       if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
-      // Simple: just continue (real shells check exit codes)
+      if (result && result.includes('class="error"')) break; // Stop on error
     }
     return output;
   }
@@ -2100,6 +2100,7 @@ function saveState() {
     aliases: state.aliases,
     envVars: state.envVars,
     commandCount: state.commandCount,
+    history: state.history.slice(-200),
     // Challenge state
     challengeCompleted: {},
     challengeTotalCompleted: challengeState.totalCompleted,
@@ -2144,6 +2145,7 @@ function loadState() {
     state.aliases = save.aliases || {};
     state.envVars = { ...state.envVars, ...(save.envVars || {}) };
     state.commandCount = save.commandCount || 0;
+    state.history = save.history || [];
     if (save.completedTasks) {
       for (const [k, v] of Object.entries(save.completedTasks)) {
         state.completedTasks[k] = new Set(v);
@@ -2190,8 +2192,9 @@ function loadState() {
   } catch(e) { return false; }
 }
 
-// Auto-save every 10 seconds
+// Auto-save every 10 seconds + on page close
 setInterval(saveState, 10000);
+window.addEventListener('beforeunload', saveState);
 
 // ============================================================
 // ADVENTURE MODE — "The Ghost in the Machine"
@@ -3073,16 +3076,17 @@ async function doSignup() {
 
   if (data.user && !data.user.confirmed_at) {
     errEl.textContent = '';
-    document.getElementById('auth-overlay').innerHTML = `
-      <div id="auth-box" style="text-align:center;padding:32px">
-        <h2 style="color:var(--green)">Check Your Email!</h2>
-        <p style="color:var(--dim);margin:16px 0;font-size:12px">
+    // Show confirmation message without destroying the auth form
+    document.getElementById('auth-signup-form').innerHTML = `
+      <div style="text-align:center;padding:12px 0">
+        <div style="color:var(--green);font-size:16px;font-weight:bold;margin-bottom:12px">Check Your Email!</div>
+        <p style="color:var(--dim);font-size:12px;line-height:1.6">
           We sent a confirmation link to <strong style="color:var(--cyan)">${email}</strong>.
           Click it to activate your account, then log in.
         </p>
-        <button class="auth-btn" onclick="document.getElementById('auth-overlay').classList.add('hidden');showAuthOverlay();showAuthTab('login')">Go to Login</button>
-        <span class="auth-skip" onclick="skipAuth()">Continue without account →</span>
       </div>`;
+    // Switch to login tab after a moment
+    setTimeout(() => showAuthTab('login'), 5000);
     return;
   }
 
@@ -3173,6 +3177,7 @@ function buildSaveObject() {
     achievements: [...state.achievements],
     aliases: state.aliases, envVars: state.envVars,
     commandCount: state.commandCount,
+    history: state.history.slice(-200),
     advStarted: adventureState.started,
     advCurrentQuest: adventureState.currentQuest,
     advCompletedQuests: [...adventureState.completedQuests],
