@@ -323,7 +323,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
 #welcome-box button:hover { background:var(--cyan); }
 /* ===== AUTH / LOGIN ===== */
 #auth-overlay {
-  position:fixed; inset:0; background:rgba(0,0,0,.85); z-index:90;
+  position:fixed; inset:0; background:rgba(0,0,0,.92); z-index:110;
   display:flex; align-items:center; justify-content:center;
 }
 #auth-overlay.hidden { display:none; }
@@ -457,11 +457,13 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
 </head>
 <body>
 
-<!-- Auth Modal -->
-<div id="auth-overlay" class="hidden">
+<!-- Auth Modal (shown first) -->
+<div id="auth-overlay">
   <div id="auth-box">
-    <h2>Terminal Academy</h2>
-    <div class="auth-subtitle">Save your progress across devices</div>
+    <div style="text-align:center;margin-bottom:16px">
+      <div style="color:var(--green);font-size:22px;font-weight:bold">Terminal <span style="color:var(--cyan)">Academy</span></div>
+      <div class="auth-subtitle">Master the command line, one command at a time</div>
+    </div>
     <div class="auth-tabs">
       <button class="active" onclick="showAuthTab('login')">Log In</button>
       <button onclick="showAuthTab('signup')">Sign Up</button>
@@ -483,7 +485,10 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
       <button class="auth-btn" id="signup-btn" onclick="doSignup()">Create Account</button>
     </div>
     <div class="auth-error" id="auth-error"></div>
-    <span class="auth-skip" onclick="skipAuth()">Continue without account →</span>
+    <div style="margin-top:20px;padding-top:16px;border-top:1px solid var(--border);text-align:center">
+      <button class="auth-btn" onclick="playAsGuest()" style="background:var(--panel2);color:var(--text);border:1px solid var(--border)">Play as Guest</button>
+      <div style="color:var(--dim);font-size:10px;margin-top:6px">Progress saves locally but won't sync across devices</div>
+    </div>
   </div>
 </div>
 
@@ -3005,6 +3010,16 @@ function skipAuth() {
   document.getElementById('auth-overlay').classList.add('hidden');
 }
 
+function playAsGuest() {
+  document.getElementById('auth-overlay').classList.add('hidden');
+  // Show welcome overlay for new guests, or go straight to game for returning guests
+  if (localStorage.getItem('terminalAcademy')) {
+    document.getElementById('welcome-overlay').classList.add('hidden');
+    startGame();
+  }
+  // else: welcome overlay is already visible, user clicks "BEGIN TRAINING"
+}
+
 async function doLogin() {
   if (!sb) return;
   const email = document.getElementById('login-email').value.trim();
@@ -3025,6 +3040,11 @@ async function doLogin() {
   currentUser = data.user;
   document.getElementById('auth-overlay').classList.add('hidden');
   updateUserUI();
+  // If game hasn't started yet, start it
+  if (!document.getElementById('welcome-overlay').classList.contains('hidden')) {
+    document.getElementById('welcome-overlay').classList.add('hidden');
+    startGame();
+  }
   await loadCloudState();
   showToast('Logged in! Progress synced.', 'xp');
 }
@@ -3070,6 +3090,10 @@ async function doSignup() {
   currentUser = data.user;
   document.getElementById('auth-overlay').classList.add('hidden');
   updateUserUI();
+  if (!document.getElementById('welcome-overlay').classList.contains('hidden')) {
+    document.getElementById('welcome-overlay').classList.add('hidden');
+    startGame();
+  }
   await saveCloudState();
   showToast('Account created! Progress will sync automatically.', 'xp');
 }
@@ -3249,11 +3273,30 @@ function startGame() {
 // Click anywhere on terminal focuses input
 document.getElementById('terminal-pane').addEventListener('click', () => inputEl.focus());
 
-// Check for saved progress and skip welcome if exists
-if (localStorage.getItem('terminalAcademy')) {
-  document.getElementById('welcome-overlay').classList.add('hidden');
-  startGame();
-}
+// Init flow: check for existing session or saved progress
+(async function initApp() {
+  // Try to restore Supabase session first
+  if (SUPABASE_URL && SUPABASE_ANON_KEY && typeof window.supabase !== 'undefined') {
+    try {
+      const tmpSb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      const { data } = await tmpSb.auth.getUser();
+      if (data?.user) {
+        // Returning logged-in user — skip auth and welcome
+        document.getElementById('auth-overlay').classList.add('hidden');
+        document.getElementById('welcome-overlay').classList.add('hidden');
+        startGame();
+        return;
+      }
+    } catch(e) {}
+  }
+
+  // No session — check for local progress (returning guest)
+  if (localStorage.getItem('terminalAcademy')) {
+    // Returning guest — show auth overlay (they can log in or play as guest)
+    // Don't auto-skip, let them choose
+  }
+  // New user or returning guest: auth overlay is visible by default
+})();
 </script>
 </body>
 </html>
