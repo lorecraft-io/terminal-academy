@@ -610,6 +610,15 @@ function createFS() {
         player: dir('rwxr-xr-x', {
           '.bashrc': file('rw-r--r--', '# ~/.bashrc\nexport PS1="\\u@\\h:\\w\\$ "\nexport PATH="/usr/local/bin:$PATH"\nalias ll="ls -la"\nalias gs="git status"\n\n# Welcome to your shell config!\n# This file runs every time you open a new terminal.\n'),
           '.profile': file('rw-r--r--', '# ~/.profile\n# This runs once at login.\nexport EDITOR=nano\nexport LANG=en_US.UTF-8\n'),
+          '.zshrc': file('rw-r--r--', '# ~/.zshrc\n# Zsh configuration file — runs on every new shell.\n\nexport PS1="%n@%m:%~$ "\nexport PATH="/usr/local/bin:$PATH"\n\nalias ll="ls -la"\nalias gs="git status"\nalias gp="git push"\n\n# Enable color support\nexport CLICOLOR=1\nexport LSCOLORS=GxFxCxDxBxegedabagaced\n'),
+          '.bash_history': file('rw-------', 'ls -la\ncd documents\ncat notes.txt\ngrep "error" log.txt\nfind . -name "*.txt"\nchmod +x scripts/backup.sh\nmkdir myproject\ncd myproject\ngit init\ntouch README.md\nhistory\n'),
+          '.gitconfig': file('rw-r--r--', '[user]\n    name = player\n    email = player@academy.dev\n[core]\n    editor = nano\n[alias]\n    st = status\n    co = checkout\n    br = branch\n    ci = commit\n    lg = log --oneline --graph\n[init]\n    defaultBranch = main\n'),
+          '.vimrc': file('rw-r--r--', '" ~/.vimrc\nset number\nset relativenumber\nset tabstop=4\nset shiftwidth=4\nset expandtab\nset autoindent\nsyntax on\nset hlsearch\nset incsearch\ncolorscheme desert\n'),
+          '.ssh': dir('rwx------', {
+            'id_ed25519.pub': file('rw-r--r--', 'ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIN0EWBhVWdJci19AyL6q3F0gFzKx0VwpNz4XjkR7zK2L player@academy\n'),
+            'known_hosts': file('rw-r--r--', 'github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl\n'),
+            'config': file('rw-r--r--', '# SSH Config File\n# Shortcuts for SSH connections\n\nHost github\n    HostName github.com\n    User git\n    IdentityFile ~/.ssh/id_ed25519\n\nHost production\n    HostName 10.0.1.100\n    User deploy\n    IdentityFile ~/.ssh/id_ed25519\n    Port 22\n\nHost staging\n    HostName 10.0.1.200\n    User deploy\n    IdentityFile ~/.ssh/id_ed25519\n'),
+          }),
           '.hidden_treasure': file('rw-------', '🏆 You found the hidden treasure! Real terminal pros always check for dotfiles.\n'),
           'documents': dir('rwxr-xr-x', {
             'notes.txt': file('rw-r--r--', 'Terminal Academy Notes\n=====================\n\nDay 1: Learned what a terminal is.\nDay 2: Figured out how to navigate directories!\nDay 3: Files are just text. Everything is a file.\nDay 4: Pipes are magical.\nDay 5: I feel like a hacker.\n'),
@@ -768,6 +777,11 @@ function getNode(fs, path) {
   for (const p of parts) {
     if (!node || node.type !== 'dir' || !node.children[p]) return null;
     node = node.children[p];
+  }
+  // Follow symlinks
+  if (node && node.type === 'symlink') {
+    const targetPath = resolvePath(path.replace(/\/[^/]+$/, '') || '/', node.target);
+    return getNode(fs, targetPath);
   }
   return node;
 }
@@ -1086,6 +1100,223 @@ const lessons = [
     ],
     xp: 80,
   },
+  // CHAPTER 19: TERMINAL COLORS & HIGHLIGHTING
+  {
+    chapter: 19, title: 'Terminal Colors & Highlighting',
+    desc: 'Ever wonder why some items in <span class="highlight">ls</span> output appear in different colors? Your terminal uses <span class="highlight">ANSI escape codes</span> to colorize output. Here\'s what the colors mean:\n\n• <span class="highlight">Blue</span> — directories\n• <span class="highlight">Green</span> — executable files\n• <span class="highlight">Cyan</span> — symbolic links\n• <span class="highlight">Red</span> — broken links or errors\n• <span class="highlight">No color</span> — regular files\n\nThe <span class="code">LS_COLORS</span> environment variable controls these mappings. You can customize them to your taste!',
+    tasks: [
+      { text:'Run <code>ls</code> in your home directory and observe the colors', hint:'Type: ls — directories appear in blue/cyan, executables in green', validate: c => c.cmd === 'ls' },
+      { text:'Run <code>ls -l scripts/</code> to see executable files highlighted', hint:'Type: ls -l scripts/ — notice the green color on executable files', validate: c => c.cmd.includes('ls') && c.cmd.includes('scripts') },
+      { text:'Use the <code>colors</code> command to see a color reference chart', hint:'Type: colors — shows all terminal color meanings', validate: c => c.cmd === 'colors' },
+      { text:'Check the LS_COLORS variable: <code>echo $LS_COLORS</code>', hint:'Type: echo $LS_COLORS — this controls file coloring', validate: c => c.cmd.includes('echo') && c.cmd.includes('LS_COLORS') },
+      { text:'List hidden files to see dim-colored dotfiles: <code>ls -a</code>', hint:'Type: ls -a — dotfiles often appear in a dimmer color', validate: c => c.cmd === 'ls -a' || c.cmd === 'ls -la' || c.cmd === 'ls -al' },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 20: REDIRECTS & STREAMS DEEP DIVE
+  {
+    chapter: 20, title: 'Redirects & Streams Deep Dive',
+    desc: 'Every process has three <span class="highlight">standard streams</span>:\n\n• <span class="highlight">stdin (0)</span> — standard input (keyboard by default)\n• <span class="highlight">stdout (1)</span> — standard output (screen by default)\n• <span class="highlight">stderr (2)</span> — standard error (screen by default)\n\nYou can redirect these streams:\n• <span class="code">&gt;</span> — redirect stdout to a file (overwrite)\n• <span class="code">&gt;&gt;</span> — redirect stdout to a file (append)\n• <span class="code">2&gt;</span> — redirect stderr to a file\n• <span class="code">2&gt;&amp;1</span> — redirect stderr to stdout\n• <span class="code">/dev/null</span> — the "black hole" — discard output\n• <span class="code">tee</span> — write to BOTH stdout and a file simultaneously',
+    tasks: [
+      { text:'Write output to a file: <code>echo "hello" > output.txt</code>', hint:'Type: echo "hello" > output.txt — creates or overwrites the file', validate: c => c.cmd.includes('echo') && c.cmd.includes('>') && !c.cmd.includes('>>') && !c.cmd.includes('2>') },
+      { text:'Append to a file: <code>echo "world" >> output.txt</code>', hint:'Type: echo "world" >> output.txt — adds to the end of the file', validate: c => c.cmd.includes('>>') },
+      { text:'Redirect stderr: <code>cat nonexistent 2> errors.txt</code>', hint:'Type: cat nonexistent 2> errors.txt — errors go to the file instead of screen', validate: c => c.cmd.includes('2>') },
+      { text:'Use tee to split output: <code>echo "logged" | tee log.txt</code>', hint:'Type: echo "logged" | tee log.txt — output goes to both screen AND file', validate: c => c.cmd.includes('tee') },
+      { text:'Verify the file was created: <code>cat output.txt</code>', hint:'Type: cat output.txt — should show both hello and world', validate: c => c.cmd.includes('cat') && c.cmd.includes('output.txt') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 21: WILDCARDS & GLOBBING
+  {
+    chapter: 21, title: 'Wildcards & Globbing',
+    desc: '<span class="highlight">Globbing</span> is the shell\'s pattern matching system. Before a command runs, the shell expands wildcards into matching filenames:\n\n• <span class="code">*</span> — matches any number of characters\n• <span class="code">?</span> — matches exactly one character\n• <span class="code">[abc]</span> — matches any character in the set\n• <span class="code">[0-9]</span> — matches any digit\n• <span class="code">{a,b,c}</span> — brace expansion (not technically a glob, but similar)\n\nGlobs are expanded by the shell BEFORE the command sees them. This is fundamental to how the terminal works!',
+    tasks: [
+      { text:'List all .txt files: <code>ls *.txt</code> or <code>find . -name "*.txt"</code>', hint:'Type: find . -name "*.txt" — the * matches any characters before .txt', validate: c => c.cmd.includes('*.txt') },
+      { text:'Find all .js files: <code>find . -name "*.js"</code>', hint:'Type: find . -name "*.js"', validate: c => c.cmd.includes('find') && c.cmd.includes('*.js') },
+      { text:'Find files starting with "note": <code>find . -name "note*"</code>', hint:'Type: find . -name "note*" — matches notes.txt, notebook.md, etc.', validate: c => c.cmd.includes('find') && c.cmd.includes('note*') },
+      { text:'List all CSV data files: <code>find . -name "*.csv"</code>', hint:'Type: find . -name "*.csv"', validate: c => c.cmd.includes('find') && c.cmd.includes('*.csv') },
+    ],
+    xp: 75,
+  },
+  // CHAPTER 22: SYMLINKS & HARD LINKS
+  {
+    chapter: 22, title: 'Symlinks & Hard Links',
+    desc: 'Links let you create references to files and directories:\n\n• <span class="highlight">Symbolic link (symlink)</span> — <span class="code">ln -s target link_name</span> — a shortcut that points to a path. If the target is deleted, the symlink becomes <span class="highlight">broken</span>.\n• <span class="highlight">Hard link</span> — <span class="code">ln target link_name</span> — another name for the same file data (same <span class="highlight">inode</span>). Deleting the original doesn\'t affect the hard link.\n\nSymlinks are like bookmarks; hard links are like giving a file two names. Use <span class="code">readlink</span> to see where a symlink points.',
+    tasks: [
+      { text:'Create a symlink: <code>ln -s documents/notes.txt my_link</code>', hint:'Type: ln -s documents/notes.txt my_link — creates a symbolic link', validate: c => c.cmd.includes('ln -s') },
+      { text:'Read through the symlink: <code>cat my_link</code>', hint:'Type: cat my_link — works just like reading the original file', validate: c => c.cmd.includes('cat') && c.cmd.includes('my_link') },
+      { text:'Check where the link points: <code>readlink my_link</code>', hint:'Type: readlink my_link — shows the target path', validate: c => c.cmd.includes('readlink') },
+      { text:'Create a hard link: <code>ln documents/todo.txt todo_hardlink</code>', hint:'Type: ln documents/todo.txt todo_hardlink — no -s flag means hard link', validate: c => c.cmd.includes('ln ') && !c.cmd.includes('-s') },
+      { text:'View link details with ls: <code>ls -l my_link</code>', hint:'Type: ls -l my_link — symlinks show -> pointing to their target', validate: c => c.cmd.includes('ls -l') && c.cmd.includes('my_link') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 23: FILE COMPRESSION & ARCHIVES
+  {
+    chapter: 23, title: 'File Compression & Archives',
+    desc: '<span class="highlight">tar</span> (Tape ARchive) bundles multiple files into one archive. Combined with <span class="highlight">gzip</span>, you get the classic <span class="code">.tar.gz</span> format.\n\nKey flags:\n• <span class="code">tar -czf archive.tar.gz files/</span> — <span class="highlight">c</span>reate a g<span class="highlight">z</span>ipped archive to <span class="highlight">f</span>ile\n• <span class="code">tar -xzf archive.tar.gz</span> — e<span class="highlight">x</span>tract a g<span class="highlight">z</span>ipped archive from <span class="highlight">f</span>ile\n• <span class="code">tar -tzf archive.tar.gz</span> — lis<span class="highlight">t</span> contents without extracting\n• <span class="code">gzip file</span> — compress a single file (creates file.gz)\n• <span class="code">gunzip file.gz</span> — decompress a file',
+    tasks: [
+      { text:'Create an archive: <code>tar -czf backup.tar.gz documents/</code>', hint:'Type: tar -czf backup.tar.gz documents/ — c=create, z=gzip, f=file', validate: c => c.cmd.includes('tar') && c.cmd.includes('-c') },
+      { text:'List archive contents: <code>tar -tzf backup.tar.gz</code>', hint:'Type: tar -tzf backup.tar.gz — t=list, z=gzip, f=file', validate: c => c.cmd.includes('tar') && c.cmd.includes('-t') },
+      { text:'Extract an archive: <code>tar -xzf backup.tar.gz</code>', hint:'Type: tar -xzf backup.tar.gz — x=extract, z=gzip, f=file', validate: c => c.cmd.includes('tar') && c.cmd.includes('-x') },
+      { text:'Compress a single file: <code>gzip output.txt</code>', hint:'Type: gzip output.txt — creates output.txt.gz', validate: c => c.cmd.includes('gzip') && !c.cmd.includes('gunzip') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 24: TEXT PROCESSING WITH SED
+  {
+    chapter: 24, title: 'Text Processing with sed',
+    desc: '<span class="highlight">sed</span> (Stream EDitor) transforms text line by line. It\'s a powerhouse for find-and-replace operations and text manipulation.\n\nCommon patterns:\n• <span class="code">sed \'s/old/new/\' file</span> — replace first occurrence per line\n• <span class="code">sed \'s/old/new/g\' file</span> — replace ALL occurrences (<span class="highlight">g</span>lobal)\n• <span class="code">sed -i \'s/old/new/g\' file</span> — edit <span class="highlight">i</span>n-place (modifies the file)\n• <span class="code">sed \'3d\' file</span> — delete line 3\n• <span class="code">sed -n \'2,5p\' file</span> — print only lines 2 through 5\n• <span class="code">sed \'/pattern/d\' file</span> — delete lines matching pattern',
+    tasks: [
+      { text:'Replace text: <code>sed \'s/hello/goodbye/\' documents/notes.txt</code>', hint:'Type: sed \'s/hello/goodbye/\' documents/notes.txt — substitutes first match per line', validate: c => c.cmd.includes('sed') && c.cmd.includes('s/') },
+      { text:'Global replace: <code>sed \'s/the/THE/g\' documents/notes.txt</code>', hint:'Add the g flag for global replacement: sed \'s/the/THE/g\' file', validate: c => c.cmd.includes('sed') && c.cmd.includes('/g') },
+      { text:'Print specific lines: <code>sed -n \'1,3p\' documents/notes.txt</code>', hint:'Type: sed -n \'1,3p\' file — prints lines 1 through 3', validate: c => c.cmd.includes('sed') && c.cmd.includes('-n') && c.cmd.includes('p') },
+      { text:'Delete lines matching a pattern: <code>sed \'/error/d\' documents/projects/data/log.txt</code>', hint:'Type: sed \'/error/d\' file — removes lines containing "error"', validate: c => c.cmd.includes('sed') && c.cmd.includes('/d') },
+      { text:'Pipe with sed: <code>cat documents/notes.txt | sed \'s/ /-/g\'</code>', hint:'Combine cat with sed using a pipe to transform output', validate: c => c.cmd.includes('|') && c.cmd.includes('sed') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 25: TEXT PROCESSING WITH AWK
+  {
+    chapter: 25, title: 'Text Processing with awk',
+    desc: '<span class="highlight">awk</span> is a pattern-scanning and processing language. It excels at working with <span class="highlight">columnar data</span> (like CSV files and log files).\n\nBy default, awk splits each line into fields by whitespace:\n• <span class="code">$0</span> — the entire line\n• <span class="code">$1, $2, $3...</span> — individual fields\n• <span class="code">NR</span> — current line number\n• <span class="code">NF</span> — number of fields in current line\n• <span class="code">-F ","</span> — set field separator to comma\n\nBasic syntax: <span class="code">awk \'pattern { action }\' file</span>',
+    tasks: [
+      { text:'Print the first column: <code>awk \'{print $1}\' documents/projects/data/users.csv</code>', hint:'Type: awk \'{print $1}\' file — prints the first whitespace-separated field', validate: c => c.cmd.includes('awk') && c.cmd.includes('$1') },
+      { text:'Use comma as separator: <code>awk -F "," \'{print $1}\' documents/projects/data/users.csv</code>', hint:'Type: awk -F "," \'{print $1}\' file — -F sets the field delimiter', validate: c => c.cmd.includes('awk') && c.cmd.includes('-F') },
+      { text:'Print line numbers: <code>awk \'{print NR, $0}\' documents/notes.txt</code>', hint:'Type: awk \'{print NR, $0}\' file — NR is the line number', validate: c => c.cmd.includes('awk') && c.cmd.includes('NR') },
+      { text:'Print multiple columns: <code>awk -F "," \'{print $1, $2}\' documents/projects/data/sales.csv</code>', hint:'Separate multiple fields with commas in the print statement', validate: c => c.cmd.includes('awk') && c.cmd.includes('$2') },
+      { text:'Count lines with awk: <code>awk \'END {print NR}\' documents/notes.txt</code>', hint:'Type: awk \'END {print NR}\' file — END runs after all lines are processed', validate: c => c.cmd.includes('awk') && c.cmd.includes('END') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 26: REGULAR EXPRESSIONS
+  {
+    chapter: 26, title: 'Regular Expressions',
+    desc: '<span class="highlight">Regular expressions</span> (regex) are patterns for matching text. They\'re used by grep, sed, awk, and many programming languages.\n\nCore syntax:\n• <span class="code">.</span> — any single character\n• <span class="code">*</span> — zero or more of the previous\n• <span class="code">+</span> — one or more of the previous\n• <span class="code">?</span> — zero or one of the previous\n• <span class="code">^</span> — start of line\n• <span class="code">$</span> — end of line\n• <span class="code">[abc]</span> — character class (a, b, or c)\n• <span class="code">[0-9]</span> — digit range\n• <span class="code">(a|b)</span> — alternation (a or b)\n• <span class="code">\\d \\w \\s</span> — digit, word character, whitespace',
+    tasks: [
+      { text:'Search for lines starting with a word: <code>grep "^[A-Z]" documents/quotes.txt</code>', hint:'The ^ anchor matches the start of a line, [A-Z] matches uppercase', validate: c => c.cmd.includes('grep') && c.cmd.includes('^') },
+      { text:'Find lines ending with a period: <code>grep "\\.$" documents/notes.txt</code>', hint:'The $ anchor matches end of line, \\. matches a literal period', validate: c => c.cmd.includes('grep') && c.cmd.includes('$') },
+      { text:'Match any character: <code>grep "h.t" documents/quotes.txt</code>', hint:'The dot . matches any single character — hat, hit, hot all match', validate: c => c.cmd.includes('grep') && /\w\.\w/.test(c.cmd) },
+      { text:'Use a character class: <code>grep "[0-9]" documents/projects/data/log.txt</code>', hint:'[0-9] matches any digit character', validate: c => c.cmd.includes('grep') && c.cmd.includes('[') && c.cmd.includes(']') },
+      { text:'Search with alternation: <code>grep -E "ERROR|WARNING" documents/projects/data/log.txt</code>', hint:'Use -E for extended regex, then use | for "or"', validate: c => c.cmd.includes('grep') && c.cmd.includes('-E') && c.cmd.includes('|') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 27: COMMAND HISTORY & REVERSE SEARCH
+  {
+    chapter: 27, title: 'Command History & Reverse Search',
+    desc: 'Your shell remembers every command you type. This <span class="highlight">command history</span> is one of the terminal\'s best productivity features.\n\n• <span class="code">history</span> — show all past commands\n• <span class="code">!!</span> — repeat the last command\n• <span class="code">!n</span> — repeat command number n from history\n• <span class="code">!string</span> — repeat the most recent command starting with "string"\n• <span class="code">Ctrl+R</span> — interactive reverse search through history\n• <span class="code">~/.bash_history</span> or <span class="code">~/.zsh_history</span> — where history is saved to disk\n• <span class="code">HISTSIZE</span> — controls how many commands are remembered',
+    tasks: [
+      { text:'View your command history: <code>history</code>', hint:'Type: history — shows numbered list of past commands', validate: c => c.cmd === 'history' },
+      { text:'Check the history file: <code>cat ~/.bash_history</code>', hint:'Type: cat ~/.bash_history — history is persisted here between sessions', validate: c => c.cmd.includes('cat') && c.cmd.includes('history') },
+      { text:'Check the HISTSIZE variable: <code>echo $HISTSIZE</code>', hint:'Type: echo $HISTSIZE — controls max history entries', validate: c => c.cmd.includes('echo') && c.cmd.includes('HISTSIZE') },
+      { text:'Learn about reverse search: <code>shortcut ctrl-r</code>', hint:'Type: shortcut ctrl-r — the fastest way to find past commands', validate: c => c.cmd === 'shortcut ctrl-r' },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 28: DOTFILES & SHELL CONFIGURATION
+  {
+    chapter: 28, title: 'Dotfiles & Shell Configuration',
+    desc: '<span class="highlight">Dotfiles</span> are hidden configuration files that control how your shell and tools behave. They start with a dot (.) and live in your home directory.\n\nKey dotfiles:\n• <span class="code">.bashrc / .zshrc</span> — runs every time you open a new shell (aliases, prompt, PATH)\n• <span class="code">.profile / .bash_profile</span> — runs on login shells only\n• <span class="code">.gitconfig</span> — git settings (name, email, aliases)\n• <span class="code">.vimrc</span> — vim editor settings\n\nThe <span class="code">source</span> command reloads a config file without restarting your shell: <span class="code">source ~/.zshrc</span>',
+    tasks: [
+      { text:'View your shell config: <code>cat ~/.bashrc</code>', hint:'Type: cat ~/.bashrc — see your shell startup configuration', validate: c => c.cmd.includes('cat') && (c.cmd.includes('.bashrc') || c.cmd.includes('.zshrc')) },
+      { text:'View git config: <code>cat ~/.gitconfig</code>', hint:'Type: cat ~/.gitconfig — see your git settings', validate: c => c.cmd.includes('cat') && c.cmd.includes('.gitconfig') },
+      { text:'List all dotfiles: <code>ls -a ~</code> or <code>ls -a</code>', hint:'Type: ls -a — dotfiles are hidden, need -a to see them', validate: c => c.cmd.includes('ls') && c.cmd.includes('-a') },
+      { text:'View your PATH: <code>echo $PATH</code>', hint:'Type: echo $PATH — shows where the shell looks for commands', validate: c => c.cmd.includes('echo') && c.cmd.includes('PATH') },
+      { text:'Source a config file: <code>source ~/.bashrc</code>', hint:'Type: source ~/.bashrc — reloads the config without restarting', validate: c => c.cmd.includes('source') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 29: PACKAGE MANAGERS
+  {
+    chapter: 29, title: 'Package Managers',
+    desc: '<span class="highlight">Package managers</span> install, update, and remove software. Different systems use different ones:\n\n• <span class="highlight">brew</span> (macOS) — <span class="code">brew install node</span>\n• <span class="highlight">apt</span> (Ubuntu/Debian) — <span class="code">apt install nginx</span>\n• <span class="highlight">npm</span> (Node.js) — <span class="code">npm install express</span>\n• <span class="highlight">pip</span> (Python) — <span class="code">pip install requests</span>\n\nCommon operations: <span class="code">install</span>, <span class="code">uninstall</span> (or <span class="code">remove</span>), <span class="code">update</span> / <span class="code">upgrade</span>, <span class="code">search</span>, <span class="code">list</span>\n\nPackage managers handle dependencies automatically — install one thing and it pulls in everything it needs.',
+    tasks: [
+      { text:'Install a package with brew: <code>brew install wget</code>', hint:'Type: brew install wget — installs wget on macOS', validate: c => c.cmd.includes('brew') && c.cmd.includes('install') },
+      { text:'Search for a package: <code>brew search node</code>', hint:'Type: brew search node — finds packages matching "node"', validate: c => c.cmd.includes('brew') && c.cmd.includes('search') },
+      { text:'Install a Python package: <code>pip install requests</code>', hint:'Type: pip install requests — installs the requests library', validate: c => c.cmd.includes('pip') && c.cmd.includes('install') },
+      { text:'Install a package with apt: <code>apt install nginx</code>', hint:'Type: apt install nginx — installs nginx on Ubuntu/Debian', validate: c => c.cmd.includes('apt') && c.cmd.includes('install') },
+      { text:'List installed brew packages: <code>brew list</code>', hint:'Type: brew list — shows all installed Homebrew packages', validate: c => c.cmd.includes('brew') && c.cmd.includes('list') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 30: GIT FROM THE TERMINAL
+  {
+    chapter: 30, title: 'Git from the Terminal',
+    desc: '<span class="highlight">Git</span> is the world\'s most popular version control system. It tracks changes to your code and enables collaboration.\n\nThe essential workflow:\n1. <span class="code">git init</span> — initialize a new repo\n2. <span class="code">git add file</span> — stage changes\n3. <span class="code">git commit -m "message"</span> — save a snapshot\n4. <span class="code">git push</span> — upload to remote (GitHub)\n\nOther key commands:\n• <span class="code">git status</span> — see what\'s changed\n• <span class="code">git log</span> — view commit history\n• <span class="code">git diff</span> — see unstaged changes\n• <span class="code">git branch</span> — list/create branches\n• <span class="code">git checkout -b name</span> — create and switch to a new branch',
+    tasks: [
+      { text:'Initialize a repo: <code>git init</code>', hint:'Type: git init — creates a new git repository', validate: c => c.cmd === 'git init' },
+      { text:'Check repo status: <code>git status</code>', hint:'Type: git status — shows staged, unstaged, and untracked files', validate: c => c.cmd === 'git status' },
+      { text:'Stage a file: <code>git add hello.sh</code>', hint:'Type: git add hello.sh — stages a file for committing', validate: c => c.cmd.includes('git add') },
+      { text:'Commit changes: <code>git commit -m "Initial commit"</code>', hint:'Type: git commit -m "Initial commit" — saves a snapshot with a message', validate: c => c.cmd.includes('git commit') },
+      { text:'View commit history: <code>git log</code>', hint:'Type: git log — shows the commit history', validate: c => c.cmd === 'git log' || c.cmd.startsWith('git log') },
+      { text:'Create a branch: <code>git branch feature</code> or <code>git checkout -b feature</code>', hint:'Type: git branch feature — creates a new branch called "feature"', validate: c => c.cmd.includes('git branch') || c.cmd.includes('git checkout -b') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 31: SSH & REMOTE CONNECTIONS
+  {
+    chapter: 31, title: 'SSH & Remote Connections',
+    desc: '<span class="highlight">SSH</span> (Secure Shell) lets you securely connect to remote machines. It\'s essential for server management and deployment.\n\nKey concepts:\n• <span class="code">ssh-keygen</span> — generate a key pair (public + private)\n• <span class="code">~/.ssh/id_ed25519</span> — your private key (NEVER share this!)\n• <span class="code">~/.ssh/id_ed25519.pub</span> — your public key (add this to servers)\n• <span class="code">~/.ssh/config</span> — save connection shortcuts\n• <span class="code">~/.ssh/known_hosts</span> — fingerprints of servers you\'ve connected to\n• <span class="code">scp</span> — copy files between machines over SSH\n• <span class="code">ssh-agent</span> — manages your keys so you don\'t type passphrases repeatedly',
+    tasks: [
+      { text:'Generate an SSH key pair: <code>ssh-keygen</code>', hint:'Type: ssh-keygen — creates a public/private key pair', validate: c => c.cmd.includes('ssh-keygen') },
+      { text:'View your public key: <code>cat ~/.ssh/id_ed25519.pub</code>', hint:'Type: cat ~/.ssh/id_ed25519.pub — this is what you give to servers/GitHub', validate: c => c.cmd.includes('cat') && c.cmd.includes('.ssh') && c.cmd.includes('.pub') },
+      { text:'Connect to a server: <code>ssh user@server</code>', hint:'Type: ssh user@server — opens an encrypted connection', validate: c => c.cmd.includes('ssh ') && c.cmd.includes('@') },
+      { text:'Copy a file to a remote server: <code>scp file.txt user@server:/path/</code>', hint:'Type: scp file.txt user@server:/path/ — secure copy over SSH', validate: c => c.cmd.includes('scp') },
+      { text:'View SSH config: <code>cat ~/.ssh/config</code>', hint:'Type: cat ~/.ssh/config — saved connection shortcuts', validate: c => c.cmd.includes('cat') && c.cmd.includes('.ssh/config') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 32: DISK & SYSTEM MONITORING
+  {
+    chapter: 32, title: 'Disk & System Monitoring',
+    desc: 'System administrators use these commands daily to check the health of their systems:\n\n• <span class="highlight">df</span> — <span class="highlight">d</span>isk <span class="highlight">f</span>ree — show disk space usage\n• <span class="highlight">du</span> — <span class="highlight">d</span>isk <span class="highlight">u</span>sage — show how much space files/directories use\n• <span class="highlight">top</span> — live process and CPU/memory monitor\n• <span class="highlight">free</span> — show memory usage\n• <span class="highlight">uptime</span> — how long the system has been running\n• <span class="highlight">lsof</span> — list open files (useful for finding what\'s using a port)\n• <span class="highlight">watch</span> — repeat a command every N seconds',
+    tasks: [
+      { text:'Check disk space: <code>df -h</code>', hint:'Type: df -h — the -h flag shows human-readable sizes (GB, MB)', validate: c => c.cmd.includes('df') },
+      { text:'Check directory sizes: <code>du -sh documents/</code>', hint:'Type: du -sh documents/ — s=summary, h=human-readable', validate: c => c.cmd.includes('du') },
+      { text:'View running processes: <code>top</code>', hint:'Type: top — live view of system resource usage', validate: c => c.cmd === 'top' },
+      { text:'Check system uptime: <code>uptime</code>', hint:'Type: uptime — shows how long the system has been running', validate: c => c.cmd === 'uptime' },
+      { text:'Watch a command repeatedly: <code>watch ls</code>', hint:'Type: watch ls — re-runs ls every 2 seconds (press Ctrl+C to stop)', validate: c => c.cmd.includes('watch') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 33: TERMINAL MULTIPLEXERS (TMUX)
+  {
+    chapter: 33, title: 'Terminal Multiplexers (tmux)',
+    desc: '<span class="highlight">tmux</span> (Terminal MUltipleXer) lets you run multiple terminal sessions inside one window. It\'s essential for remote work because sessions <span class="highlight">persist</span> even if you disconnect.\n\nKey concepts:\n• <span class="highlight">Sessions</span> — independent terminal environments\n• <span class="highlight">Windows</span> — like tabs within a session\n• <span class="highlight">Panes</span> — split a window into sections\n• <span class="highlight">Prefix key</span> — <span class="code">Ctrl+B</span> (press before any tmux command)\n\nCommon commands:\n• <span class="code">tmux new -s work</span> — create a session named "work"\n• <span class="code">tmux attach -t work</span> — reattach to session\n• <span class="code">tmux ls</span> — list sessions\n• <span class="code">Ctrl+B %</span> — split pane vertically\n• <span class="code">Ctrl+B "</span> — split pane horizontally',
+    tasks: [
+      { text:'Create a tmux session: <code>tmux new -s work</code>', hint:'Type: tmux new -s work — creates a named session', validate: c => c.cmd.includes('tmux') && c.cmd.includes('new') },
+      { text:'List tmux sessions: <code>tmux ls</code>', hint:'Type: tmux ls — shows all running sessions', validate: c => c.cmd === 'tmux ls' || c.cmd === 'tmux list-sessions' },
+      { text:'Attach to a session: <code>tmux attach -t work</code>', hint:'Type: tmux attach -t work — reconnects to the named session', validate: c => c.cmd.includes('tmux') && c.cmd.includes('attach') },
+      { text:'Learn about tmux shortcuts: <code>tmux help</code>', hint:'Type: tmux help — shows tmux key bindings and commands', validate: c => c.cmd === 'tmux help' },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 34: CRON JOBS & SCHEDULING
+  {
+    chapter: 34, title: 'Cron Jobs & Scheduling',
+    desc: '<span class="highlight">Cron</span> is the time-based job scheduler in Unix. It runs commands automatically on a schedule.\n\nCron syntax: <span class="code">minute hour day month weekday command</span>\n\n• <span class="code">*</span> — every value\n• <span class="code">*/5</span> — every 5 units\n• <span class="code">1,15</span> — at 1 and 15\n• <span class="code">1-5</span> — range from 1 to 5\n\nExamples:\n• <span class="code">0 * * * * command</span> — every hour\n• <span class="code">0 9 * * 1 command</span> — every Monday at 9am\n• <span class="code">*/5 * * * * command</span> — every 5 minutes\n\nShortcuts: <span class="code">@reboot</span>, <span class="code">@daily</span>, <span class="code">@weekly</span>, <span class="code">@hourly</span>',
+    tasks: [
+      { text:'View your crontab: <code>crontab -l</code>', hint:'Type: crontab -l — lists your scheduled cron jobs', validate: c => c.cmd.includes('crontab') && c.cmd.includes('-l') },
+      { text:'Edit your crontab: <code>crontab -e</code>', hint:'Type: crontab -e — opens the crontab editor', validate: c => c.cmd.includes('crontab') && c.cmd.includes('-e') },
+      { text:'Learn cron syntax with an example: <code>crontab example</code>', hint:'Type: crontab example — shows common cron expressions', validate: c => c.cmd.includes('crontab') && c.cmd.includes('example') },
+      { text:'Schedule a daily backup: <code>crontab add "0 2 * * * tar -czf /backup/daily.tar.gz /data"</code>', hint:'Type the full crontab add command with a cron expression', validate: c => c.cmd.includes('crontab') && c.cmd.includes('add') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 35: XARGS & COMMAND SUBSTITUTION
+  {
+    chapter: 35, title: 'xargs & Command Substitution',
+    desc: 'Advanced command chaining techniques for power users:\n\n<span class="highlight">xargs</span> converts stdin into arguments for another command:\n• <span class="code">find . -name "*.txt" | xargs wc -l</span> — count lines in all .txt files\n• <span class="code">echo "a b c" | xargs mkdir</span> — create directories a, b, c\n• <span class="code">xargs -P 4</span> — run up to 4 processes in parallel\n\n<span class="highlight">Command substitution</span> — <span class="code">$(command)</span> — replaces itself with the output of the command:\n• <span class="code">echo "Today is $(date)"</span>\n• <span class="code">files=$(find . -name "*.log")</span>\n• <span class="code">wc -l $(find . -name "*.txt")</span>',
+    tasks: [
+      { text:'Use xargs to count lines in .txt files: <code>find . -name "*.txt" | xargs wc -l</code>', hint:'find produces file paths, xargs passes them as arguments to wc', validate: c => c.cmd.includes('xargs') && c.cmd.includes('wc') },
+      { text:'Create multiple directories with xargs: <code>echo "alpha beta gamma" | xargs mkdir</code>', hint:'echo produces words, xargs passes each as an argument to mkdir', validate: c => c.cmd.includes('xargs') && c.cmd.includes('mkdir') },
+      { text:'Use command substitution: <code>echo "I am $(whoami) on $(hostname)"</code>', hint:'$(command) is replaced by the output of command', validate: c => c.cmd.includes('$(') },
+      { text:'Delete files found by find using xargs: <code>find . -name "*.tmp" | xargs rm</code>', hint:'find locates files, xargs feeds them to rm — very powerful combo', validate: c => c.cmd.includes('xargs') && c.cmd.includes('rm') },
+      { text:'Use xargs with grep: <code>find . -name "*.txt" | xargs grep "hello"</code>', hint:'Search for "hello" in all .txt files using find + xargs + grep', validate: c => c.cmd.includes('xargs') && c.cmd.includes('grep') },
+    ],
+    xp: 100,
+  },
 ];
 
 // ============================================================
@@ -1106,14 +1337,21 @@ const achievementDefs = [
   { id:'env_setter', name:'Configurator', desc:'Set an environment variable', icon:'⚙️' },
   { id:'aliaser', name:'Shortcut King', desc:'Create a command alias', icon:'👑' },
   { id:'speed_demon', name:'Speed Demon', desc:'Complete a lesson in under 90 seconds', icon:'⚡' },
-  { id:'halfway', name:'Halfway There', desc:'Complete 9 chapters', icon:'🏔️' },
-  { id:'graduate', name:'Graduate', desc:'Complete all 18 chapters', icon:'🎖️' },
+  { id:'halfway', name:'Halfway There', desc:'Complete 17 chapters', icon:'🏔️' },
+  { id:'graduate', name:'Graduate', desc:'Complete the first 18 chapters', icon:'🎖️' },
   { id:'centurion', name:'Centurion', desc:'Run 100 commands', icon:'💯' },
   { id:'treasure', name:'Treasure Hunter', desc:'Find the hidden treasure file', icon:'🏆' },
   { id:'shortcut_pro', name:'Shortcut Pro', desc:'Learn 5 keyboard shortcuts', icon:'⌨️' },
   { id:'networker', name:'Networker', desc:'Use curl or ping', icon:'🌐' },
   { id:'claude_master', name:'Claude Master', desc:'Explore all Claude Code features', icon:'🤖' },
   { id:'warp_pilot', name:'Warp Pilot', desc:'Explore all Warp features', icon:'🚀' },
+  { id:'color_aware', name:'Color Theory', desc:'Learn terminal color meanings', icon:'🎨' },
+  { id:'regex_master', name:'Regex Wizard', desc:'Master regular expressions', icon:'🧙' },
+  { id:'git_hero', name:'Git Hero', desc:'Complete a full git workflow', icon:'🌿' },
+  { id:'sysadmin', name:'Sysadmin', desc:'Monitor system resources', icon:'📊' },
+  { id:'automation', name:'Automator', desc:'Set up a cron job', icon:'🤖' },
+  { id:'tmux_user', name:'Multiplexer', desc:'Learn tmux basics', icon:'🪟' },
+  { id:'master', name:'Terminal Master', desc:'Complete all 35 chapters', icon:'👑' },
 ];
 
 // ============================================================
@@ -1133,7 +1371,7 @@ let state = {
   completedTasks: {}, // lessonIdx -> Set of taskIdx
   achievements: new Set(),
   aliases: {},
-  envVars: { HOME:'/home/player', USER:'player', PATH:'/usr/local/bin:/usr/bin:/bin', SHELL:'/bin/bash', EDITOR:'nano', TERM:'xterm-256color', LANG:'en_US.UTF-8', HOSTNAME:'academy' },
+  envVars: { HOME:'/home/player', USER:'player', PATH:'/usr/local/bin:/usr/bin:/bin', SHELL:'/bin/bash', EDITOR:'nano', TERM:'xterm-256color', LANG:'en_US.UTF-8', HOSTNAME:'academy', LS_COLORS:'di=34:ex=32:ln=36:or=31:mi=31:*.tar=33:*.gz=33:*.zip=33', HISTSIZE:'10000', HISTFILE:'/home/player/.bash_history' },
   dirsVisited: new Set(['/home/player']),
   filesRead: new Set(),
   manPagesRead: new Set(),
@@ -1188,12 +1426,21 @@ function execCommand(raw, stdinData) {
   // Handle output redirection
   let redirectFile = null;
   let appendMode = false;
+  let stderrRedirect = false;
   let cmdPart = trimmed;
+  if (trimmed.includes('2>&1')) {
+    cmdPart = trimmed.replace('2>&1', '').trim();
+  }
   if (trimmed.includes('>>')) {
     const idx = trimmed.indexOf('>>');
     cmdPart = trimmed.slice(0, idx).trim();
-    redirectFile = trimmed.slice(idx + 2).trim();
+    redirectFile = trimmed.slice(idx + 2).trim().replace('2>&1', '').trim();
     appendMode = true;
+  } else if (trimmed.includes('2>') && !trimmed.includes('2>&1')) {
+    const idx = trimmed.indexOf('2>');
+    cmdPart = trimmed.slice(0, idx).trim();
+    redirectFile = trimmed.slice(idx + 2).trim();
+    stderrRedirect = true;
   } else if (trimmed.includes('>')) {
     const idx = trimmed.indexOf('>');
     cmdPart = trimmed.slice(0, idx).trim();
@@ -1311,9 +1558,35 @@ function runCommand(cmd, args, stdin) {
     case 'wget': return cmdWget(args);
     case 'claude': return cmdClaude(args);
     case 'warp': return cmdWarp(args);
+    case 'colors': return cmdColors();
+    case 'tee': return cmdTee(args, stdin);
+    case 'ln': return cmdLn(args);
+    case 'readlink': return cmdReadlink(args);
+    case 'tar': return cmdTar(args);
+    case 'gzip': return cmdGzip(args);
+    case 'gunzip': return cmdGunzip(args);
+    case 'sed': return cmdSed(args, stdin);
+    case 'awk': return cmdAwk(args, stdin);
+    case 'source': return cmdSource(args);
+    case 'brew': return cmdBrew(args);
+    case 'apt': return cmdApt(args);
+    case 'pip': return cmdPip(args);
+    case 'npm': return cmdNpm(args);
+    case 'git': return cmdGit(args);
+    case 'ssh-keygen': return cmdSshKeygen(args);
+    case 'scp': return cmdScp(args);
+    case 'df': return cmdDf(args);
+    case 'du': return cmdDu(args);
+    case 'free': return cmdFree();
+    case 'uptime': return cmdUptime();
+    case 'lsof': return cmdLsof(args);
+    case 'watch': return cmdWatch(args);
+    case 'tmux': return cmdTmux(args);
+    case 'crontab': return cmdCrontab(args);
+    case 'xargs': return cmdXargs(args, stdin);
     case 'which': {
       if (!args[0]) return '<span class="error">which: missing argument</span>';
-      const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl'};
+      const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl',tar:'/usr/bin/tar',gzip:'/usr/bin/gzip',gunzip:'/usr/bin/gunzip',sed:'/usr/bin/sed',awk:'/usr/bin/awk',ln:'/bin/ln',readlink:'/usr/bin/readlink',df:'/bin/df',du:'/usr/bin/du',tmux:'/usr/bin/tmux',git:'/usr/bin/git',scp:'/usr/bin/scp','ssh-keygen':'/usr/bin/ssh-keygen',brew:'/usr/local/bin/brew',pip:'/usr/bin/pip',npm:'/usr/local/bin/npm',xargs:'/usr/bin/xargs',crontab:'/usr/bin/crontab',tee:'/usr/bin/tee',free:'/usr/bin/free',uptime:'/usr/bin/uptime',lsof:'/usr/sbin/lsof',watch:'/usr/bin/watch',apt:'/usr/bin/apt'};
       return bins[args[0]] || `${args[0]} not found`;
     }
     case 'man': return cmdMan(args);
@@ -1357,6 +1630,7 @@ function cmdLs(args) {
     const child = node.children[name];
     if (!child) return `<span class="dir-color">${name}</span>`;
     if (child.type === 'dir') return `<span class="dir-color">${name}/</span>`;
+    if (child.type === 'symlink') return `<span class="info">${name}</span>`;
     if (child.permissions && child.permissions.includes('x')) return `<span class="exec-color">${name}</span>`;
     if (name.startsWith('.')) return `<span class="hidden-color">${name}</span>`;
     return `<span class="file-color">${name}</span>`;
@@ -1364,12 +1638,20 @@ function cmdLs(args) {
 }
 
 function formatLong(name, node) {
-  const typeChar = node.type === 'dir' ? 'd' : '-';
+  const typeChar = node.type === 'dir' ? 'd' : (node.type === 'symlink' ? 'l' : '-');
   const perms = node.permissions || 'rw-r--r--';
   const size = node.content ? node.content.length : 4096;
   const date = 'Mar 22 12:00';
-  const display = node.type === 'dir' ? `<span class="dir-color">${name}/</span>` :
-    (perms.includes('x') ? `<span class="exec-color">${name}</span>` : `<span class="file-color">${name}</span>`);
+  let display;
+  if (node.type === 'symlink') {
+    display = `<span class="info">${name}</span> -> ${node.target}`;
+  } else if (node.type === 'dir') {
+    display = `<span class="dir-color">${name}/</span>`;
+  } else if (perms.includes('x')) {
+    display = `<span class="exec-color">${name}</span>`;
+  } else {
+    display = `<span class="file-color">${name}</span>`;
+  }
   return `<span class="perm-color">${typeChar}${perms}</span>  1 player player  ${String(size).padStart(5)}  ${date}  ${display}`;
 }
 
@@ -2258,6 +2540,750 @@ Search commands, files, workflows, settings — all in one place.</span>`
   return `\n<span class="info">━━━ ${feat.title} ━━━</span>\n\n${feat.content}\n`;
 }
 
+// --- colors ---
+function cmdColors() {
+  checkAchievement('color_aware');
+  return `<span class="info">━━━ TERMINAL COLOR REFERENCE ━━━</span>
+
+<span class="dir-color">Blue/Cyan</span>      Directories
+<span class="exec-color">Green</span>          Executable files
+<span class="file-color">White/Default</span>  Regular files
+<span class="hidden-color">Dim/Gray</span>       Hidden files (dotfiles)
+<span class="highlight">Magenta/Pink</span>   Symlinks (in many configs)
+<span class="error">Red</span>            Broken symlinks / errors
+<span class="warning">Yellow</span>         Device files / special files
+<span class="perm-color">Yellow</span>         Permissions in ls -l
+
+<span class="dim">Colors are controlled by the LS_COLORS environment variable.
+Different terminals and themes may display slightly different colors.
+ANSI escape codes: \\033[31m = red, \\033[32m = green, \\033[34m = blue, etc.
+
+Customize with: export LS_COLORS="di=34:ex=32:ln=36"
+  di = directory, ex = executable, ln = symlink</span>`;
+}
+
+// --- tee ---
+function cmdTee(args, stdin) {
+  let appendMode = false;
+  let filePath = null;
+  for (const a of args) {
+    if (a === '-a') appendMode = true;
+    else if (!a.startsWith('-')) filePath = a;
+  }
+  const content = stdin || '';
+  if (filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const { parent, name } = getParentAndName(state.fs, path);
+    if (parent && parent.type === 'dir') {
+      if (appendMode && parent.children[name]) {
+        parent.children[name].content += content + '\n';
+      } else {
+        parent.children[name] = file('rw-r--r--', content + '\n');
+      }
+    }
+  }
+  return content;
+}
+
+// --- ln ---
+function cmdLn(args) {
+  let symbolic = false;
+  const paths = [];
+  for (const a of args) {
+    if (a === '-s') symbolic = true;
+    else if (!a.startsWith('-')) paths.push(a);
+  }
+  if (paths.length < 2) return '<span class="error">ln: missing destination</span>';
+  const target = paths[0];
+  const linkName = paths[1];
+  const linkPath = resolvePath(state.cwd, linkName);
+  const { parent, name } = getParentAndName(state.fs, linkPath);
+  if (!parent) return `<span class="error">ln: cannot create link '${linkName}'</span>`;
+  if (symbolic) {
+    parent.children[name] = { type: 'symlink', target: target, permissions: 'rwxrwxrwx' };
+  } else {
+    const targetPath = resolvePath(state.cwd, target);
+    const targetNode = getNode(state.fs, targetPath);
+    if (!targetNode) return `<span class="error">ln: ${target}: No such file or directory</span>`;
+    if (targetNode.type === 'dir') return '<span class="error">ln: hard links to directories not allowed</span>';
+    parent.children[name] = { type: 'file', content: targetNode.content, permissions: targetNode.permissions };
+  }
+  return '';
+}
+
+// --- readlink ---
+function cmdReadlink(args) {
+  if (!args[0]) return '<span class="error">readlink: missing operand</span>';
+  const path = resolvePath(state.cwd, args[0]);
+  // Get the raw node without following symlinks
+  const parts = path.split('/').filter(Boolean);
+  let node = state.fs['/'];
+  for (const p of parts) {
+    if (!node || node.type !== 'dir' || !node.children[p]) { node = null; break; }
+    node = node.children[p];
+  }
+  if (!node) return `<span class="error">readlink: ${args[0]}: No such file or directory</span>`;
+  if (node.type === 'symlink') return node.target;
+  return `<span class="error">readlink: ${args[0]}: not a symbolic link</span>`;
+}
+
+// --- tar ---
+function cmdTar(args) {
+  if (args.length === 0) return '<span class="error">tar: missing operand</span>\n<span class="dim">Usage: tar -czf archive.tar.gz files/ | tar -xzf archive.tar.gz | tar -tzf archive.tar.gz</span>';
+  const flags = args[0] || '';
+  const archiveName = args[1] || 'archive.tar.gz';
+  const sources = args.slice(2);
+
+  if (flags.includes('c')) {
+    // Create
+    const { parent, name } = getParentAndName(state.fs, resolvePath(state.cwd, archiveName));
+    if (parent && parent.type === 'dir') {
+      parent.children[name] = file('rw-r--r--', `[tar archive: ${sources.join(', ')}]`);
+    }
+    return `<span class="success">Created archive: ${archiveName}</span>\n<span class="dim">${sources.length ? sources.join(', ') : '(files)'} → ${archiveName}</span>`;
+  } else if (flags.includes('t')) {
+    // List
+    return `<span class="info">Contents of ${archiveName}:</span>
+drwxr-xr-x  documents/
+-rw-r--r--  documents/notes.txt
+-rw-r--r--  documents/todo.txt
+-rw-r--r--  documents/quotes.txt
+drwxr-xr-x  documents/projects/
+-rw-r--r--  documents/projects/readme.md
+<span class="dim">(simulated archive contents)</span>`;
+  } else if (flags.includes('x')) {
+    // Extract
+    return `<span class="success">Extracted: ${archiveName}</span>\n<span class="dim">Files extracted to current directory.</span>`;
+  }
+  return '<span class="error">tar: invalid flags</span>\n<span class="dim">Use -c (create), -x (extract), or -t (list). Add -z for gzip, -f for filename.</span>';
+}
+
+// --- gzip ---
+function cmdGzip(args) {
+  if (!args[0]) return '<span class="error">gzip: missing file operand</span>';
+  const target = args[0];
+  const path = resolvePath(state.cwd, target);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">gzip: ${target}: No such file or directory</span>`;
+  if (node.type === 'dir') return `<span class="error">gzip: ${target}: is a directory</span>`;
+  const { parent, name } = getParentAndName(state.fs, path);
+  if (parent) {
+    parent.children[name + '.gz'] = file('rw-r--r--', `[gzip compressed: ${node.content.length} bytes]`);
+    delete parent.children[name];
+  }
+  return `<span class="dim">${target} → ${target}.gz (compressed)</span>`;
+}
+
+// --- gunzip ---
+function cmdGunzip(args) {
+  if (!args[0]) return '<span class="error">gunzip: missing file operand</span>';
+  const target = args[0];
+  if (!target.endsWith('.gz')) return `<span class="error">gunzip: ${target}: unknown suffix -- ignored</span>`;
+  const outName = target.slice(0, -3);
+  const path = resolvePath(state.cwd, target);
+  const { parent, name } = getParentAndName(state.fs, path);
+  const outBaseName = outName.split('/').pop();
+  if (parent) {
+    parent.children[outBaseName] = file('rw-r--r--', '(decompressed content)');
+    delete parent.children[name];
+  }
+  return `<span class="dim">${target} → ${outName} (decompressed)</span>`;
+}
+
+// --- sed ---
+function cmdSed(args, stdin) {
+  let inPlace = false;
+  let expression = null;
+  let filePath = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-i') inPlace = true;
+    else if (args[i] === '-n') { /* quiet mode handled below */ }
+    else if (!expression) expression = args[i];
+    else if (!filePath) filePath = args[i];
+  }
+  if (!expression) return '<span class="error">sed: no expression provided</span>';
+
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">sed: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+
+  // Handle substitution: s/old/new/ or s/old/new/g
+  const subMatch = expression.match(/^s\/(.+?)\/(.*)\/([gi]*)$/);
+  if (subMatch) {
+    const [, pattern, replacement, flags] = subMatch;
+    const regex = new RegExp(pattern, flags.includes('g') ? 'g' : '');
+    const result = content.split('\n').map(line => line.replace(regex, replacement)).join('\n');
+    if (inPlace && filePath) {
+      const path = resolvePath(state.cwd, filePath);
+      const node = getNode(state.fs, path);
+      if (node) node.content = result;
+    }
+    return result;
+  }
+
+  // Handle delete: /pattern/d
+  const delMatch = expression.match(/^\/(.+)\/d$/);
+  if (delMatch) {
+    const regex = new RegExp(delMatch[1]);
+    return content.split('\n').filter(line => !regex.test(line)).join('\n');
+  }
+
+  // Handle print specific lines: -n '2,5p'
+  const printMatch = expression.match(/^(\d+),(\d+)p$/);
+  if (printMatch) {
+    const start = parseInt(printMatch[1]);
+    const end = parseInt(printMatch[2]);
+    return content.split('\n').slice(start - 1, end).join('\n');
+  }
+
+  // Handle delete by line number: 3d
+  const lineDelMatch = expression.match(/^(\d+)d$/);
+  if (lineDelMatch) {
+    const lineNum = parseInt(lineDelMatch[1]);
+    const lines = content.split('\n');
+    lines.splice(lineNum - 1, 1);
+    return lines.join('\n');
+  }
+
+  return content;
+}
+
+// --- awk ---
+function cmdAwk(args, stdin) {
+  let fieldSep = /\s+/;
+  let expression = null;
+  let filePath = null;
+  for (let i = 0; i < args.length; i++) {
+    if (args[i] === '-F' && args[i+1]) {
+      const sep = args[++i];
+      fieldSep = sep === ',' ? /,/ : sep === '\t' ? /\t/ : new RegExp(sep.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    } else if (!expression) expression = args[i];
+    else if (!filePath) filePath = args[i];
+  }
+  if (!expression) return '<span class="error">awk: no program text</span>';
+
+  let content = stdin;
+  if (!content && filePath) {
+    const path = resolvePath(state.cwd, filePath);
+    const node = getNode(state.fs, path);
+    if (!node) return `<span class="error">awk: ${filePath}: No such file or directory</span>`;
+    content = node.content;
+  }
+  if (!content) return '';
+
+  const lines = content.split('\n').filter(Boolean);
+
+  // Handle END block: END {print NR}
+  const endMatch = expression.match(/^END\s*\{(.+)\}$/);
+  if (endMatch) {
+    const body = endMatch[1].trim();
+    if (body.includes('NR')) return String(lines.length);
+    return body;
+  }
+
+  // Handle print with fields: {print $1} or {print $1, $2}
+  const printMatch = expression.match(/^\{print\s+(.+)\}$/);
+  if (printMatch) {
+    const fieldExpr = printMatch[1].trim();
+    return lines.map((line, idx) => {
+      const fields = line.split(fieldSep);
+      return fieldExpr.replace(/\$(\d+)/g, (_, n) => {
+        const num = parseInt(n);
+        if (num === 0) return line;
+        return fields[num - 1] || '';
+      }).replace(/NR/g, String(idx + 1))
+        .replace(/NF/g, String(fields.length))
+        .replace(/,\s*/g, ' ');
+    }).join('\n');
+  }
+
+  return content;
+}
+
+// --- source ---
+function cmdSource(args) {
+  if (!args[0]) return '<span class="error">source: missing filename argument</span>';
+  const filePath = args[0];
+  const path = resolvePath(state.cwd, filePath);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">source: ${filePath}: No such file or directory</span>`;
+  return `<span class="success">Sourced ${filePath}</span>\n<span class="dim">Configuration reloaded. In a real shell, aliases, functions, and variables from the file are now active.</span>`;
+}
+
+// --- brew ---
+function cmdBrew(args) {
+  if (!args[0]) return '<span class="dim">Usage: brew &lt;command&gt;\nCommands: install, uninstall, search, list, update, upgrade, info</span>';
+  const sub = args[0];
+  const pkg = args[1] || '';
+  switch(sub) {
+    case 'install':
+      if (!pkg) return '<span class="error">brew install: missing package name</span>';
+      return `<span class="success">==></span> Downloading ${pkg}...\n<span class="success">==></span> Installing <span class="highlight">${pkg}</span>\n<span class="success">==></span> Summary: /usr/local/Cellar/${pkg}/1.0.0: 42 files, 2.1MB\n<span class="dim">To uninstall: brew uninstall ${pkg}</span>`;
+    case 'uninstall': case 'remove':
+      if (!pkg) return '<span class="error">brew uninstall: missing package name</span>';
+      return `<span class="success">Uninstalling ${pkg}... (1.0.0)</span>`;
+    case 'search':
+      if (!pkg) return '<span class="error">brew search: missing search term</span>';
+      return `<span class="info">==></span> Formulae\n<span class="success">${pkg}</span>    ${pkg}-dev    lib${pkg}\n\n<span class="info">==></span> Casks\n${pkg}-app    ${pkg}-gui`;
+    case 'list':
+      return 'curl\ngit\nnode\npython@3.12\nwget\nvim\ntmux\njq\nripgrep\nfzf';
+    case 'update':
+      return '<span class="success">==></span> Updating Homebrew...\n<span class="success">==></span> Updated 3 taps.\n<span class="dim">Already up-to-date.</span>';
+    case 'upgrade':
+      return '<span class="success">==></span> Upgrading 2 outdated packages:\nnode 20.11.0 -> 20.12.0\npython@3.12 3.12.2 -> 3.12.3';
+    case 'info':
+      if (!pkg) return '<span class="error">brew info: missing package name</span>';
+      return `<span class="highlight">${pkg}</span>: stable 1.0.0\n${pkg} description here\nhttps://${pkg}.dev\n/usr/local/Cellar/${pkg}/1.0.0 (42 files, 2.1MB) *\n  Poured from bottle`;
+    default:
+      return `<span class="error">brew: unknown command: ${sub}</span>`;
+  }
+}
+
+// --- apt ---
+function cmdApt(args) {
+  if (!args[0]) return '<span class="dim">Usage: apt &lt;command&gt; [package]\nCommands: install, remove, update, upgrade, search, list</span>';
+  const sub = args[0];
+  const pkg = args[1] || '';
+  switch(sub) {
+    case 'install':
+      if (!pkg) return '<span class="error">E: No packages specified</span>';
+      return `Reading package lists... Done\nBuilding dependency tree... Done\nThe following NEW packages will be installed:\n  <span class="highlight">${pkg}</span>\n0 upgraded, 1 newly installed, 0 to remove.\nNeed to get 1,234 kB of archives.\n<span class="success">Setting up ${pkg} (1.0.0-1) ...</span>`;
+    case 'remove':
+      if (!pkg) return '<span class="error">E: No packages specified</span>';
+      return `<span class="success">Removing ${pkg} (1.0.0-1) ...</span>`;
+    case 'update':
+      return 'Hit:1 http://archive.ubuntu.com/ubuntu jammy InRelease\nGet:2 http://archive.ubuntu.com/ubuntu jammy-updates InRelease [119 kB]\n<span class="success">Fetched 119 kB in 1s (119 kB/s)\nReading package lists... Done</span>';
+    case 'upgrade':
+      return '2 upgraded, 0 newly installed, 0 to remove.\n<span class="success">Unpacking nginx (1.25.4-1) over (1.25.3-1) ...</span>';
+    case 'search':
+      if (!pkg) return '<span class="error">E: No search term specified</span>';
+      return `Sorting... Done\n<span class="success">${pkg}</span>/jammy 1.0.0-1 amd64\n  ${pkg} description\n<span class="success">${pkg}-dev</span>/jammy 1.0.0-1 amd64\n  ${pkg} development files`;
+    case 'list':
+      return 'Listing... Done\nbash/jammy,now 5.1-6 amd64 [installed]\ncurl/jammy,now 7.81.0-1 amd64 [installed]\ngit/jammy,now 2.34.1-1 amd64 [installed]\nnginx/jammy,now 1.25.4-1 amd64 [installed]';
+    default:
+      return `<span class="error">E: Invalid operation ${sub}</span>`;
+  }
+}
+
+// --- pip ---
+function cmdPip(args) {
+  if (!args[0]) return '<span class="dim">Usage: pip &lt;command&gt; [package]\nCommands: install, uninstall, list, search, freeze</span>';
+  const sub = args[0];
+  const pkg = args[1] || '';
+  switch(sub) {
+    case 'install':
+      if (!pkg) return '<span class="error">ERROR: You must give at least one requirement to install</span>';
+      return `Collecting ${pkg}\n  Downloading ${pkg}-1.0.0-py3-none-any.whl (58 kB)\nInstalling collected packages: ${pkg}\n<span class="success">Successfully installed ${pkg}-1.0.0</span>`;
+    case 'uninstall':
+      if (!pkg) return '<span class="error">ERROR: You must give at least one requirement to uninstall</span>';
+      return `<span class="success">Successfully uninstalled ${pkg}-1.0.0</span>`;
+    case 'list':
+      return 'Package    Version\n---------- -------\npip        24.0\nrequests   2.31.0\nnumpy      1.26.4\npandas     2.2.1\nflask      3.0.2';
+    case 'freeze':
+      return 'flask==3.0.2\nnumpy==1.26.4\npandas==2.2.1\nrequests==2.31.0';
+    default:
+      return `<span class="error">ERROR: unknown command "${sub}"</span>`;
+  }
+}
+
+// --- npm ---
+function cmdNpm(args) {
+  if (!args[0]) return '<span class="dim">Usage: npm &lt;command&gt;\nCommands: install, uninstall, list, search, init, run</span>';
+  const sub = args[0];
+  const pkg = args[1] || '';
+  switch(sub) {
+    case 'install': case 'i':
+      if (!pkg) return 'up to date, audited 342 packages in 2s\n<span class="success">found 0 vulnerabilities</span>';
+      return `\nadded 1 package in 1s\n<span class="success">+ ${pkg}@1.0.0</span>`;
+    case 'uninstall':
+      return `removed 1 package in 0.5s`;
+    case 'list':
+      return 'project@1.0.0\n├── express@4.18.2\n├── react@18.2.0\n├── typescript@5.3.3\n└── webpack@5.90.3';
+    default:
+      return `<span class="error">Unknown command: "${sub}"</span>`;
+  }
+}
+
+// --- git ---
+function cmdGit(args) {
+  if (!args[0]) return '<span class="dim">Usage: git &lt;command&gt;\nCommands: init, add, commit, status, log, diff, branch, checkout, merge, push, pull, clone</span>';
+  const sub = args[0];
+  switch(sub) {
+    case 'init':
+      checkAchievement('git_hero');
+      return '<span class="success">Initialized empty Git repository in ' + state.cwd + '/.git/</span>';
+    case 'status':
+      return `On branch main
+Changes not staged for commit:
+  <span class="error">modified:   hello.sh</span>
+
+Untracked files:
+  <span class="error">loop.sh</span>
+  <span class="error">output.txt</span>
+
+<span class="dim">use "git add <file>" to stage changes</span>`;
+    case 'add':
+      if (!args[1]) return '<span class="error">Nothing specified, nothing added.</span>\n<span class="dim">Usage: git add <file> or git add .</span>';
+      return `<span class="dim">Staged: ${args.slice(1).join(', ')}</span>`;
+    case 'commit':
+      if (!args.includes('-m')) return '<span class="error">error: switch `m\' requires a value</span>\n<span class="dim">Usage: git commit -m "Your commit message"</span>';
+      const msgIdx = args.indexOf('-m') + 1;
+      const msg = args[msgIdx] || 'no message';
+      checkAchievement('git_hero');
+      return `<span class="success">[main abc1234] ${msg}</span>\n 2 files changed, 15 insertions(+), 3 deletions(-)`;
+    case 'log':
+      return `<span class="warning">commit abc1234def5678 (HEAD -> main)</span>
+Author: player <player@academy.dev>
+Date:   ${new Date().toDateString()}
+
+    Initial commit
+
+<span class="warning">commit 9876543210fedcba</span>
+Author: player <player@academy.dev>
+Date:   ${new Date().toDateString()}
+
+    Setup project structure`;
+    case 'diff':
+      return `<span class="error">--- a/hello.sh</span>
+<span class="success">+++ b/hello.sh</span>
+<span class="info">@@ -1,3 +1,5 @@</span>
+ #!/bin/bash
+<span class="success">+echo "Hello from script!"</span>
+<span class="success">+echo "This is new content"</span>
+ echo "original line"`;
+    case 'branch':
+      if (args[1]) return `<span class="success">Created branch '${args[1]}'</span>`;
+      return '* <span class="success">main</span>\n  develop\n  feature/login';
+    case 'checkout':
+      if (args[1] === '-b' && args[2]) return `Switched to a new branch '<span class="success">${args[2]}</span>'`;
+      if (args[1]) return `Switched to branch '<span class="success">${args[1]}</span>'`;
+      return '<span class="error">error: you need to specify a branch</span>';
+    case 'merge':
+      if (!args[1]) return '<span class="error">merge: missing branch name</span>';
+      return `Merge made by the 'ort' strategy.\n 2 files changed, 30 insertions(+)\n<span class="success">Merged '${args[1]}' into main</span>`;
+    case 'push':
+      return `Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Writing objects: 100% (3/3), 312 bytes | 312.00 KiB/s, done.
+<span class="success">To github.com:player/project.git
+   abc1234..def5678  main -> main</span>`;
+    case 'pull':
+      return `remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+Unpacking objects: 100% (3/3), done.
+From github.com:player/project
+<span class="success">Already up to date.</span>`;
+    case 'clone':
+      if (!args[1]) return '<span class="error">You must specify a repository to clone.</span>';
+      const repoName = args[1].split('/').pop().replace('.git', '') || 'repo';
+      return `Cloning into '${repoName}'...
+remote: Enumerating objects: 42, done.
+remote: Total 42, reused 42
+Receiving objects: 100% (42/42), 128.00 KiB, done.
+<span class="success">Repository cloned to ./${repoName}</span>`;
+    default:
+      return `<span class="error">git: '${sub}' is not a git command.</span>\n<span class="dim">Available: init, add, commit, status, log, diff, branch, checkout, merge, push, pull, clone</span>`;
+  }
+}
+
+// --- ssh-keygen ---
+function cmdSshKeygen(args) {
+  return `Generating public/private ed25519 key pair.
+Enter file in which to save the key (/home/player/.ssh/id_ed25519):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/player/.ssh/id_ed25519
+Your public key has been saved in /home/player/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:xR4jKl9mQ2pN7vBwZ8tH3yF6uA0cE5dG1iO9sLkMnWp player@academy
+The key's randomart image is:
++--[ED25519 256]--+
+|     .o+==*o.    |
+|      .=B+o=     |
+|      .+*+. .    |
+|       o+o.o     |
+|      . S.+ .    |
+|       . = o     |
+|        o . E    |
+|         + .     |
+|          o      |
++----[SHA256]-----+
+
+<span class="dim">Your key pair has been generated:
+  Private: ~/.ssh/id_ed25519 (NEVER share this!)
+  Public:  ~/.ssh/id_ed25519.pub (add this to GitHub, servers, etc.)
+
+To add your public key to GitHub:
+  cat ~/.ssh/id_ed25519.pub | pbcopy  (copies to clipboard on macOS)
+  Then: GitHub → Settings → SSH Keys → New SSH Key</span>`;
+}
+
+// --- scp ---
+function cmdScp(args) {
+  if (args.length < 2) return '<span class="error">usage: scp source destination</span>\n<span class="dim">Examples:\n  scp file.txt user@host:/path/    — upload\n  scp user@host:/path/file.txt .   — download\n  scp -r dir/ user@host:/path/     — recursive upload</span>';
+  const src = args[args.length - 2] || args[0];
+  const dst = args[args.length - 1];
+  return `<span class="success">${src} → ${dst}</span>
+${src}       100%  1234     1.2KB/s   00:01
+
+<span class="dim">scp (Secure Copy) uses SSH for encrypted file transfer.
+Useful flags:
+  scp -r dir/ host:/path/  — recursive (copy directories)
+  scp -P 2222 file host:   — use custom SSH port
+  scp -i key.pem file host: — use specific key</span>`;
+}
+
+// --- df ---
+function cmdDf(args) {
+  const human = args.includes('-h');
+  checkAchievement('sysadmin');
+  if (human) {
+    return `Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       100G   45G   55G  45% /
+tmpfs           7.8G  1.2M  7.8G   1% /dev/shm
+/dev/sda2       500G  280G  220G  56% /home
+tmpfs           1.6G   12K  1.6G   1% /run/user/1000`;
+  }
+  return `Filesystem     1K-blocks     Used Available Use% Mounted on
+/dev/sda1      104857600 47185920  57671680  45% /
+tmpfs            8176640     1228   8175412   1% /dev/shm
+/dev/sda2      524288000 293601280 230686720  56% /home`;
+}
+
+// --- du ---
+function cmdDu(args) {
+  let summary = false, human = false, target = '.';
+  for (const a of args) {
+    if (a.includes('s')) summary = true;
+    if (a.includes('h')) human = true;
+    if (!a.startsWith('-')) target = a;
+  }
+  checkAchievement('sysadmin');
+  if (summary && human) return `4.2M\t${target}`;
+  if (summary) return `4300\t${target}`;
+  if (human) {
+    return `1.2K\t${target}/notes.txt
+2.4K\t${target}/projects
+512B\t${target}/todo.txt
+4.2M\t${target}`;
+  }
+  return `12\t${target}/notes.txt
+24\t${target}/projects
+5\t${target}/todo.txt
+4300\t${target}`;
+}
+
+// --- free ---
+function cmdFree() {
+  checkAchievement('sysadmin');
+  return `              total        used        free      shared  buff/cache   available
+Mem:       16384000     5120000     8192000      128000     3072000    10240000
+Swap:       2048000           0     2048000
+
+<span class="dim">Use "free -h" for human-readable output in a real terminal.</span>`;
+}
+
+// --- uptime ---
+function cmdUptime() {
+  return ` 12:00:00 up 42 days,  3:14,  1 user,  load average: 0.42, 0.38, 0.35
+
+<span class="dim">Fields: current time, uptime, logged-in users, load average (1/5/15 min)
+A load average under the number of CPU cores means the system is not overloaded.</span>`;
+}
+
+// --- lsof ---
+function cmdLsof(args) {
+  if (args.includes('-i') || args.length > 0) {
+    return `COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+node      101   player  20u  IPv4  12345      0t0  TCP *:3000 (LISTEN)
+python3   205   player  5u   IPv4  12346      0t0  TCP *:8000 (LISTEN)
+nginx     301   root    6u   IPv4  12347      0t0  TCP *:80 (LISTEN)
+postgres  401   pguser  7u   IPv4  12348      0t0  TCP *:5432 (LISTEN)
+
+<span class="dim">lsof = List Open Files. On Unix, everything is a file — including network connections.
+Useful commands:
+  lsof -i :3000     — what's using port 3000?
+  lsof -u player    — files opened by a user
+  lsof +D /path     — files opened in a directory</span>`;
+  }
+  return `COMMAND   PID   USER   FD   TYPE DEVICE SIZE/OFF NODE NAME
+bash      300   player  cwd   DIR  8,1     4096     / /home/player
+node      101   player  txt   REG  8,1    28736     / /usr/bin/node
+python3   205   player  txt   REG  8,1    17064     / /usr/bin/python3
+
+<span class="dim">lsof lists all open files. Use flags to filter:
+  lsof -i :PORT  — filter by network port
+  lsof -u USER   — filter by user
+  lsof -p PID    — filter by process ID</span>`;
+}
+
+// --- watch ---
+function cmdWatch(args) {
+  if (!args[0]) return '<span class="error">watch: missing command</span>\n<span class="dim">Usage: watch [-n seconds] command\nExample: watch -n 2 ls -la (runs ls -la every 2 seconds)</span>';
+  const cmd = args.join(' ');
+  return `<span class="info">Every 2.0s: ${cmd}</span>    academy: ${new Date().toLocaleTimeString()}
+
+<span class="dim">(Simulated — in a real terminal, watch re-runs the command every 2 seconds.
+Press Ctrl+C to stop.
+
+Useful examples:
+  watch df -h          — monitor disk space
+  watch -n 1 "ls -la"  — watch files change every second
+  watch "ps aux | grep node" — monitor a specific process)</span>`;
+}
+
+// --- tmux ---
+function cmdTmux(args) {
+  if (!args[0]) return '<span class="dim">Usage: tmux &lt;command&gt;\nCommands: new, ls, attach, detach, help, kill-session</span>';
+  const sub = args[0];
+  switch(sub) {
+    case 'new':
+      const sessionName = args.includes('-s') ? args[args.indexOf('-s') + 1] : 'default';
+      checkAchievement('tmux_user');
+      return `<span class="success">Created new tmux session: ${sessionName}</span>
+<span class="dim">You're now inside a tmux session. Key bindings (prefix = Ctrl+B):
+  Ctrl+B %    — split pane vertically
+  Ctrl+B "    — split pane horizontally
+  Ctrl+B o    — switch between panes
+  Ctrl+B d    — detach from session (it keeps running!)
+  Ctrl+B c    — create new window
+  Ctrl+B n/p  — next/previous window
+  Ctrl+B [    — enter scroll mode (q to exit)</span>`;
+    case 'ls': case 'list-sessions':
+      return `<span class="success">work</span>: 3 windows (created Mon Mar 22 10:00:00 2026)
+<span class="success">dev</span>: 1 windows (created Mon Mar 22 11:30:00 2026)
+<span class="success">monitor</span>: 2 windows (created Mon Mar 22 14:00:00 2026)`;
+    case 'attach': case 'a':
+      const target = args.includes('-t') ? args[args.indexOf('-t') + 1] : 'work';
+      checkAchievement('tmux_user');
+      return `<span class="success">Attached to session: ${target}</span>\n<span class="dim">Press Ctrl+B then d to detach again.</span>`;
+    case 'detach':
+      return '<span class="dim">[detached (from session work)]</span>';
+    case 'kill-session':
+      const killTarget = args.includes('-t') ? args[args.indexOf('-t') + 1] : 'work';
+      return `<span class="dim">Killed session: ${killTarget}</span>`;
+    case 'help':
+      checkAchievement('tmux_user');
+      return `<span class="info">━━━ TMUX CHEAT SHEET ━━━</span>
+
+<span class="warning">Session Management:</span>
+  tmux new -s name    Create a named session
+  tmux ls             List sessions
+  tmux attach -t name Reattach to a session
+  tmux kill-session -t name  Kill a session
+  Ctrl+B d            Detach from current session
+
+<span class="warning">Window Management (Ctrl+B prefix):</span>
+  Ctrl+B c            Create new window
+  Ctrl+B n / p        Next / previous window
+  Ctrl+B 0-9          Switch to window by number
+  Ctrl+B ,            Rename current window
+  Ctrl+B &            Close current window
+
+<span class="warning">Pane Management (Ctrl+B prefix):</span>
+  Ctrl+B %            Split vertically (left/right)
+  Ctrl+B "            Split horizontally (top/bottom)
+  Ctrl+B o            Switch to next pane
+  Ctrl+B arrow        Switch pane by direction
+  Ctrl+B x            Close current pane
+  Ctrl+B z            Zoom/unzoom current pane
+
+<span class="dim">Why tmux matters: If you SSH into a server and get disconnected,
+your tmux session keeps running. Just reattach when you reconnect!</span>`;
+    default:
+      return `<span class="error">tmux: unknown command: ${sub}</span>`;
+  }
+}
+
+// --- crontab ---
+function cmdCrontab(args) {
+  if (!args[0]) return '<span class="dim">Usage: crontab [-l | -e | -r | example | add "expression"]\nThe cron daemon runs scheduled commands automatically.</span>';
+  const sub = args[0];
+  switch(sub) {
+    case '-l':
+      checkAchievement('automation');
+      return `# Terminal Academy crontab
+# m h dom mon dow command
+0 * * * * /usr/bin/cleanup.sh
+30 2 * * * /usr/bin/backup.sh
+*/15 * * * * /usr/bin/health-check.sh
+0 9 * * 1-5 echo "Good morning!" >> /var/log/greetings.log
+
+<span class="dim">Fields: minute(0-59) hour(0-23) day(1-31) month(1-12) weekday(0-7, 0=Sun)</span>`;
+    case '-e':
+      checkAchievement('automation');
+      return `<span class="info">Opening crontab editor...</span>
+
+<span class="dim">In a real terminal, this opens your crontab in your $EDITOR (usually vim or nano).
+Each line is one scheduled job in the format:
+
+  ┌───── minute (0-59)
+  │ ┌───── hour (0-23)
+  │ │ ┌───── day of month (1-31)
+  │ │ │ ┌───── month (1-12)
+  │ │ │ │ ┌───── day of week (0-7, Sun=0 or 7)
+  │ │ │ │ │
+  * * * * * command to execute
+
+Save and exit to apply changes. Use crontab -l to verify.</span>`;
+    case '-r':
+      return '<span class="warning">Removed all cron jobs for player.</span>';
+    case 'example':
+      checkAchievement('automation');
+      return `<span class="info">━━━ CRON EXPRESSION EXAMPLES ━━━</span>
+
+<span class="warning">Expression          Meaning</span>
+* * * * *           Every minute
+*/5 * * * *         Every 5 minutes
+0 * * * *           Every hour (at minute 0)
+0 9 * * *           Every day at 9:00 AM
+0 9 * * 1-5         Weekdays at 9:00 AM
+0 0 1 * *           First of every month at midnight
+0 0 * * 0           Every Sunday at midnight
+30 2 * * *          Every day at 2:30 AM
+
+<span class="warning">Shortcuts:</span>
+@reboot             Run once at startup
+@daily              Same as 0 0 * * *
+@weekly             Same as 0 0 * * 0
+@hourly             Same as 0 * * * *
+@monthly            Same as 0 0 1 * *
+
+<span class="dim">Pro tip: Use https://crontab.guru to test expressions visually!</span>`;
+    case 'add':
+      checkAchievement('automation');
+      const expr = args.slice(1).join(' ');
+      return `<span class="success">Added cron job: ${expr}</span>\n<span class="dim">Use crontab -l to verify your cron jobs.</span>`;
+    default:
+      return `<span class="error">crontab: invalid option -- '${sub}'</span>\n<span class="dim">Usage: crontab [-l | -e | -r]</span>`;
+  }
+}
+
+// --- xargs ---
+function cmdXargs(args, stdin) {
+  if (!args[0] && !stdin) return '<span class="error">xargs: missing command</span>\n<span class="dim">Usage: command | xargs other_command\nExample: find . -name "*.txt" | xargs wc -l</span>';
+  const cmd = args[0] || 'echo';
+  const cmdArgs = args.slice(1);
+  if (!stdin) return `<span class="dim">(waiting for input... in a real terminal, xargs reads from stdin)\nUsage: command | xargs ${cmd}</span>`;
+
+  // Split stdin into arguments and run the command
+  const items = stdin.split('\n').filter(Boolean);
+  let output = '';
+  for (const item of items) {
+    const cleanItem = item.replace(/<[^>]*>/g, '').trim();
+    if (cleanItem) {
+      const result = runCommand(cmd, [...cmdArgs, cleanItem], null);
+      if (result) output += (output ? '\n' : '') + result;
+    }
+  }
+  return output || `<span class="dim">xargs: ran ${cmd} on ${items.length} items</span>`;
+}
+
 // --- man ---
 function cmdMan(args) {
   if (!args[0]) return 'What manual page do you want?\nUsage: man <command>';
@@ -2306,14 +3332,20 @@ function cmdHelp() {
 <span class="warning">Navigation:</span>       pwd, cd, ls
 <span class="warning">File Reading:</span>     cat, head, tail, wc
 <span class="warning">File Creation:</span>    touch, mkdir, echo (with > or >>)
-<span class="warning">File Management:</span>  cp, mv, rm
+<span class="warning">File Management:</span>  cp, mv, rm, ln, readlink
 <span class="warning">Search:</span>           grep, find, which
-<span class="warning">Text Processing:</span>  sort, uniq, cut
+<span class="warning">Text Processing:</span>  sort, uniq, cut, sed, awk, xargs, tee
 <span class="warning">Permissions:</span>      chmod
-<span class="warning">Environment:</span>      env, export, alias
-<span class="warning">System:</span>           whoami, hostname, date, ps, history, clear
+<span class="warning">Environment:</span>      env, export, alias, source
+<span class="warning">System:</span>           whoami, hostname, date, ps, history, clear, colors
 <span class="warning">Process Control:</span>  jobs, fg, bg, kill, top
-<span class="warning">Networking:</span>       curl, ping, ssh, wget
+<span class="warning">Monitoring:</span>       df, du, free, uptime, lsof, watch
+<span class="warning">Archives:</span>         tar, gzip, gunzip
+<span class="warning">Networking:</span>       curl, ping, ssh, scp, ssh-keygen, wget
+<span class="warning">Packages:</span>        brew, apt, pip, npm
+<span class="warning">Version Control:</span>  git (init, add, commit, status, log, diff, branch...)
+<span class="warning">Multiplexer:</span>     tmux (new, ls, attach, help)
+<span class="warning">Scheduling:</span>      crontab (-l, -e, example, add)
 <span class="warning">Shortcuts:</span>        shortcut &lt;key&gt; (e.g., shortcut ctrl-c)
 <span class="warning">Claude Code:</span>      claude &lt;topic&gt; (help, slash, mcp, skills, hooks)
 <span class="warning">Warp Terminal:</span>    warp &lt;topic&gt; (blocks, workflows, ai, drive, tips)
@@ -2432,7 +3464,10 @@ const validCommands = new Set([
   'pwd','whoami','hostname','date','clear','echo','ls','cd','cat','head','tail','wc',
   'touch','mkdir','cp','mv','rm','grep','find','sort','uniq','cut','chmod','env','printenv',
   'export','alias','history','ps','jobs','fg','bg','kill','top','shortcut','curl','ping',
-  'ssh','wget','claude','warp','which','man','glossary','help','xp','achievements'
+  'ssh','wget','claude','warp','which','man','glossary','help','xp','achievements',
+  'colors','tee','ln','readlink','tar','gzip','gunzip','sed','awk','source','brew','apt',
+  'pip','npm','git','ssh-keygen','scp','df','du','free','uptime','lsof','watch',
+  'tmux','crontab','xargs'
 ]);
 
 function updateSyntaxHighlight() {
@@ -2580,8 +3615,9 @@ function validateTask(rawCmd) {
           checkAchievement('speed_demon');
         }
 
-        if (state.completedLessons.size >= 9) checkAchievement('halfway');
-        if (state.completedLessons.size >= lessons.length) checkAchievement('graduate');
+        if (state.completedLessons.size >= 17) checkAchievement('halfway');
+        if (state.completedLessons.size >= 18) checkAchievement('graduate');
+        if (state.completedLessons.size >= lessons.length) checkAchievement('master');
 
         // Auto-advance after a moment
         if (state.currentLesson < lessons.length - 1) {
@@ -2591,8 +3627,8 @@ function validateTask(rawCmd) {
             nextLesson();
           }, 1000);
         } else {
-          printToTerminal(`\n<span class="success">🎓 CONGRATULATIONS! You've completed all 18 chapters of Terminal Academy!</span>`, 'success');
-          printToTerminal(`<span class="info">You're now a terminal power user. The real terminal awaits!</span>`, 'info');
+          printToTerminal(`\n<span class="success">🎓 CONGRATULATIONS! You've completed all ${lessons.length} chapters of Terminal Academy!</span>`, 'success');
+          printToTerminal(`<span class="info">You're now a terminal master. The real terminal awaits!</span>`, 'info');
         }
       }
       break; // Only complete one task per command
