@@ -726,8 +726,18 @@ function createFS() {
       }),
       etc: dir('rwxr-xr-x', {
         'hosts': file('rw-r--r--', '127.0.0.1    localhost\n255.255.255.255  broadcasthost\n::1              localhost\n'),
-        'passwd': file('rw-r--r--', 'root:x:0:0:root:/root:/bin/bash\nplayer:x:1000:1000:Player:/home/player:/bin/bash\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\n'),
+        'passwd': file('rw-r--r--', 'root:x:0:0:root:/root:/bin/bash\nplayer:x:1000:1000:Player:/home/player:/bin/bash\nnobody:x:65534:65534:nobody:/nonexistent:/usr/sbin/nologin\nwww-data:x:33:33:www-data:/var/www:/usr/sbin/nologin\n'),
+        'group': file('rw-r--r--', 'root:x:0:\nstaff:x:20:player\nadmin:x:80:player\nwheel:x:0:root,player\ndeveloper:x:100:player\nwww-data:x:33:\n'),
         'shells': file('rw-r--r--', '/bin/sh\n/bin/bash\n/bin/zsh\n/usr/bin/fish\n'),
+        'fstab': file('rw-r--r--', '# <file system>  <mount point>  <type>  <options>       <dump>  <pass>\n/dev/disk0s2     /              apfs    rw,noatime      0       1\n/dev/disk0s1     /boot/efi      vfat    defaults        0       2\ntmpfs            /tmp           tmpfs   defaults        0       0\n'),
+      }),
+      dev: dir('rwxr-xr-x', {
+        'null': file('rw-rw-rw-', ''),
+        'zero': file('rw-rw-rw-', ''),
+        'urandom': file('rw-rw-rw-', ''),
+        'stdin': file('rw-rw-rw-', ''),
+        'stdout': file('rw-rw-rw-', ''),
+        'stderr': file('rw-rw-rw-', ''),
       }),
       usr: dir('rwxr-xr-x', {
         bin: dir('rwxr-xr-x', {}),
@@ -738,6 +748,8 @@ function createFS() {
       var: dir('rwxr-xr-x', {
         log: dir('rwxr-xr-x', {
           'system.log': file('rw-r-----', '[2024-01-15 00:00:01] System boot complete\n[2024-01-15 00:00:02] Loading kernel modules\n[2024-01-15 00:00:03] Network interfaces up\n[2024-01-15 00:00:05] SSH daemon started\n[2024-01-15 06:00:00] Cron job: /etc/cron.daily/logrotate\n[2024-01-15 06:00:01] Log rotation completed\n'),
+          'syslog': file('rw-r-----', 'Mar 23 08:00:01 academy sshd[1234]: Server listening on 0.0.0.0 port 22\nMar 23 08:00:02 academy nginx[5678]: Started\nMar 23 08:01:15 academy node[9012]: Server running on port 3000\nMar 23 08:05:00 academy CRON[2345]: (player) CMD (/usr/bin/cleanup.sh)\nMar 23 08:10:30 academy kernel: [UFW BLOCK] IN=en0 SRC=10.0.0.5\nMar 23 09:00:00 academy systemd[1]: Starting Daily Cleanup...\n'),
+          'auth.log': file('rw-r-----', 'Mar 23 08:00:01 academy sshd[1234]: Accepted publickey for player\nMar 23 08:15:00 academy sudo: player : TTY=tty1 ; PWD=/home/player ; COMMAND=/bin/ls\nMar 23 09:30:00 academy sshd[5678]: Failed password for root from 10.0.0.99\n'),
         }),
       }),
       tmp: dir('rwxrwxrwt', {}),
@@ -1317,6 +1329,599 @@ const lessons = [
     ],
     xp: 100,
   },
+  // CHAPTER 36: VIM SURVIVAL GUIDE
+  {
+    chapter: 36, title: 'Vim Survival Guide',
+    desc: '<span class="highlight">Vim</span> is the legendary modal text editor found on virtually every Unix system. It\'s incredibly powerful but famously hard to exit. Vim has multiple <span class="highlight">modes</span>:\n\n• <span class="highlight">Normal mode</span> — default mode for navigation and commands (press <span class="code">Esc</span>)\n• <span class="highlight">Insert mode</span> — for typing text (press <span class="code">i</span>)\n• <span class="highlight">Visual mode</span> — for selecting text (press <span class="code">v</span>)\n• <span class="highlight">Command mode</span> — for running ex commands (press <span class="code">:</span>)\n\nEssential commands:\n• <span class="code">:wq</span> — save and quit\n• <span class="code">:q!</span> — quit without saving\n• <span class="code">hjkl</span> — left/down/up/right navigation\n• <span class="code">dd</span> — delete a line, <span class="code">yy</span> — yank (copy) a line, <span class="code">p</span> — paste\n• <span class="code">/search</span> — search for text, <span class="code">:set number</span> — show line numbers',
+    tasks: [
+      { text:'Open a file in vim: <code>vim documents/notes.txt</code>', hint:'Type: vim documents/notes.txt — opens the file in vim', validate: c => c.cmd.includes('vim') && c.cmd.includes('.txt') },
+      { text:'Save and quit vim: <code>vim :wq</code>', hint:'Type: vim :wq — the classic save-and-exit command', validate: c => c.cmd.includes('vim') && c.cmd.includes(':wq') },
+      { text:'Quit without saving: <code>vim :q!</code>', hint:'Type: vim :q! — force quit, discarding changes', validate: c => c.cmd.includes('vim') && c.cmd.includes(':q!') },
+      { text:'Search in vim: <code>vim /search</code>', hint:'Type: vim /search — finds text in the current file', validate: c => c.cmd.includes('vim') && c.cmd.includes('/') },
+      { text:'Learn vim keybindings: <code>vim help</code>', hint:'Type: vim help — shows a cheat sheet of vim commands', validate: c => c.cmd === 'vim help' },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 37: NANO EDITOR
+  {
+    chapter: 37, title: 'nano Editor',
+    desc: '<span class="highlight">nano</span> is the beginner-friendly terminal text editor. Unlike vim, it shows keyboard shortcuts at the bottom of the screen.\n\nKey shortcuts (^ means Ctrl):\n• <span class="code">Ctrl+O</span> — write Out (save)\n• <span class="code">Ctrl+X</span> — exit\n• <span class="code">Ctrl+W</span> — search (Where is)\n• <span class="code">Ctrl+K</span> — cut the current line\n• <span class="code">Ctrl+U</span> — uncut (paste) the line\n• <span class="code">Ctrl+G</span> — help screen\n\nConfig file: <span class="code">~/.nanorc</span> — customize syntax highlighting, tab size, and more.',
+    tasks: [
+      { text:'Open a file in nano: <code>nano documents/notes.txt</code>', hint:'Type: nano documents/notes.txt — opens the file for editing', validate: c => c.cmd.includes('nano') && !c.cmd.includes('help') },
+      { text:'Learn nano shortcuts: <code>nano help</code>', hint:'Type: nano help — shows all nano keyboard shortcuts', validate: c => c.cmd === 'nano help' },
+      { text:'View nano config: <code>cat .nanorc</code>', hint:'Type: cat .nanorc — shows the nano configuration file (or creates one)', validate: c => c.cmd.includes('cat') && c.cmd.includes('nanorc') },
+      { text:'Create a file with nano: <code>nano newfile.txt</code>', hint:'Type: nano newfile.txt — creates and opens a new file', validate: c => c.cmd.includes('nano') && c.cmd.includes('newfile') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 38: DOCKER & CONTAINERS
+  {
+    chapter: 38, title: 'Docker & Containers',
+    desc: '<span class="highlight">Docker</span> packages applications into <span class="highlight">containers</span> — lightweight, portable environments that include everything an app needs to run.\n\nKey concepts:\n• <span class="highlight">Image</span> — a blueprint/template (like a class)\n• <span class="highlight">Container</span> — a running instance of an image (like an object)\n• <span class="highlight">Dockerfile</span> — instructions to build an image\n• <span class="highlight">docker-compose</span> — define multi-container apps in YAML\n\nEssential commands:\n• <span class="code">docker run</span> — create and start a container\n• <span class="code">docker ps</span> — list running containers\n• <span class="code">docker images</span> — list downloaded images\n• <span class="code">docker build</span> — build an image from a Dockerfile\n• <span class="code">-v</span> — mount volumes, <span class="code">-p</span> — map ports',
+    tasks: [
+      { text:'Run a container: <code>docker run hello-world</code>', hint:'Type: docker run hello-world — pulls and runs the hello-world image', validate: c => c.cmd.includes('docker') && c.cmd.includes('run') },
+      { text:'List running containers: <code>docker ps</code>', hint:'Type: docker ps — shows all currently running containers', validate: c => c.cmd === 'docker ps' || c.cmd === 'docker ps -a' },
+      { text:'List images: <code>docker images</code>', hint:'Type: docker images — shows all downloaded images', validate: c => c.cmd === 'docker images' },
+      { text:'Build an image: <code>docker build -t myapp .</code>', hint:'Type: docker build -t myapp . — builds from Dockerfile in current dir', validate: c => c.cmd.includes('docker') && c.cmd.includes('build') },
+      { text:'Use docker-compose: <code>docker-compose up</code>', hint:'Type: docker-compose up — starts all services defined in docker-compose.yml', validate: c => c.cmd.includes('docker-compose') || (c.cmd.includes('docker') && c.cmd.includes('compose')) },
+      { text:'Stop a container: <code>docker stop myapp</code>', hint:'Type: docker stop followed by the container name or ID', validate: c => c.cmd.includes('docker') && c.cmd.includes('stop') },
+    ],
+    xp: 120,
+  },
+  // CHAPTER 39: USERS, GROUPS & SUDO
+  {
+    chapter: 39, title: 'Users, Groups & sudo',
+    desc: 'Unix is a <span class="highlight">multi-user</span> system. Every file is owned by a user and a group. <span class="highlight">sudo</span> lets you run commands as the superuser (root).\n\nKey commands:\n• <span class="code">whoami</span> — current username\n• <span class="code">id</span> — show user ID, group ID, and groups\n• <span class="code">sudo command</span> — run as root (requires password)\n• <span class="code">su username</span> — switch to another user\n• <span class="code">groups</span> — list groups you belong to\n\nKey files:\n• <span class="code">/etc/passwd</span> — user accounts database\n• <span class="code">/etc/group</span> — group definitions\n• <span class="code">/etc/sudoers</span> — who can use sudo',
+    tasks: [
+      { text:'Check your user and group info: <code>id</code>', hint:'Type: id — shows your uid, gid, and group memberships', validate: c => c.cmd === 'id' },
+      { text:'Run a command with sudo: <code>sudo whoami</code>', hint:'Type: sudo whoami — should return "root"', validate: c => c.cmd.includes('sudo') },
+      { text:'List your groups: <code>groups</code>', hint:'Type: groups — shows all groups your user belongs to', validate: c => c.cmd === 'groups' },
+      { text:'View the passwd file: <code>cat /etc/passwd</code>', hint:'Type: cat /etc/passwd — shows all user accounts on the system', validate: c => c.cmd.includes('cat') && c.cmd.includes('/etc/passwd') },
+      { text:'Add a new user (simulated): <code>useradd newuser</code>', hint:'Type: useradd newuser — creates a new user account', validate: c => c.cmd.includes('useradd') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 40: NETWORKING DEEP DIVE
+  {
+    chapter: 40, title: 'Networking Deep Dive',
+    desc: 'Essential <span class="highlight">networking</span> commands for diagnosing connectivity issues and understanding your network:\n\n• <span class="code">ifconfig</span> / <span class="code">ip addr</span> — show network interfaces and IP addresses\n• <span class="code">netstat</span> / <span class="code">ss</span> — show network connections and listening ports\n• <span class="code">traceroute host</span> — trace the path packets take to a host\n• <span class="code">dig domain</span> — DNS lookup (detailed)\n• <span class="code">nslookup domain</span> — DNS lookup (simple)\n• <span class="code">/etc/hosts</span> — local DNS overrides\n\nCommon ports: 22 (SSH), 80 (HTTP), 443 (HTTPS), 3000 (dev servers), 5432 (PostgreSQL)',
+    tasks: [
+      { text:'View your network interfaces: <code>ifconfig</code>', hint:'Type: ifconfig — shows your IP addresses and network info', validate: c => c.cmd === 'ifconfig' || c.cmd === 'ip addr' },
+      { text:'Check listening ports: <code>netstat -tlnp</code>', hint:'Type: netstat -tlnp — shows TCP listening ports and their processes', validate: c => c.cmd.includes('netstat') || c.cmd.includes('ss') },
+      { text:'Trace a route: <code>traceroute google.com</code>', hint:'Type: traceroute google.com — shows each hop to the destination', validate: c => c.cmd.includes('traceroute') },
+      { text:'DNS lookup: <code>dig example.com</code>', hint:'Type: dig example.com — queries DNS for the domain', validate: c => c.cmd.includes('dig') },
+      { text:'View hosts file: <code>cat /etc/hosts</code>', hint:'Type: cat /etc/hosts — shows local DNS overrides', validate: c => c.cmd.includes('cat') && c.cmd.includes('/etc/hosts') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 41: MAKE & BUILD SYSTEMS
+  {
+    chapter: 41, title: 'Make & Build Systems',
+    desc: '<span class="highlight">make</span> automates building software using rules defined in a <span class="highlight">Makefile</span>. It\'s been around since 1976 and is still widely used.\n\nMakefile anatomy:\n<span class="code">target: dependencies\n    command</span>\n\nKey concepts:\n• <span class="highlight">Targets</span> — what to build (e.g., <span class="code">all</span>, <span class="code">clean</span>, <span class="code">install</span>)\n• <span class="highlight">Dependencies</span> — what the target needs (other files/targets)\n• <span class="highlight">Variables</span> — <span class="code">CC=gcc</span>, <span class="code">CFLAGS=-Wall</span>\n• <span class="highlight">.PHONY</span> — targets that don\'t produce files\n• <span class="code">make clean</span> — conventional target to remove build artifacts',
+    tasks: [
+      { text:'Run make with default target: <code>make</code>', hint:'Type: make — runs the first target in the Makefile', validate: c => c.cmd === 'make' },
+      { text:'Run a specific target: <code>make clean</code>', hint:'Type: make clean — runs the "clean" target', validate: c => c.cmd.includes('make') && c.cmd.includes('clean') },
+      { text:'Dry run (show what would be done): <code>make -n</code>', hint:'Type: make -n — shows commands without executing them', validate: c => c.cmd.includes('make') && c.cmd.includes('-n') },
+      { text:'View a sample Makefile: <code>make help</code>', hint:'Type: make help — shows Makefile structure and examples', validate: c => c.cmd === 'make help' },
+      { text:'Build with a variable: <code>make CC=clang</code>', hint:'Type: make CC=clang — overrides the CC variable at build time', validate: c => c.cmd.includes('make') && c.cmd.includes('=') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 42: LOG FILES & DEBUGGING
+  {
+    chapter: 42, title: 'Log Files & Debugging',
+    desc: 'Log files are your best friend when debugging. Unix systems store logs in <span class="highlight">/var/log</span>.\n\nKey log commands:\n• <span class="code">tail -f /var/log/syslog</span> — follow logs in real time\n• <span class="code">dmesg</span> — kernel ring buffer messages (hardware, drivers)\n• <span class="code">journalctl</span> — systemd journal (modern Linux)\n• <span class="code">last</span> — show recent logins\n\nCommon log locations:\n• <span class="code">/var/log/syslog</span> or <span class="code">/var/log/messages</span> — general system logs\n• <span class="code">/var/log/auth.log</span> — authentication events\n• <span class="code">/var/log/kern.log</span> — kernel messages\n• <span class="code">/var/log/nginx/</span> — web server logs\n\nLog rotation: <span class="code">logrotate</span> automatically compresses and archives old logs.',
+    tasks: [
+      { text:'View system logs: <code>tail -f /var/log/syslog</code>', hint:'Type: tail -f /var/log/syslog — follows new log entries in real time', validate: c => c.cmd.includes('tail') && c.cmd.includes('/var/log') },
+      { text:'Check kernel messages: <code>dmesg</code>', hint:'Type: dmesg — displays kernel ring buffer messages', validate: c => c.cmd === 'dmesg' || c.cmd.includes('dmesg') },
+      { text:'View systemd journal: <code>journalctl -n 20</code>', hint:'Type: journalctl -n 20 — shows the last 20 journal entries', validate: c => c.cmd.includes('journalctl') },
+      { text:'Check recent logins: <code>last</code>', hint:'Type: last — shows who has logged in recently', validate: c => c.cmd === 'last' },
+      { text:'View log directory contents: <code>ls /var/log</code>', hint:'Type: ls /var/log — shows all available log files', validate: c => c.cmd.includes('ls') && c.cmd.includes('/var/log') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 43: SECURITY & ENCRYPTION
+  {
+    chapter: 43, title: 'Security & Encryption',
+    desc: 'Terminal tools for <span class="highlight">encrypting</span>, <span class="highlight">signing</span>, and <span class="highlight">verifying</span> data:\n\n• <span class="code">gpg -c file</span> — encrypt a file (symmetric, password-based)\n• <span class="code">gpg -d file.gpg</span> — decrypt a file\n• <span class="code">gpg --sign file</span> — digitally sign a file\n• <span class="code">sha256sum file</span> — compute SHA-256 hash\n• <span class="code">md5 file</span> — compute MD5 hash (less secure, still used for integrity)\n\nHashing is <span class="highlight">one-way</span> — you can verify a file hasn\'t been tampered with, but you can\'t reverse it.\n\nPassword generation: <span class="code">openssl rand -base64 32</span> generates a strong random password.',
+    tasks: [
+      { text:'Encrypt a file: <code>gpg -c documents/notes.txt</code>', hint:'Type: gpg -c documents/notes.txt — encrypts with a passphrase', validate: c => c.cmd.includes('gpg') && c.cmd.includes('-c') },
+      { text:'Decrypt a file: <code>gpg -d documents/notes.txt.gpg</code>', hint:'Type: gpg -d file.gpg — decrypts the file', validate: c => c.cmd.includes('gpg') && c.cmd.includes('-d') },
+      { text:'Hash a file: <code>sha256sum documents/notes.txt</code>', hint:'Type: sha256sum file — produces a unique hash fingerprint', validate: c => c.cmd.includes('sha256sum') || c.cmd.includes('md5') },
+      { text:'Generate a password: <code>openssl rand -base64 32</code>', hint:'Type: openssl rand -base64 32 — generates 32 bytes of random data', validate: c => c.cmd.includes('openssl') && c.cmd.includes('rand') },
+      { text:'Sign a file: <code>gpg --sign documents/notes.txt</code>', hint:'Type: gpg --sign file — creates a digital signature', validate: c => c.cmd.includes('gpg') && c.cmd.includes('--sign') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 44: ANSI ESCAPE CODES
+  {
+    chapter: 44, title: 'ANSI Escape Codes',
+    desc: '<span class="highlight">ANSI escape codes</span> are special character sequences that control terminal formatting. They start with <span class="code">\\033[</span> (or <span class="code">\\e[</span>).\n\nCommon codes:\n• <span class="code">\\033[0m</span> — reset all formatting\n• <span class="code">\\033[1m</span> — bold\n• <span class="code">\\033[4m</span> — underline\n• <span class="code">\\033[31m</span> — red text, <span class="code">\\033[32m</span> — green, <span class="code">\\033[33m</span> — yellow\n• <span class="code">\\033[41m</span> — red background\n\nThe <span class="code">tput</span> command is a portable alternative:\n• <span class="code">tput bold</span>, <span class="code">tput setaf 2</span> (green), <span class="code">tput sgr0</span> (reset)',
+    tasks: [
+      { text:'Print colored text: <code>echo "\\033[32mGreen text\\033[0m"</code>', hint:'Type the echo command with ANSI codes — \\033[32m for green', validate: c => c.cmd.includes('echo') && (c.cmd.includes('033') || c.cmd.includes('\\e[')) },
+      { text:'Use tput for formatting: <code>tput bold</code>', hint:'Type: tput bold — enables bold text in the terminal', validate: c => c.cmd.includes('tput') },
+      { text:'View an ANSI color chart: <code>ansi colors</code>', hint:'Type: ansi colors — displays a full ANSI color reference', validate: c => c.cmd.includes('ansi') },
+      { text:'Reset terminal formatting: <code>tput sgr0</code>', hint:'Type: tput sgr0 — resets all terminal formatting to defaults', validate: c => c.cmd.includes('tput') && c.cmd.includes('sgr0') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 45: DISK PARTITIONS & MOUNTING
+  {
+    chapter: 45, title: 'Disk Partitions & Mounting',
+    desc: 'In Unix, storage devices must be <span class="highlight">mounted</span> to a directory before use. The filesystem is one big tree — devices attach at <span class="highlight">mount points</span>.\n\n• <span class="code">mount /dev/sdb1 /mnt/usb</span> — mount a partition to a directory\n• <span class="code">umount /mnt/usb</span> — unmount safely\n• <span class="code">/etc/fstab</span> — defines automatic mounts at boot\n• <span class="code">lsblk</span> — list all block devices (disks and partitions)\n• <span class="code">df -h</span> — disk free space (human-readable)\n• <span class="code">diskutil list</span> — macOS disk utility\n\nFilesystem types: <span class="code">ext4</span> (Linux), <span class="code">APFS</span> (macOS), <span class="code">NTFS</span> (Windows), <span class="code">FAT32</span> (universal)',
+    tasks: [
+      { text:'List block devices: <code>lsblk</code>', hint:'Type: lsblk — shows all disks and their partitions', validate: c => c.cmd === 'lsblk' },
+      { text:'Check disk space: <code>df -h</code>', hint:'Type: df -h — shows filesystem usage in human-readable format', validate: c => c.cmd.includes('df') && c.cmd.includes('-h') },
+      { text:'View fstab: <code>cat /etc/fstab</code>', hint:'Type: cat /etc/fstab — shows partition mount configuration', validate: c => c.cmd.includes('cat') && c.cmd.includes('fstab') },
+      { text:'List disks on macOS: <code>diskutil list</code>', hint:'Type: diskutil list — shows all disks and partitions on macOS', validate: c => c.cmd.includes('diskutil') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 46: PYTHON VIRTUAL ENVIRONMENTS
+  {
+    chapter: 46, title: 'Python Virtual Environments',
+    desc: '<span class="highlight">Virtual environments</span> isolate Python project dependencies so different projects don\'t conflict.\n\nWorkflow:\n1. <span class="code">python3 -m venv myenv</span> — create a virtual environment\n2. <span class="code">source myenv/bin/activate</span> — activate it (prompt changes)\n3. <span class="code">pip install package</span> — install packages (isolated)\n4. <span class="code">pip freeze > requirements.txt</span> — save dependencies\n5. <span class="code">deactivate</span> — leave the virtual environment\n\nWhy it matters: Without venvs, installing a package for one project might break another. <span class="highlight">Isolation</span> is key!\n\nAlternatives: <span class="code">conda</span> (Anaconda), <span class="code">pyenv</span>, <span class="code">poetry</span>',
+    tasks: [
+      { text:'Create a virtual environment: <code>python3 -m venv myenv</code>', hint:'Type: python3 -m venv myenv — creates the environment directory', validate: c => c.cmd.includes('python') && c.cmd.includes('venv') },
+      { text:'Activate the environment: <code>source myenv/bin/activate</code>', hint:'Type: source myenv/bin/activate — your prompt will change', validate: c => c.cmd.includes('source') && c.cmd.includes('activate') },
+      { text:'Freeze dependencies: <code>pip freeze</code>', hint:'Type: pip freeze — lists all installed packages with versions', validate: c => c.cmd.includes('pip') && c.cmd.includes('freeze') },
+      { text:'Deactivate the environment: <code>deactivate</code>', hint:'Type: deactivate — returns to the global Python environment', validate: c => c.cmd === 'deactivate' },
+      { text:'Install from requirements: <code>pip install -r requirements.txt</code>', hint:'Type: pip install -r requirements.txt — installs all listed packages', validate: c => c.cmd.includes('pip') && c.cmd.includes('install') && c.cmd.includes('-r') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 47: NODE.JS & NPM DEEP DIVE
+  {
+    chapter: 47, title: 'Node.js & npm Deep Dive',
+    desc: '<span class="highlight">npm</span> (Node Package Manager) manages JavaScript packages. <span class="highlight">npx</span> runs packages without installing them globally.\n\nKey differences:\n• <span class="code">npm install pkg</span> — install a package locally to your project\n• <span class="code">npx create-react-app myapp</span> — run a package without installing\n\nEssential commands:\n• <span class="code">npm init</span> — create a package.json\n• <span class="code">npm install</span> — install all dependencies from package.json\n• <span class="code">npm link</span> — symlink a local package for development\n• <span class="code">npm audit</span> — check for security vulnerabilities\n• <span class="code">nvm</span> — Node Version Manager for switching Node versions\n\nGlobal vs local: <span class="code">npm install -g</span> installs system-wide; local installs go in <span class="code">node_modules/</span>',
+    tasks: [
+      { text:'Initialize a new project: <code>npm init</code>', hint:'Type: npm init — creates a package.json interactively', validate: c => c.cmd.includes('npm') && c.cmd.includes('init') },
+      { text:'Install a package: <code>npm install express</code>', hint:'Type: npm install express — adds it to node_modules and package.json', validate: c => c.cmd.includes('npm') && c.cmd.includes('install') },
+      { text:'Use npx to run a package: <code>npx cowsay hello</code>', hint:'Type: npx cowsay hello — runs cowsay without installing it globally', validate: c => c.cmd.includes('npx') },
+      { text:'Audit for vulnerabilities: <code>npm audit</code>', hint:'Type: npm audit — checks all dependencies for known security issues', validate: c => c.cmd.includes('npm') && c.cmd.includes('audit') },
+      { text:'List installed packages: <code>npm list</code>', hint:'Type: npm list — shows the dependency tree', validate: c => c.cmd.includes('npm') && c.cmd.includes('list') },
+      { text:'Check Node version: <code>node -v</code>', hint:'Type: node -v — shows your current Node.js version', validate: c => c.cmd.includes('node') && c.cmd.includes('-v') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 48: HOMEBREW DEEP DIVE
+  {
+    chapter: 48, title: 'Homebrew Deep Dive',
+    desc: '<span class="highlight">Homebrew</span> is the missing package manager for macOS (and Linux). It installs command-line tools and desktop apps.\n\nKey commands:\n• <span class="code">brew install pkg</span> — install a formula (CLI tool)\n• <span class="code">brew install --cask app</span> — install a cask (GUI app)\n• <span class="code">brew search term</span> — search for packages\n• <span class="code">brew list</span> — show installed packages\n• <span class="code">brew services</span> — manage background services\n• <span class="code">brew cleanup</span> — remove old versions\n• <span class="code">brew doctor</span> — diagnose issues\n\nTaps: <span class="code">brew tap user/repo</span> adds third-party repositories.',
+    tasks: [
+      { text:'Search for a package: <code>brew search jq</code>', hint:'Type: brew search jq — finds packages matching "jq"', validate: c => c.cmd.includes('brew') && c.cmd.includes('search') },
+      { text:'Install a cask (GUI app): <code>brew install --cask firefox</code>', hint:'Type: brew install --cask firefox — installs the Firefox app', validate: c => c.cmd.includes('brew') && c.cmd.includes('--cask') },
+      { text:'List installed packages: <code>brew list</code>', hint:'Type: brew list — shows all installed formulae and casks', validate: c => c.cmd.includes('brew') && c.cmd.includes('list') },
+      { text:'Check for problems: <code>brew doctor</code>', hint:'Type: brew doctor — runs diagnostic checks on your Homebrew installation', validate: c => c.cmd.includes('brew') && c.cmd.includes('doctor') },
+      { text:'Clean up old versions: <code>brew cleanup</code>', hint:'Type: brew cleanup — removes cached downloads and old versions', validate: c => c.cmd.includes('brew') && c.cmd.includes('cleanup') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 49: CURL POWER USER
+  {
+    chapter: 49, title: 'Curl Power User',
+    desc: '<span class="highlight">curl</span> is the Swiss Army knife for HTTP requests. It supports every protocol and is essential for API work.\n\nHTTP methods:\n• <span class="code">curl URL</span> — GET request (default)\n• <span class="code">curl -X POST -d \'{"key":"val"}\' URL</span> — POST with data\n• <span class="code">curl -X PUT URL</span> — PUT request\n• <span class="code">curl -X DELETE URL</span> — DELETE request\n\nUseful flags:\n• <span class="code">-H "Content-Type: application/json"</span> — set headers\n• <span class="code">-o file</span> — save output to file\n• <span class="code">-s</span> — silent mode (no progress bar)\n• <span class="code">-L</span> — follow redirects\n• <span class="code">-b cookies.txt</span> — send cookies\n\nPro tip: <span class="code">curl -s URL | jq .</span> — pipe JSON responses to jq for pretty-printing!',
+    tasks: [
+      { text:'Make a POST request: <code>curl -X POST -d \'{"name":"test"}\' https://api.example.com</code>', hint:'Type: curl -X POST with -d for data — sends data to the server', validate: c => c.cmd.includes('curl') && c.cmd.includes('POST') },
+      { text:'Add a custom header: <code>curl -H "Authorization: Bearer token" https://api.example.com</code>', hint:'Type: curl -H "Header: value" URL — adds a custom HTTP header', validate: c => c.cmd.includes('curl') && c.cmd.includes('-H') },
+      { text:'Save output to a file: <code>curl -o page.html https://example.com</code>', hint:'Type: curl -o filename URL — saves the response to a file', validate: c => c.cmd.includes('curl') && c.cmd.includes('-o') },
+      { text:'Follow redirects: <code>curl -L https://example.com</code>', hint:'Type: curl -L URL — follows HTTP 301/302 redirects', validate: c => c.cmd.includes('curl') && c.cmd.includes('-L') },
+      { text:'Silent mode with jq: <code>curl -s https://api.example.com | jq .</code>', hint:'Type: curl -s URL | jq . — fetches JSON silently and pretty-prints it', validate: c => c.cmd.includes('curl') && c.cmd.includes('-s') },
+      { text:'Send a DELETE request: <code>curl -X DELETE https://api.example.com/item/1</code>', hint:'Type: curl -X DELETE URL — sends an HTTP DELETE request', validate: c => c.cmd.includes('curl') && c.cmd.includes('DELETE') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 50: SIGNALS DEEP DIVE
+  {
+    chapter: 50, title: 'Signals Deep Dive',
+    desc: '<span class="highlight">Signals</span> are software interrupts sent to processes. They\'re how the OS communicates with running programs.\n\nKey signals:\n• <span class="code">SIGTERM (15)</span> — polite "please exit" (default for <span class="code">kill</span>)\n• <span class="code">SIGKILL (9)</span> — forced kill (cannot be caught or ignored)\n• <span class="code">SIGINT (2)</span> — interrupt from keyboard (<span class="code">Ctrl+C</span>)\n• <span class="code">SIGHUP (1)</span> — terminal disconnected\n• <span class="code">SIGSTOP (19)</span> — pause process (<span class="code">Ctrl+Z</span>)\n\nThe <span class="code">trap</span> command lets scripts handle signals gracefully:\n<span class="code">trap \'echo "Caught SIGINT"\' SIGINT</span>\n\nList all signals: <span class="code">kill -l</span>',
+    tasks: [
+      { text:'List all signals: <code>kill -l</code>', hint:'Type: kill -l — lists all available signal names and numbers', validate: c => c.cmd.includes('kill') && c.cmd.includes('-l') },
+      { text:'Send SIGTERM to a process: <code>kill 1234</code>', hint:'Type: kill PID — sends SIGTERM (the default, polite signal)', validate: c => c.cmd.includes('kill') && !c.cmd.includes('-l') && !c.cmd.includes('-9') },
+      { text:'Force kill a process: <code>kill -9 1234</code>', hint:'Type: kill -9 PID — sends SIGKILL (cannot be caught, last resort)', validate: c => c.cmd.includes('kill') && c.cmd.includes('-9') },
+      { text:'Learn about trap: <code>trap help</code>', hint:'Type: trap help — shows how to use trap in scripts', validate: c => c.cmd.includes('trap') },
+      { text:'Send a specific signal: <code>kill -HUP 1234</code>', hint:'Type: kill -HUP PID — sends SIGHUP to reload configuration', validate: c => c.cmd.includes('kill') && c.cmd.includes('-HUP') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 51: GHOSTTY TERMINAL
+  {
+    chapter: 51, title: 'Ghostty Terminal',
+    desc: '<span class="highlight">Ghostty</span> is a fast, feature-rich terminal emulator built with <span class="highlight">GPU rendering</span> for ultra-smooth performance.\n\nConfiguration: <span class="code">~/.config/ghostty/config</span>\n\nKey settings:\n• <span class="code">font-family = "JetBrains Mono"</span> — set the font\n• <span class="code">font-size = 14</span> — font size in points\n• <span class="code">background = #0c0c1d</span> — background color\n• <span class="code">foreground = #e0e0e0</span> — text color\n• <span class="code">window-decoration = false</span> — remove window chrome\n• <span class="code">macos-titlebar-style = hidden</span> — clean macOS look\n• <span class="code">keybind = super+t=new_tab</span> — custom keybindings',
+    tasks: [
+      { text:'View Ghostty config: <code>ghostty config</code>', hint:'Type: ghostty config — shows a sample Ghostty configuration', validate: c => c.cmd.includes('ghostty') && c.cmd.includes('config') },
+      { text:'Explore Ghostty features: <code>ghostty features</code>', hint:'Type: ghostty features — lists key features of Ghostty terminal', validate: c => c.cmd.includes('ghostty') && c.cmd.includes('features') },
+      { text:'View Ghostty keybindings: <code>ghostty keys</code>', hint:'Type: ghostty keys — shows default and customizable key bindings', validate: c => c.cmd.includes('ghostty') && c.cmd.includes('keys') },
+      { text:'Learn about GPU rendering: <code>ghostty help</code>', hint:'Type: ghostty help — overview of Ghostty and its architecture', validate: c => c.cmd === 'ghostty help' || (c.cmd.includes('ghostty') && !c.cmd.includes('config') && !c.cmd.includes('features') && !c.cmd.includes('keys')) },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 52: JQ — JSON PROCESSING
+  {
+    chapter: 52, title: 'jq — JSON Processing',
+    desc: '<span class="highlight">jq</span> is a lightweight command-line JSON processor. It\'s like <span class="code">sed</span> for JSON data.\n\nBasic syntax:\n• <span class="code">jq \'.key\'</span> — extract a top-level key\n• <span class="code">jq \'.array[]\'</span> — iterate over array elements\n• <span class="code">jq \'.[] | .name\'</span> — extract a field from each element\n• <span class="code">jq \'select(.age > 30)\'</span> — filter elements\n• <span class="code">jq \'map(.name)\'</span> — transform each element\n• <span class="code">jq -r</span> — raw output (no quotes)\n\nPro patterns:\n• <span class="code">curl -s api | jq .</span> — pretty-print API response\n• <span class="code">cat data.json | jq \'.users[] | .email\'</span> — extract emails',
+    tasks: [
+      { text:'Pretty-print JSON: <code>cat documents/projects/data/config.json | jq .</code>', hint:'Type: cat file.json | jq . — formats JSON with colors and indentation', validate: c => c.cmd.includes('jq') && c.cmd.includes('.') },
+      { text:'Extract a key: <code>echo \'{"name":"Nathan","age":30}\' | jq \'.name\'</code>', hint:'Type the command to extract the "name" field from JSON', validate: c => c.cmd.includes('jq') && c.cmd.includes('.name') },
+      { text:'Filter array elements: <code>jq select</code>', hint:'Type a jq command using select() to filter data', validate: c => c.cmd.includes('jq') && c.cmd.includes('select') },
+      { text:'Use map to transform: <code>jq map</code>', hint:'Type a jq command using map() to transform array elements', validate: c => c.cmd.includes('jq') && c.cmd.includes('map') },
+      { text:'Raw output mode: <code>echo \'{"msg":"hello"}\' | jq -r \'.msg\'</code>', hint:'The -r flag outputs raw strings without JSON quotes', validate: c => c.cmd.includes('jq') && c.cmd.includes('-r') },
+      { text:'Learn jq patterns: <code>jq help</code>', hint:'Type: jq help — shows common jq patterns and examples', validate: c => c.cmd === 'jq help' },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 53: DIFF & PATCH
+  {
+    chapter: 53, title: 'Diff & Patch',
+    desc: '<span class="highlight">diff</span> compares files line by line and shows the differences. <span class="highlight">patch</span> applies those differences to update files.\n\nCommon usage:\n• <span class="code">diff file1 file2</span> — show differences\n• <span class="code">diff -u file1 file2</span> — unified format (most readable)\n• <span class="code">diff -r dir1 dir2</span> — compare directories recursively\n• <span class="code">vimdiff file1 file2</span> — side-by-side comparison in vim\n• <span class="code">diff -u old new > changes.patch</span> — create a patch file\n• <span class="code">patch < changes.patch</span> — apply a patch\n\nIn practice, <span class="code">git diff</span> is the most common way to see differences.',
+    tasks: [
+      { text:'Compare two files: <code>diff documents/notes.txt documents/todo.txt</code>', hint:'Type: diff file1 file2 — shows line-by-line differences', validate: c => c.cmd.includes('diff') && !c.cmd.includes('-u') && !c.cmd.includes('-r') },
+      { text:'Unified diff format: <code>diff -u documents/notes.txt documents/todo.txt</code>', hint:'Type: diff -u file1 file2 — the most readable diff format', validate: c => c.cmd.includes('diff') && c.cmd.includes('-u') },
+      { text:'Compare directories: <code>diff -r documents/ scripts/</code>', hint:'Type: diff -r dir1 dir2 — recursively compares all files', validate: c => c.cmd.includes('diff') && c.cmd.includes('-r') },
+      { text:'Use vimdiff: <code>vimdiff documents/notes.txt documents/todo.txt</code>', hint:'Type: vimdiff file1 file2 — side-by-side visual comparison', validate: c => c.cmd.includes('vimdiff') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 54: CLIPBOARD INTEGRATION
+  {
+    chapter: 54, title: 'Clipboard Integration',
+    desc: 'Bridge the gap between the terminal and your system clipboard:\n\n<span class="highlight">macOS:</span>\n• <span class="code">pbcopy</span> — copy stdin to clipboard\n• <span class="code">pbpaste</span> — paste clipboard to stdout\n\n<span class="highlight">Linux:</span>\n• <span class="code">xclip -selection clipboard</span> — copy to clipboard\n• <span class="code">xsel --clipboard</span> — alternative clipboard tool\n\nPractical workflows:\n• <span class="code">cat file | pbcopy</span> — copy file contents to clipboard\n• <span class="code">pbpaste > file.txt</span> — paste clipboard into a file\n• <span class="code">pwd | pbcopy</span> — copy current directory path\n• <span class="code">history | grep "git" | pbcopy</span> — copy filtered commands',
+    tasks: [
+      { text:'Copy to clipboard: <code>echo "hello" | pbcopy</code>', hint:'Type: echo "hello" | pbcopy — copies "hello" to your clipboard', validate: c => c.cmd.includes('pbcopy') },
+      { text:'Paste from clipboard: <code>pbpaste</code>', hint:'Type: pbpaste — prints clipboard contents to the terminal', validate: c => c.cmd.includes('pbpaste') },
+      { text:'Copy a file to clipboard: <code>cat documents/notes.txt | pbcopy</code>', hint:'Type: cat file | pbcopy — puts file contents on the clipboard', validate: c => c.cmd.includes('cat') && c.cmd.includes('pbcopy') },
+      { text:'Copy current path: <code>pwd | pbcopy</code>', hint:'Type: pwd | pbcopy — copies your working directory to clipboard', validate: c => c.cmd.includes('pwd') && c.cmd.includes('pbcopy') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 55: ADVANCED SHELL SCRIPTING
+  {
+    chapter: 55, title: 'Advanced Shell Scripting',
+    desc: 'Level up your shell scripts with proper control flow and error handling:\n\n<span class="highlight">Conditionals:</span>\n• <span class="code">if [[ $x == "yes" ]]; then ... fi</span>\n• <span class="code">[[ ]]</span> is preferred over <span class="code">[ ]</span> (more features, fewer gotchas)\n• <span class="code">case $var in pattern) cmd;; esac</span>\n\n<span class="highlight">Functions:</span>\n<span class="code">greet() { local name="$1"; echo "Hello, $name"; return 0; }</span>\n\n<span class="highlight">Error handling:</span>\n• <span class="code">set -e</span> — exit on any error\n• <span class="code">set -o pipefail</span> — catch errors in pipes\n• <span class="code">set -u</span> — error on undefined variables\n• <span class="code">set -euo pipefail</span> — the "strict mode" trifecta',
+    tasks: [
+      { text:'View a script with conditionals: <code>bash examples if</code>', hint:'Type: bash examples if — shows if/elif/else patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('examples') && c.cmd.includes('if') },
+      { text:'View case statement examples: <code>bash examples case</code>', hint:'Type: bash examples case — shows case/esac patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('case') },
+      { text:'View function examples: <code>bash examples functions</code>', hint:'Type: bash examples functions — shows function definition patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('function') },
+      { text:'Learn strict mode: <code>bash examples strict</code>', hint:'Type: bash examples strict — shows set -euo pipefail usage', validate: c => c.cmd.includes('bash') && c.cmd.includes('strict') },
+      { text:'Run a script: <code>bash scripts/hello.sh</code>', hint:'Type: bash scripts/hello.sh — executes the script with bash', validate: c => c.cmd.includes('bash') && c.cmd.includes('.sh') },
+      { text:'View error handling: <code>bash examples errors</code>', hint:'Type: bash examples errors — shows trap and error handling patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('error') },
+    ],
+    xp: 100,
+  },
+  // CHAPTER 56: PARALLEL EXECUTION
+  {
+    chapter: 56, title: 'Parallel Execution',
+    desc: 'Run multiple commands simultaneously for faster results:\n\n<span class="highlight">Background jobs:</span>\n• <span class="code">command &</span> — run in background\n• <span class="code">wait</span> — wait for all background jobs to finish\n• <span class="code">jobs</span> — list background jobs\n\n<span class="highlight">GNU Parallel:</span>\n• <span class="code">parallel command ::: arg1 arg2 arg3</span>\n• Distributes work across CPU cores\n\n<span class="highlight">xargs -P:</span>\n• <span class="code">find . -name "*.jpg" | xargs -P 4 convert</span>\n• <span class="code">-P 4</span> runs up to 4 processes at once\n\nParallel downloads: <span class="code">cat urls.txt | xargs -P 8 -I {} curl -O {}</span>',
+    tasks: [
+      { text:'Run a command in the background: <code>sleep 10 &</code>', hint:'Type: sleep 10 & — the & puts it in the background', validate: c => c.cmd.includes('&') },
+      { text:'Wait for background jobs: <code>wait</code>', hint:'Type: wait — blocks until all background jobs complete', validate: c => c.cmd === 'wait' },
+      { text:'List background jobs: <code>jobs</code>', hint:'Type: jobs — shows all running and stopped background jobs', validate: c => c.cmd === 'jobs' },
+      { text:'Use xargs with parallelism: <code>echo "a b c" | xargs -P 3 echo</code>', hint:'Type a command using xargs -P for parallel execution', validate: c => c.cmd.includes('xargs') && c.cmd.includes('-P') },
+      { text:'Use GNU parallel: <code>parallel echo ::: 1 2 3 4</code>', hint:'Type: parallel echo ::: 1 2 3 4 — runs echo on each argument in parallel', validate: c => c.cmd.includes('parallel') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 57: STRING MANIPULATION IN BASH
+  {
+    chapter: 57, title: 'String Manipulation in Bash',
+    desc: 'Bash has powerful built-in <span class="highlight">string manipulation</span> — no external tools needed!\n\n<span class="highlight">Parameter expansion:</span>\n• <span class="code">${var%pattern}</span> — remove shortest match from end (trim suffix)\n• <span class="code">${var#pattern}</span> — remove shortest match from start (trim prefix)\n• <span class="code">${var/old/new}</span> — replace first occurrence\n• <span class="code">${var//old/new}</span> — replace all occurrences\n• <span class="code">${var:offset:length}</span> — substring extraction\n• <span class="code">${#var}</span> — string length\n\nThe <span class="code">tr</span> command translates characters:\n• <span class="code">echo "hello" | tr \'a-z\' \'A-Z\'</span> — uppercase\n• <span class="code">echo "hello" | tr -d \'l\'</span> — delete characters',
+    tasks: [
+      { text:'Get string length: <code>echo ${#HOME}</code>', hint:'Type: echo ${#HOME} — prints the length of the HOME variable', validate: c => c.cmd.includes('${#') },
+      { text:'Uppercase with tr: <code>echo "hello world" | tr \'a-z\' \'A-Z\'</code>', hint:'Type the command with tr to convert lowercase to uppercase', validate: c => c.cmd.includes('tr') && (c.cmd.includes('A-Z') || c.cmd.includes('a-z')) },
+      { text:'Delete characters: <code>echo "hello" | tr -d \'l\'</code>', hint:'Type: echo "hello" | tr -d \'l\' — removes all \'l\' characters', validate: c => c.cmd.includes('tr') && c.cmd.includes('-d') },
+      { text:'String substitution: <code>bash examples string</code>', hint:'Type: bash examples string — shows parameter expansion examples', validate: c => c.cmd.includes('bash') && c.cmd.includes('string') },
+      { text:'Extract a substring: <code>echo ${HOME:0:5}</code>', hint:'Type: echo ${HOME:0:5} — extracts first 5 characters', validate: c => c.cmd.includes('${') && c.cmd.includes(':') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 58: DATE & TIME
+  {
+    chapter: 58, title: 'Date & Time',
+    desc: 'Working with <span class="highlight">dates and times</span> from the command line:\n\n• <span class="code">date</span> — current date and time\n• <span class="code">date +%Y-%m-%d</span> — formatted date (2026-03-23)\n• <span class="code">date +%s</span> — epoch timestamp (seconds since 1970-01-01)\n• <span class="code">date -d "2 days ago"</span> — parse relative dates (GNU)\n• <span class="code">time command</span> — measure how long a command takes\n• <span class="code">cal</span> — display a calendar\n\nFormat codes: <span class="code">%Y</span> year, <span class="code">%m</span> month, <span class="code">%d</span> day, <span class="code">%H</span> hour, <span class="code">%M</span> minute, <span class="code">%S</span> second',
+    tasks: [
+      { text:'Get formatted date: <code>date +%Y-%m-%d</code>', hint:'Type: date +%Y-%m-%d — outputs date like 2026-03-23', validate: c => c.cmd.includes('date') && c.cmd.includes('+%') },
+      { text:'Get epoch timestamp: <code>date +%s</code>', hint:'Type: date +%s — seconds since January 1, 1970', validate: c => c.cmd.includes('date') && c.cmd.includes('%s') },
+      { text:'Show a calendar: <code>cal</code>', hint:'Type: cal — displays the current month\'s calendar', validate: c => c.cmd === 'cal' || c.cmd.includes('cal') },
+      { text:'Time a command: <code>time ls</code>', hint:'Type: time ls — shows how long the ls command takes to run', validate: c => c.cmd.includes('time') && c.cmd !== 'date' },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 59: SYSTEM INFO
+  {
+    chapter: 59, title: 'System Info',
+    desc: 'Commands to learn about your system:\n\n• <span class="code">uname -a</span> — kernel name, version, architecture\n• <span class="code">sw_vers</span> — macOS version info\n• <span class="code">arch</span> — CPU architecture (arm64, x86_64)\n• <span class="code">sysctl</span> — kernel parameters\n• <span class="code">system_profiler</span> — detailed macOS hardware/software info\n• <span class="code">hostname</span> — machine name\n• <span class="code">/proc/cpuinfo</span> — CPU info (Linux)\n• <span class="code">lscpu</span> — CPU details (Linux)',
+    tasks: [
+      { text:'Show kernel info: <code>uname -a</code>', hint:'Type: uname -a — displays all system identification info', validate: c => c.cmd.includes('uname') },
+      { text:'Check macOS version: <code>sw_vers</code>', hint:'Type: sw_vers — shows macOS product name, version, and build', validate: c => c.cmd === 'sw_vers' },
+      { text:'Check CPU architecture: <code>arch</code>', hint:'Type: arch — shows if you\'re on arm64 (Apple Silicon) or x86_64 (Intel)', validate: c => c.cmd === 'arch' },
+      { text:'View system details: <code>system_profiler SPHardwareDataType</code>', hint:'Type: system_profiler SPHardwareDataType — detailed hardware info', validate: c => c.cmd.includes('system_profiler') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 60: FILE METADATA
+  {
+    chapter: 60, title: 'File Metadata',
+    desc: 'Every file carries <span class="highlight">metadata</span> beyond its contents — size, dates, permissions, file type, and more.\n\n• <span class="code">stat file</span> — detailed metadata (size, inode, timestamps, permissions)\n• <span class="code">file filename</span> — detect file type from content (not extension)\n• <span class="code">mdls file</span> — macOS Spotlight metadata (tags, content type)\n• <span class="code">exiftool file</span> — read/write EXIF metadata (images, PDFs)\n\nTimestamps:\n• <span class="code">atime</span> — last accessed\n• <span class="code">mtime</span> — last modified (content changed)\n• <span class="code">ctime</span> — last changed (metadata changed)',
+    tasks: [
+      { text:'View file metadata: <code>stat documents/notes.txt</code>', hint:'Type: stat file — shows size, permissions, timestamps, inode', validate: c => c.cmd.includes('stat') },
+      { text:'Detect file type: <code>file documents/notes.txt</code>', hint:'Type: file filename — identifies the file type from its contents', validate: c => c.cmd.startsWith('file ') && !c.cmd.includes('find') },
+      { text:'View Spotlight metadata: <code>mdls documents/notes.txt</code>', hint:'Type: mdls file — shows macOS Spotlight attributes', validate: c => c.cmd.includes('mdls') },
+      { text:'Check multiple file types: <code>file scripts/*</code>', hint:'Type: file scripts/* — shows the type of each file in scripts/', validate: c => c.cmd.includes('file') && c.cmd.includes('*') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 61: PROCESS SUBSTITUTION
+  {
+    chapter: 61, title: 'Process Substitution',
+    desc: 'Advanced Bash features for feeding command output as files or inline input:\n\n<span class="highlight">Process substitution</span> — <span class="code">&lt;(command)</span>:\n• Treats command output as a temporary file\n• <span class="code">diff &lt;(sort file1) &lt;(sort file2)</span> — compare sorted versions\n• <span class="code">paste &lt;(cut -f1 data) &lt;(cut -f2 data)</span> — combine columns\n\n<span class="highlight">Here strings</span> — <span class="code">&lt;&lt;&lt; "text"</span>:\n• <span class="code">grep "pattern" &lt;&lt;&lt; "search this text"</span>\n\n<span class="highlight">Here documents</span> — <span class="code">&lt;&lt;EOF</span>:\n• Multi-line input to a command\n• Useful for writing multi-line files in scripts',
+    tasks: [
+      { text:'Compare sorted output: <code>diff <(sort documents/notes.txt) <(sort documents/todo.txt)</code>', hint:'Type: diff <(sort file1) <(sort file2) — compares sorted versions', validate: c => c.cmd.includes('<(') },
+      { text:'Use a here string: <code>grep "hello" <<< "hello world"</code>', hint:'Type: grep "hello" <<< "hello world" — searches inline text', validate: c => c.cmd.includes('<<<') },
+      { text:'Use a here document: <code>cat <<EOF\nhello\nworld\nEOF</code>', hint:'Type a command using <<EOF for multi-line input', validate: c => c.cmd.includes('<<') && !c.cmd.includes('<<<') },
+      { text:'Learn about process substitution: <code>bash examples process-sub</code>', hint:'Type: bash examples process-sub — shows process substitution patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('process') },
+      { text:'Output process substitution: <code>bash examples output-sub</code>', hint:'Type: bash examples output-sub — shows >(command) pattern', validate: c => c.cmd.includes('bash') && c.cmd.includes('output') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 62: MODERN TERMINAL TOOLS
+  {
+    chapter: 62, title: 'Modern Terminal Tools',
+    desc: 'Modern replacements for classic Unix tools — faster, friendlier, and more colorful:\n\n• <span class="highlight">ripgrep</span> (<span class="code">rg</span>) — faster grep, respects .gitignore\n• <span class="highlight">fd</span> — faster, friendlier find\n• <span class="highlight">bat</span> — cat with syntax highlighting and line numbers\n• <span class="highlight">eza</span> — modern ls with colors, icons, and git status\n• <span class="highlight">fzf</span> — fuzzy finder for files, history, and more\n• <span class="highlight">zoxide</span> (<span class="code">z</span>) — smarter cd that learns your habits\n• <span class="highlight">tldr</span> — simplified man pages with examples\n\nInstall them all: <span class="code">brew install ripgrep fd bat eza fzf zoxide tldr</span>',
+    tasks: [
+      { text:'Try ripgrep: <code>rg "hello" documents/</code>', hint:'Type: rg "pattern" path — blazing fast recursive search', validate: c => c.cmd.includes('rg ') },
+      { text:'Try fd: <code>fd ".txt"</code>', hint:'Type: fd ".txt" — finds all .txt files, colorized and fast', validate: c => c.cmd.includes('fd ') },
+      { text:'Try bat: <code>bat documents/notes.txt</code>', hint:'Type: bat file — like cat but with syntax highlighting', validate: c => c.cmd.includes('bat ') },
+      { text:'Try eza: <code>eza -la</code>', hint:'Type: eza -la — modern ls with icons and git status', validate: c => c.cmd.includes('eza') },
+      { text:'Try fzf: <code>fzf</code>', hint:'Type: fzf — interactive fuzzy file finder', validate: c => c.cmd.includes('fzf') },
+      { text:'Try tldr: <code>tldr tar</code>', hint:'Type: tldr command — shows simplified, example-based help', validate: c => c.cmd.includes('tldr') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 63: SHELL CUSTOMIZATION
+  {
+    chapter: 63, title: 'Shell Customization',
+    desc: 'Make your terminal uniquely yours:\n\n<span class="highlight">Prompt customization:</span>\n• Bash: <span class="code">PS1</span> variable (e.g., <span class="code">PS1="\\u@\\h:\\w$ "</span>)\n• Zsh: <span class="code">PROMPT</span> variable (e.g., <span class="code">PROMPT="%n@%m:%~$ "</span>)\n\n<span class="highlight">Frameworks:</span>\n• <span class="code">Oh My Zsh</span> — themes, plugins, and aliases for Zsh\n• <span class="code">Starship</span> — cross-shell prompt with git status, node version, etc.\n\n<span class="highlight">Config files:</span>\n• <span class="code">~/.zshrc</span> — Zsh config (runs on every new shell)\n• <span class="code">~/.bashrc</span> — Bash config\n• <span class="code">ZDOTDIR</span> — custom location for Zsh config files',
+    tasks: [
+      { text:'View your shell config: <code>cat .zshrc</code>', hint:'Type: cat .zshrc — shows your Zsh configuration', validate: c => c.cmd.includes('cat') && (c.cmd.includes('.zshrc') || c.cmd.includes('.bashrc')) },
+      { text:'Check your current prompt: <code>echo $PS1</code>', hint:'Type: echo $PS1 — shows the prompt format string', validate: c => c.cmd.includes('echo') && (c.cmd.includes('PS1') || c.cmd.includes('PROMPT')) },
+      { text:'Explore Starship prompt: <code>starship help</code>', hint:'Type: starship help — learn about the Starship cross-shell prompt', validate: c => c.cmd.includes('starship') },
+      { text:'View Oh My Zsh info: <code>omz help</code>', hint:'Type: omz help — learn about the Oh My Zsh framework', validate: c => c.cmd.includes('omz') },
+      { text:'Set a custom prompt: <code>export PS1="→ "</code>', hint:'Type: export PS1="→ " — changes your prompt symbol', validate: c => c.cmd.includes('export') && c.cmd.includes('PS1') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 64: ZSH VS BASH
+  {
+    chapter: 64, title: 'Zsh vs Bash',
+    desc: 'macOS defaults to <span class="highlight">Zsh</span> since Catalina. Here\'s how it differs from <span class="highlight">Bash</span>:\n\n<span class="highlight">Zsh advantages:</span>\n• <span class="code">**</span> recursive globbing built in (e.g., <span class="code">ls **/*.txt</span>)\n• Better tab completion and spelling correction\n• Right-side prompt (<span class="code">RPROMPT</span>)\n• <span class="code">autopushd</span> — cd pushes to directory stack automatically\n\n<span class="highlight">Key differences:</span>\n• Arrays: Zsh is 1-indexed, Bash is 0-indexed\n• Globbing: Zsh has extended globbing by default\n• Word splitting: Zsh doesn\'t split on spaces by default\n\n<span class="highlight">Compatibility:</span>\n• Use <span class="code">#!/bin/bash</span> or <span class="code">#!/bin/zsh</span> in scripts\n• <span class="code">emulate bash</span> in Zsh for Bash compatibility',
+    tasks: [
+      { text:'Check your current shell: <code>echo $SHELL</code>', hint:'Type: echo $SHELL — shows which shell you\'re running', validate: c => c.cmd.includes('echo') && c.cmd.includes('SHELL') },
+      { text:'View Zsh-specific features: <code>zsh features</code>', hint:'Type: zsh features — shows Zsh-exclusive features', validate: c => c.cmd.includes('zsh') && c.cmd.includes('feature') },
+      { text:'Compare Zsh and Bash: <code>zsh compare</code>', hint:'Type: zsh compare — side-by-side comparison of Zsh vs Bash', validate: c => c.cmd.includes('zsh') && c.cmd.includes('compare') },
+      { text:'Check Zsh version: <code>zsh --version</code>', hint:'Type: zsh --version — shows the installed Zsh version', validate: c => c.cmd.includes('zsh') && c.cmd.includes('version') },
+      { text:'View Zsh config: <code>cat .zshrc</code>', hint:'Type: cat .zshrc — shows your Zsh configuration file', validate: c => c.cmd.includes('cat') && c.cmd.includes('.zshrc') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 65: DATA PIPELINE TOOLS
+  {
+    chapter: 65, title: 'Data Pipeline Tools',
+    desc: 'Deep dive into the classic Unix text processing tools:\n\n<span class="highlight">sort</span> — sort lines:\n• <span class="code">-n</span> numeric, <span class="code">-r</span> reverse, <span class="code">-k2</span> sort by field 2\n• <span class="code">-t,</span> set delimiter, <span class="code">-u</span> unique only\n\n<span class="highlight">cut</span> — extract columns:\n• <span class="code">cut -d, -f1,3</span> — fields 1 and 3, comma-delimited\n\n<span class="highlight">uniq</span> — deduplicate (must be sorted first!):\n• <span class="code">-c</span> count, <span class="code">-d</span> show only duplicates\n\n<span class="highlight">column</span> — format into aligned columns:\n• <span class="code">column -t -s,</span> — align CSV data\n\n<span class="highlight">paste</span> — merge lines side by side\n<span class="highlight">join</span> — join files on a shared field (like SQL JOIN)',
+    tasks: [
+      { text:'Sort CSV by a field: <code>sort -t, -k3 -n documents/projects/data/sales.csv</code>', hint:'Type: sort -t, -k3 -n file — sort by 3rd field numerically', validate: c => c.cmd.includes('sort') && c.cmd.includes('-k') },
+      { text:'Count duplicates: <code>cut -d, -f2 documents/projects/data/sales.csv | sort | uniq -c</code>', hint:'Cut a field, sort, then count unique values with uniq -c', validate: c => c.cmd.includes('uniq') && c.cmd.includes('-c') },
+      { text:'Format as table: <code>column -t -s, documents/projects/data/users.csv</code>', hint:'Type: column -t -s, file — aligns CSV into a readable table', validate: c => c.cmd.includes('column') },
+      { text:'Extract specific fields: <code>cut -d, -f1,3 documents/projects/data/users.csv</code>', hint:'Type: cut -d, -f1,3 file — extracts fields 1 and 3', validate: c => c.cmd.includes('cut') && c.cmd.includes('-f') },
+      { text:'Sort uniquely: <code>sort -u documents/projects/data/sales.csv</code>', hint:'Type: sort -u file — sorts and removes duplicate lines', validate: c => c.cmd.includes('sort') && c.cmd.includes('-u') },
+      { text:'Merge files: <code>paste documents/notes.txt documents/todo.txt</code>', hint:'Type: paste file1 file2 — joins lines side by side', validate: c => c.cmd.includes('paste') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 66: EXIT CODES & ERROR HANDLING
+  {
+    chapter: 66, title: 'Exit Codes & Error Handling',
+    desc: 'Every command returns an <span class="highlight">exit code</span>: 0 means success, anything else means failure.\n\n• <span class="code">$?</span> — check the last exit code\n• <span class="code">echo $?</span> — print it (0 = success, 1+ = error)\n\n<span class="highlight">Error handling in scripts:</span>\n• <span class="code">set -e</span> — exit immediately on any error\n• <span class="code">set -o pipefail</span> — propagate errors through pipes\n• <span class="code">trap \'echo "Error on line $LINENO"\' ERR</span> — catch errors\n\n<span class="highlight">Logical operators:</span>\n• <span class="code">cmd1 && cmd2</span> — run cmd2 only if cmd1 succeeds\n• <span class="code">cmd1 || cmd2</span> — run cmd2 only if cmd1 fails\n• <span class="code">exit 0</span> — exit with success, <span class="code">exit 1</span> — exit with error',
+    tasks: [
+      { text:'Check an exit code: <code>echo $?</code>', hint:'Type: echo $? — shows 0 for success, non-zero for error', validate: c => c.cmd.includes('echo') && c.cmd.includes('$?') },
+      { text:'Test success: <code>ls && echo "Success"</code>', hint:'Type: ls && echo "Success" — second command runs if first succeeds', validate: c => c.cmd.includes('&&') && c.cmd.includes('echo') },
+      { text:'Test failure: <code>cat nonexistent || echo "Failed"</code>', hint:'Type: cat nonexistent || echo "Failed" — fallback on error', validate: c => c.cmd.includes('||') },
+      { text:'Learn about trap: <code>bash examples errors</code>', hint:'Type: bash examples errors — shows trap and error handling', validate: c => c.cmd.includes('bash') && c.cmd.includes('error') },
+      { text:'View exit code reference: <code>exitcode help</code>', hint:'Type: exitcode help — shows common exit codes and their meanings', validate: c => c.cmd.includes('exitcode') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 67: MACOS TERMINAL TRICKS
+  {
+    chapter: 67, title: 'macOS Terminal Tricks',
+    desc: 'macOS-specific commands that supercharge your terminal:\n\n• <span class="code">open file</span> — open file with default app\n• <span class="code">open -a "App" file</span> — open with specific app\n• <span class="code">open .</span> — open current directory in Finder\n• <span class="code">say "hello"</span> — text-to-speech\n• <span class="code">caffeinate</span> — prevent Mac from sleeping\n• <span class="code">defaults read</span> — read system preferences\n• <span class="code">mdfind "query"</span> — Spotlight search from terminal\n• <span class="code">softwareupdate -l</span> — check for macOS updates',
+    tasks: [
+      { text:'Open current directory in Finder: <code>open .</code>', hint:'Type: open . — opens Finder at your current location', validate: c => c.cmd.includes('open') },
+      { text:'Text-to-speech: <code>say "Hello from the terminal"</code>', hint:'Type: say "message" — your Mac speaks the text aloud', validate: c => c.cmd.includes('say') },
+      { text:'Prevent sleep: <code>caffeinate</code>', hint:'Type: caffeinate — keeps your Mac awake (Ctrl+C to stop)', validate: c => c.cmd.includes('caffeinate') },
+      { text:'Spotlight search: <code>mdfind "terminal"</code>', hint:'Type: mdfind "query" — searches using Spotlight index', validate: c => c.cmd.includes('mdfind') },
+      { text:'Read system preferences: <code>defaults read NSGlobalDomain</code>', hint:'Type: defaults read domain — reads macOS preference values', validate: c => c.cmd.includes('defaults') },
+      { text:'Check for updates: <code>softwareupdate -l</code>', hint:'Type: softwareupdate -l — lists available macOS updates', validate: c => c.cmd.includes('softwareupdate') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 68: SPECIAL FILES & DEVICES
+  {
+    chapter: 68, title: 'Special Files & Devices',
+    desc: 'Unix has special files in <span class="code">/dev</span> that aren\'t really files — they\'re interfaces to the kernel:\n\n• <span class="code">/dev/null</span> — the "black hole." Anything written here vanishes.\n  <span class="code">command 2>/dev/null</span> — suppress errors\n• <span class="code">/dev/zero</span> — infinite stream of zero bytes\n  <span class="code">dd if=/dev/zero of=file bs=1M count=10</span> — create a 10MB file\n• <span class="code">/dev/urandom</span> — random data\n  <span class="code">head -c 32 /dev/urandom | base64</span> — generate random string\n• <span class="code">/dev/stdin</span>, <span class="code">/dev/stdout</span>, <span class="code">/dev/stderr</span> — standard streams\n• <span class="code">mkfifo pipe</span> — create a named pipe (FIFO) for IPC',
+    tasks: [
+      { text:'Discard output: <code>echo "gone" > /dev/null</code>', hint:'Type: echo "gone" > /dev/null — output vanishes', validate: c => c.cmd.includes('/dev/null') },
+      { text:'Generate random data: <code>head -c 16 /dev/urandom | base64</code>', hint:'Type the command to get random bytes and encode them', validate: c => c.cmd.includes('/dev/urandom') },
+      { text:'Create a named pipe: <code>mkfifo mypipe</code>', hint:'Type: mkfifo mypipe — creates a special FIFO file for IPC', validate: c => c.cmd.includes('mkfifo') },
+      { text:'Learn about /dev: <code>ls /dev</code>', hint:'Type: ls /dev — lists all device files on the system', validate: c => c.cmd.includes('ls') && c.cmd.includes('/dev') },
+      { text:'Create a file of zeros: <code>dd if=/dev/zero of=zeros.bin bs=1024 count=10</code>', hint:'Type: dd if=/dev/zero of=file bs=1024 count=10 — creates 10KB of zeros', validate: c => c.cmd.includes('dd') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 69: REPLS & INTERACTIVE SHELLS
+  {
+    chapter: 69, title: 'REPLs & Interactive Shells',
+    desc: 'A <span class="highlight">REPL</span> (Read-Eval-Print Loop) is an interactive programming environment:\n\n• <span class="code">python3</span> — Python REPL (>>> prompt)\n• <span class="code">node</span> — Node.js REPL (> prompt)\n• <span class="code">irb</span> — Ruby interactive shell\n\nREPLs are perfect for:\n• Quick calculations: <span class="code">python3 -c "print(2**10)"</span>\n• Testing code snippets before putting them in scripts\n• Exploring libraries interactively\n• One-liners: <span class="code">python3 -c "import json; print(json.dumps({\'a\':1}, indent=2))"</span>\n\nUse <span class="code">exit()</span> or <span class="code">Ctrl+D</span> to leave a REPL.',
+    tasks: [
+      { text:'Start Python REPL: <code>python3</code>', hint:'Type: python3 — enters the Python interactive interpreter', validate: c => c.cmd === 'python3' || c.cmd === 'python' },
+      { text:'Run a Python one-liner: <code>python3 -c "print(2**10)"</code>', hint:'Type: python3 -c "expression" — runs Python code inline', validate: c => c.cmd.includes('python') && c.cmd.includes('-c') },
+      { text:'Start Node.js REPL: <code>node</code>', hint:'Type: node — enters the Node.js interactive environment', validate: c => c.cmd === 'node' },
+      { text:'Run a Node one-liner: <code>node -e "console.log(Math.PI)"</code>', hint:'Type: node -e "code" — runs JavaScript code inline', validate: c => c.cmd.includes('node') && c.cmd.includes('-e') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 70: RSYNC & FILE SYNCHRONIZATION
+  {
+    chapter: 70, title: 'rsync & File Synchronization',
+    desc: '<span class="highlight">rsync</span> is the gold standard for file synchronization. It only transfers <span class="highlight">differences</span>, making it incredibly efficient.\n\nCommon patterns:\n• <span class="code">rsync -avz source/ dest/</span> — archive mode, verbose, compressed\n• <span class="code">rsync -avz dir/ user@host:dir/</span> — sync to remote via SSH\n• <span class="code">rsync --dry-run</span> — preview what would change\n• <span class="code">rsync --exclude "*.log"</span> — skip certain files\n• <span class="code">rsync --delete</span> — remove files in dest not in source\n\nFlags: <span class="code">-a</span> archive (preserves everything), <span class="code">-v</span> verbose, <span class="code">-z</span> compress during transfer, <span class="code">-P</span> show progress',
+    tasks: [
+      { text:'Sync directories: <code>rsync -avz documents/ backup/</code>', hint:'Type: rsync -avz source/ dest/ — syncs with archive mode', validate: c => c.cmd.includes('rsync') && c.cmd.includes('-a') },
+      { text:'Dry run first: <code>rsync -avz --dry-run documents/ backup/</code>', hint:'Type: rsync --dry-run — shows what would be transferred', validate: c => c.cmd.includes('rsync') && c.cmd.includes('--dry-run') },
+      { text:'Exclude files: <code>rsync -avz --exclude "*.log" documents/ backup/</code>', hint:'Type: rsync --exclude "pattern" — skips matching files', validate: c => c.cmd.includes('rsync') && c.cmd.includes('--exclude') },
+      { text:'Sync to remote: <code>rsync -avz documents/ user@server:~/backup/</code>', hint:'Type: rsync -avz dir/ user@host:path/ — syncs via SSH', validate: c => c.cmd.includes('rsync') && c.cmd.includes('@') },
+      { text:'Delete extra files: <code>rsync -avz --delete documents/ backup/</code>', hint:'Type: rsync --delete — removes files in dest that aren\'t in source', validate: c => c.cmd.includes('rsync') && c.cmd.includes('--delete') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 71: NETCAT (NC)
+  {
+    chapter: 71, title: 'netcat (nc)',
+    desc: '<span class="highlight">netcat</span> (nc) is the "Swiss Army knife" of networking. It reads and writes data across network connections.\n\nKey modes:\n• <span class="code">nc host port</span> — connect to a TCP server\n• <span class="code">nc -l port</span> — listen for incoming connections\n• <span class="code">nc -u host port</span> — UDP mode\n• <span class="code">nc -z host 1-1000</span> — port scanning\n\nPractical uses:\n• <span class="highlight">File transfer:</span> <span class="code">nc -l 1234 > file</span> (receiver) / <span class="code">nc host 1234 < file</span> (sender)\n• <span class="highlight">Simple chat:</span> Listen on one machine, connect from another\n• <span class="highlight">Banner grabbing:</span> <span class="code">echo "" | nc host 80</span> — see server info',
+    tasks: [
+      { text:'Connect to a host: <code>nc example.com 80</code>', hint:'Type: nc host port — opens a TCP connection', validate: c => c.cmd.includes('nc') && !c.cmd.includes('-l') && !c.cmd.includes('-z') },
+      { text:'Listen for connections: <code>nc -l 8080</code>', hint:'Type: nc -l port — starts listening for incoming connections', validate: c => c.cmd.includes('nc') && c.cmd.includes('-l') },
+      { text:'Scan ports: <code>nc -z example.com 1-100</code>', hint:'Type: nc -z host range — scans for open ports', validate: c => c.cmd.includes('nc') && c.cmd.includes('-z') },
+      { text:'UDP mode: <code>nc -u example.com 53</code>', hint:'Type: nc -u host port — connects using UDP instead of TCP', validate: c => c.cmd.includes('nc') && c.cmd.includes('-u') },
+      { text:'Learn netcat patterns: <code>nc help</code>', hint:'Type: nc help — shows common netcat use cases', validate: c => c.cmd === 'nc help' || (c.cmd.includes('nc') && c.cmd.includes('help')) },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 72: SHELL BUILTINS VS EXTERNAL COMMANDS
+  {
+    chapter: 72, title: 'Shell Builtins vs External Commands',
+    desc: 'Some commands are built into the shell itself (<span class="highlight">builtins</span>), while others are separate programs (<span class="highlight">external commands</span>).\n\n<span class="highlight">Builtins</span> (run inside the shell process):\n• <span class="code">cd</span>, <span class="code">echo</span>, <span class="code">export</span>, <span class="code">alias</span>, <span class="code">source</span>, <span class="code">type</span>, <span class="code">read</span>\n\n<span class="highlight">External</span> (separate programs in /usr/bin etc.):\n• <span class="code">ls</span>, <span class="code">grep</span>, <span class="code">find</span>, <span class="code">cat</span>, <span class="code">sort</span>\n\nWhy it matters:\n• Builtins are faster (no process creation)\n• <span class="code">type command</span> — tells you if it\'s builtin or external\n• <span class="code">which command</span> — shows the external binary path\n• <span class="code">command echo "hi"</span> — forces the external version\n• <span class="code">builtin echo "hi"</span> — forces the builtin version',
+    tasks: [
+      { text:'Check if a command is builtin: <code>type cd</code>', hint:'Type: type cd — shows "cd is a shell builtin"', validate: c => c.cmd.includes('type') && !c.cmd.includes('file') },
+      { text:'Find the external binary: <code>which ls</code>', hint:'Type: which ls — shows /bin/ls (the external program path)', validate: c => c.cmd.includes('which') },
+      { text:'Compare type vs which: <code>type echo</code>', hint:'Type: type echo — tells you echo is a builtin, not /bin/echo', validate: c => c.cmd.includes('type') && c.cmd.includes('echo') },
+      { text:'List all shell builtins: <code>builtin help</code>', hint:'Type: builtin help — shows all available shell builtins', validate: c => c.cmd.includes('builtin') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 73: ARRAYS & DATA STRUCTURES IN BASH
+  {
+    chapter: 73, title: 'Arrays & Data Structures in Bash',
+    desc: 'Bash supports <span class="highlight">indexed arrays</span> and <span class="highlight">associative arrays</span> (hash maps):\n\n<span class="highlight">Indexed arrays:</span>\n• <span class="code">arr=(one two three)</span> — create array\n• <span class="code">${arr[0]}</span> — access element (Bash: 0-indexed)\n• <span class="code">${arr[@]}</span> — all elements\n• <span class="code">${#arr[@]}</span> — array length\n• <span class="code">arr+=(four)</span> — append\n\n<span class="highlight">Associative arrays (Bash 4+):</span>\n• <span class="code">declare -A map</span>\n• <span class="code">map[key]="value"</span>\n• <span class="code">${map[key]}</span> — access by key\n• <span class="code">${!map[@]}</span> — all keys',
+    tasks: [
+      { text:'View array examples: <code>bash examples arrays</code>', hint:'Type: bash examples arrays — shows indexed array patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('array') },
+      { text:'View associative array examples: <code>bash examples assoc</code>', hint:'Type: bash examples assoc — shows associative array patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('assoc') },
+      { text:'Create an array inline: <code>echo "arr=(a b c); echo ${arr[@]}"</code>', hint:'Type an echo or bash command showing array syntax', validate: c => c.cmd.includes('arr') || (c.cmd.includes('bash') && c.cmd.includes('array')) },
+      { text:'Iterate over an array: <code>bash examples loop-array</code>', hint:'Type: bash examples loop-array — shows how to iterate arrays', validate: c => c.cmd.includes('bash') && c.cmd.includes('loop') },
+      { text:'Array slicing: <code>bash examples slice</code>', hint:'Type: bash examples slice — shows array slicing syntax', validate: c => c.cmd.includes('bash') && c.cmd.includes('slice') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 74: LOOPING PATTERNS
+  {
+    chapter: 74, title: 'Looping Patterns',
+    desc: 'Every loop pattern you need in shell scripting:\n\n<span class="highlight">for-in:</span> <span class="code">for x in a b c; do echo $x; done</span>\n<span class="highlight">C-style for:</span> <span class="code">for ((i=0; i<10; i++)); do echo $i; done</span>\n<span class="highlight">while:</span> <span class="code">while read line; do echo "$line"; done < file</span>\n<span class="highlight">until:</span> <span class="code">until [ condition ]; do ...; done</span> (opposite of while)\n<span class="highlight">select:</span> <span class="code">select opt in a b c; do echo $opt; done</span> (menu)\n\nControls:\n• <span class="code">break</span> — exit the loop\n• <span class="code">continue</span> — skip to next iteration\n\nReading files: <span class="code">while IFS= read -r line; do echo "$line"; done < file</span>',
+    tasks: [
+      { text:'View for loop examples: <code>bash examples for</code>', hint:'Type: bash examples for — shows for loop patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('for') },
+      { text:'View while loop examples: <code>bash examples while</code>', hint:'Type: bash examples while — shows while loop patterns', validate: c => c.cmd.includes('bash') && c.cmd.includes('while') },
+      { text:'Run a simple loop: <code>for i in 1 2 3; do echo $i; done</code>', hint:'Type the for-in loop to echo 1, 2, 3', validate: c => c.cmd.includes('for') && c.cmd.includes('do') },
+      { text:'View select menu example: <code>bash examples select</code>', hint:'Type: bash examples select — shows select menu pattern', validate: c => c.cmd.includes('bash') && c.cmd.includes('select') },
+      { text:'View file reading pattern: <code>bash examples read-file</code>', hint:'Type: bash examples read-file — shows while read pattern', validate: c => c.cmd.includes('bash') && c.cmd.includes('read') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 75: GITHUB CLI (GH)
+  {
+    chapter: 75, title: 'GitHub CLI (gh)',
+    desc: 'The <span class="highlight">GitHub CLI</span> (<span class="code">gh</span>) brings GitHub to your terminal:\n\n<span class="highlight">Repositories:</span>\n• <span class="code">gh repo create</span> — create a new repo\n• <span class="code">gh repo clone user/repo</span> — clone a repo\n• <span class="code">gh repo view</span> — view repo details\n\n<span class="highlight">Pull requests:</span>\n• <span class="code">gh pr create</span> — create a PR\n• <span class="code">gh pr list</span> — list open PRs\n• <span class="code">gh pr merge</span> — merge a PR\n\n<span class="highlight">Other:</span>\n• <span class="code">gh issue create/list</span> — manage issues\n• <span class="code">gh workflow run/view</span> — manage GitHub Actions\n• <span class="code">gh api</span> — call any GitHub API endpoint',
+    tasks: [
+      { text:'Create a repo: <code>gh repo create myproject</code>', hint:'Type: gh repo create myproject — creates a new GitHub repository', validate: c => c.cmd.includes('gh') && c.cmd.includes('repo') && c.cmd.includes('create') },
+      { text:'Create a pull request: <code>gh pr create</code>', hint:'Type: gh pr create — creates a PR from the current branch', validate: c => c.cmd.includes('gh') && c.cmd.includes('pr') && c.cmd.includes('create') },
+      { text:'List open PRs: <code>gh pr list</code>', hint:'Type: gh pr list — shows all open pull requests', validate: c => c.cmd.includes('gh') && c.cmd.includes('pr') && c.cmd.includes('list') },
+      { text:'View issues: <code>gh issue list</code>', hint:'Type: gh issue list — shows open issues', validate: c => c.cmd.includes('gh') && c.cmd.includes('issue') },
+      { text:'Run a workflow: <code>gh workflow run deploy.yml</code>', hint:'Type: gh workflow run name — triggers a GitHub Actions workflow', validate: c => c.cmd.includes('gh') && c.cmd.includes('workflow') },
+      { text:'Call GitHub API: <code>gh api repos/owner/repo</code>', hint:'Type: gh api endpoint — calls the GitHub REST API directly', validate: c => c.cmd.includes('gh') && c.cmd.includes('api') },
+    ],
+    xp: 90,
+  },
+  // CHAPTER 76: CHOWN & CHGRP
+  {
+    chapter: 76, title: 'chown & chgrp',
+    desc: 'Change file <span class="highlight">ownership</span> with <span class="code">chown</span> and group with <span class="code">chgrp</span>:\n\n• <span class="code">chown user file</span> — change owner\n• <span class="code">chown user:group file</span> — change owner and group\n• <span class="code">chgrp group file</span> — change group only\n• <span class="code">chown -R user:group dir/</span> — recursive\n\nCommon use cases:\n• Web server files: <span class="code">chown -R www-data:www-data /var/www</span>\n• Shared directories: <span class="code">chown :developers project/</span>\n\nUse <span class="code">ls -l</span> to see current ownership (3rd and 4th columns).',
+    tasks: [
+      { text:'Change file owner: <code>chown player documents/notes.txt</code>', hint:'Type: chown user file — changes who owns the file', validate: c => c.cmd.includes('chown') && !c.cmd.includes('-R') },
+      { text:'Change owner and group: <code>chown player:staff documents/notes.txt</code>', hint:'Type: chown user:group file — changes both owner and group', validate: c => c.cmd.includes('chown') && c.cmd.includes(':') },
+      { text:'Recursive ownership change: <code>chown -R player:staff documents/</code>', hint:'Type: chown -R user:group dir/ — changes all files recursively', validate: c => c.cmd.includes('chown') && c.cmd.includes('-R') },
+      { text:'Change group only: <code>chgrp staff documents/notes.txt</code>', hint:'Type: chgrp group file — changes only the group ownership', validate: c => c.cmd.includes('chgrp') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 77: TERMINAL RECORDING
+  {
+    chapter: 77, title: 'Terminal Recording',
+    desc: 'Record and replay terminal sessions — perfect for tutorials and debugging:\n\n<span class="highlight">script</span> — built-in session recorder:\n• <span class="code">script session.log</span> — start recording\n• <span class="code">exit</span> — stop recording\n• <span class="code">cat session.log</span> — replay the session\n\n<span class="highlight">asciinema</span> — modern terminal recorder:\n• <span class="code">asciinema rec demo.cast</span> — record a session\n• <span class="code">asciinema play demo.cast</span> — replay locally\n• <span class="code">asciinema upload demo.cast</span> — share online\n\nGreat for: documentation, bug reports, teaching, code reviews.',
+    tasks: [
+      { text:'Start a recording: <code>script session.log</code>', hint:'Type: script session.log — starts recording your terminal session', validate: c => c.cmd.includes('script') && !c.cmd.includes('asciinema') },
+      { text:'Record with asciinema: <code>asciinema rec demo.cast</code>', hint:'Type: asciinema rec file — records with timing data for playback', validate: c => c.cmd.includes('asciinema') && c.cmd.includes('rec') },
+      { text:'Replay a recording: <code>asciinema play demo.cast</code>', hint:'Type: asciinema play file — replays the recording', validate: c => c.cmd.includes('asciinema') && c.cmd.includes('play') },
+      { text:'Learn recording tools: <code>asciinema help</code>', hint:'Type: asciinema help — overview of terminal recording options', validate: c => c.cmd.includes('asciinema') && c.cmd.includes('help') },
+    ],
+    xp: 60,
+  },
+  // CHAPTER 78: BENCHMARKING & PERFORMANCE
+  {
+    chapter: 78, title: 'Benchmarking & Performance',
+    desc: 'Measure and optimize command performance:\n\n<span class="highlight">time</span> — measure execution time:\n• <span class="code">time command</span> — shows real, user, and sys time\n• <span class="code">real</span> — wall clock time\n• <span class="code">user</span> — CPU time in user mode\n• <span class="code">sys</span> — CPU time in kernel mode\n\n<span class="highlight">hyperfine</span> — statistical benchmarking:\n• <span class="code">hyperfine "command1" "command2"</span> — compare two commands\n• Runs multiple iterations, shows mean, min, max, std dev\n\n<span class="code">/usr/bin/time -l command</span> — detailed resource usage including memory',
+    tasks: [
+      { text:'Time a command: <code>time ls -R</code>', hint:'Type: time ls -R — measures how long recursive ls takes', validate: c => c.cmd.includes('time') && !c.cmd.includes('hyperfine') },
+      { text:'Compare commands: <code>hyperfine "find . -name *.txt" "fd .txt"</code>', hint:'Type: hyperfine "cmd1" "cmd2" — statistically compares performance', validate: c => c.cmd.includes('hyperfine') },
+      { text:'Detailed resource usage: <code>/usr/bin/time -l ls</code>', hint:'Type: /usr/bin/time -l command — shows memory and CPU details', validate: c => c.cmd.includes('/usr/bin/time') },
+      { text:'Learn benchmarking: <code>benchmark help</code>', hint:'Type: benchmark help — shows benchmarking tips and tools', validate: c => c.cmd.includes('benchmark') },
+    ],
+    xp: 70,
+  },
+  // CHAPTER 79: SQLITE3 FROM TERMINAL
+  {
+    chapter: 79, title: 'sqlite3 from Terminal',
+    desc: '<span class="highlight">SQLite</span> is a self-contained database engine you can use directly from the terminal:\n\n• <span class="code">sqlite3 db.sqlite</span> — open or create a database\n• <span class="code">.tables</span> — list all tables\n• <span class="code">.schema tablename</span> — show table structure\n• <span class="code">SELECT * FROM users;</span> — query data\n• <span class="code">.mode csv</span> — switch to CSV output\n• <span class="code">.import file.csv tablename</span> — import CSV data\n• <span class="code">.output file.txt</span> — redirect output to file\n• <span class="code">.quit</span> — exit sqlite3\n\nSQLite is everywhere: browsers, phones, and most apps use it.',
+    tasks: [
+      { text:'Open a database: <code>sqlite3 test.db</code>', hint:'Type: sqlite3 test.db — opens (or creates) a SQLite database', validate: c => c.cmd.includes('sqlite3') && !c.cmd.includes('help') },
+      { text:'Create a table: <code>sqlite3 create</code>', hint:'Type: sqlite3 create — shows CREATE TABLE syntax', validate: c => c.cmd.includes('sqlite3') && c.cmd.includes('create') },
+      { text:'Query data: <code>sqlite3 select</code>', hint:'Type: sqlite3 select — shows SELECT query examples', validate: c => c.cmd.includes('sqlite3') && c.cmd.includes('select') },
+      { text:'Import CSV: <code>sqlite3 import</code>', hint:'Type: sqlite3 import — shows how to import CSV data', validate: c => c.cmd.includes('sqlite3') && c.cmd.includes('import') },
+      { text:'Learn SQLite commands: <code>sqlite3 help</code>', hint:'Type: sqlite3 help — shows dot-commands and SQL examples', validate: c => c.cmd === 'sqlite3 help' },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 80: HEX, BINARY & ENCODING
+  {
+    chapter: 80, title: 'Hex, Binary & Encoding',
+    desc: 'Peek inside binary files and convert between encodings:\n\n• <span class="code">xxd file</span> — hex dump (both hex and ASCII)\n• <span class="code">xxd -r</span> — reverse hex dump (convert back to binary)\n• <span class="code">hexdump -C file</span> — canonical hex+ASCII display\n• <span class="code">base64 file</span> — encode file as Base64\n• <span class="code">base64 -d encoded</span> — decode Base64\n• <span class="code">od -A x -t x1 file</span> — octal dump with hex output\n• <span class="code">file binary</span> — identify file type from magic bytes\n• <span class="code">iconv -f UTF-16 -t UTF-8 file</span> — convert encodings',
+    tasks: [
+      { text:'Hex dump a file: <code>xxd documents/notes.txt</code>', hint:'Type: xxd file — shows hexadecimal representation', validate: c => c.cmd.includes('xxd') && !c.cmd.includes('-r') },
+      { text:'Base64 encode: <code>echo "hello" | base64</code>', hint:'Type: echo "text" | base64 — encodes text as Base64', validate: c => c.cmd.includes('base64') && !c.cmd.includes('-d') && !c.cmd.includes('-D') },
+      { text:'Base64 decode: <code>echo "aGVsbG8=" | base64 -d</code>', hint:'Type: echo "encoded" | base64 -d — decodes Base64 back to text', validate: c => c.cmd.includes('base64') && (c.cmd.includes('-d') || c.cmd.includes('-D')) },
+      { text:'Check file type: <code>file downloads/archive.tar.gz</code>', hint:'Type: file binary — identifies type from magic bytes in the header', validate: c => c.cmd.startsWith('file ') && !c.cmd.includes('find') },
+      { text:'Learn about encoding: <code>encoding help</code>', hint:'Type: encoding help — shows encoding formats and conversion tools', validate: c => c.cmd.includes('encoding') },
+    ],
+    xp: 80,
+  },
+  // CHAPTER 81: DEBUGGING SHELL SCRIPTS
+  {
+    chapter: 81, title: 'Debugging Shell Scripts',
+    desc: 'When scripts break, these tools help you find the bug:\n\n<span class="highlight">Trace mode:</span>\n• <span class="code">set -x</span> — print each command before executing (inside script)\n• <span class="code">bash -x script.sh</span> — run script with tracing from outside\n• <span class="code">PS4=\'+ ${LINENO}: \'</span> — customize trace prefix to show line numbers\n\n<span class="highlight">shellcheck</span> — static analysis linter:\n• <span class="code">shellcheck script.sh</span> — finds common bugs and bad practices\n• Catches quoting issues, word splitting, unused variables\n\n<span class="highlight">Common bugs:</span>\n• Unquoted variables: <span class="code">"$var"</span> not <span class="code">$var</span>\n• Word splitting on spaces\n• <span class="code">set -u</span> — error on unset variables\n• Missing <span class="code">-r</span> flag on <span class="code">read</span> (backslash interpretation)',
+    tasks: [
+      { text:'Trace a script: <code>bash -x scripts/hello.sh</code>', hint:'Type: bash -x script.sh — shows each command as it executes', validate: c => c.cmd.includes('bash') && c.cmd.includes('-x') },
+      { text:'Run shellcheck: <code>shellcheck scripts/hello.sh</code>', hint:'Type: shellcheck script.sh — static analysis for shell scripts', validate: c => c.cmd.includes('shellcheck') },
+      { text:'Learn about common bugs: <code>bash examples debug</code>', hint:'Type: bash examples debug — shows common shell script bugs', validate: c => c.cmd.includes('bash') && c.cmd.includes('debug') },
+      { text:'View set options: <code>bash examples set</code>', hint:'Type: bash examples set — shows set -e, -u, -x, -o pipefail', validate: c => c.cmd.includes('bash') && c.cmd.includes('set') },
+      { text:'Lint with verbose output: <code>shellcheck -x scripts/backup.sh</code>', hint:'Type: shellcheck -x script.sh — follows sourced files too', validate: c => c.cmd.includes('shellcheck') && c.cmd.includes('-x') },
+    ],
+    xp: 80,
+  },
 ];
 
 // ============================================================
@@ -1351,7 +1956,15 @@ const achievementDefs = [
   { id:'sysadmin', name:'Sysadmin', desc:'Monitor system resources', icon:'📊' },
   { id:'automation', name:'Automator', desc:'Set up a cron job', icon:'🤖' },
   { id:'tmux_user', name:'Multiplexer', desc:'Learn tmux basics', icon:'🪟' },
-  { id:'master', name:'Terminal Master', desc:'Complete all 35 chapters', icon:'👑' },
+  { id:'master', name:'Terminal Master', desc:'Complete 35 chapters', icon:'👑' },
+  { id:'vim_survivor', name:'Vim Survivor', desc:'Exit vim successfully', icon:'🏃' },
+  { id:'docker_captain', name:'Docker Captain', desc:'Run a container', icon:'🐳' },
+  { id:'json_jedi', name:'JSON Jedi', desc:'Process JSON with jq', icon:'🔮' },
+  { id:'pipeline_pro', name:'Pipeline Pro', desc:'Build a 5-command pipeline', icon:'🔗' },
+  { id:'macos_native', name:'macOS Native', desc:'Use 3 macOS-specific commands', icon:'🍎' },
+  { id:'modern_tools', name:'Modern Toolbox', desc:'Try 3 modern terminal tools', icon:'✨' },
+  { id:'gh_contributor', name:'Open Source Contributor', desc:'Use GitHub CLI', icon:'🐙' },
+  { id:'ultimate_master', name:'Ultimate Terminal Master', desc:'Complete all 81 chapters', icon:'💎' },
 ];
 
 // ============================================================
@@ -1379,6 +1992,8 @@ let state = {
   shortcutsLearned: new Set(),
   claudeFeaturesExplored: new Set(),
   warpFeaturesExplored: new Set(),
+  macosCommandsUsed: new Set(),
+  modernToolsUsed: new Set(),
 };
 
 // ============================================================
@@ -1584,9 +2199,114 @@ function runCommand(cmd, args, stdin) {
     case 'tmux': return cmdTmux(args);
     case 'crontab': return cmdCrontab(args);
     case 'xargs': return cmdXargs(args, stdin);
+    case 'vim': case 'vi': return cmdVim(args);
+    case 'nano': return cmdNano(args);
+    case 'docker': case 'docker-compose': return cmdDocker(args, cmd);
+    case 'id': return cmdId();
+    case 'sudo': return cmdSudo(args);
+    case 'su': return `<span class="info">Switching to user ${args[0] || 'root'}...</span>\n<span class="dim">Password required. In a real terminal, su switches your active user.\nUse sudo instead for running individual commands as root.</span>`;
+    case 'groups': return 'staff admin wheel developer';
+    case 'useradd': return args[0] ? `<span class="success">User '${args[0]}' created.</span>\n<span class="dim">In a real system, this modifies /etc/passwd and creates a home directory.</span>` : '<span class="error">useradd: missing username</span>';
+    case 'usermod': return args.length > 1 ? `<span class="success">Modified user ${args[args.length-1]}</span>` : '<span class="error">usermod: missing arguments</span>';
+    case 'ifconfig': return cmdIfconfig();
+    case 'ip': return cmdIp(args);
+    case 'netstat': return cmdNetstat(args);
+    case 'ss': return cmdNetstat(args);
+    case 'traceroute': return cmdTraceroute(args);
+    case 'dig': return cmdDig(args);
+    case 'nslookup': return cmdNslookup(args);
+    case 'make': return cmdMake(args);
+    case 'dmesg': return cmdDmesg();
+    case 'journalctl': return cmdJournalctl(args);
+    case 'last': return cmdLast();
+    case 'gpg': return cmdGpg(args);
+    case 'sha256sum': case 'md5': case 'md5sum': return cmdHash(args, cmd);
+    case 'openssl': return cmdOpenssl(args);
+    case 'ansi': return cmdAnsi(args);
+    case 'tput': return cmdTput(args);
+    case 'lsblk': return cmdLsblk();
+    case 'diskutil': return cmdDiskutil(args);
+    case 'mount': return cmdMount(args);
+    case 'umount': return `<span class="success">Unmounted ${args[0] || '/mnt/usb'}</span>`;
+    case 'python3': case 'python': return cmdPython(args);
+    case 'deactivate': return '<span class="info">(myenv) deactivated</span>\n<span class="dim">Returned to global Python environment.</span>';
+    case 'npx': return cmdNpx(args);
+    case 'node': return cmdNode(args);
+    case 'nvm': return '<span class="dim">Node Version Manager (0.39.7)\nUsage:\n  nvm install 20     Install Node 20\n  nvm use 20         Switch to Node 20\n  nvm ls             List installed versions\n  nvm ls-remote      List available versions\n  nvm alias default 20  Set default version</span>';
+    case 'jq': return cmdJq(args, stdin);
+    case 'diff': return cmdDiff(args);
+    case 'vimdiff': return `<span class="info">Opening ${args.slice(0,2).join(' and ')} in side-by-side view...</span>\n<span class="dim">vimdiff shows two files in split panes with differences highlighted.\nNavigation: ]c = next diff, [c = prev diff, do = obtain change, dp = put change\nExit: :qa to quit all panes.</span>`;
+    case 'patch': return args.length ? '<span class="success">patching file... done</span>' : '<span class="dim">Usage: patch < changes.patch\nApplies a diff/patch file to update source files.</span>';
+    case 'pbcopy': return '<span class="dim">(copied to clipboard)</span>';
+    case 'pbpaste': return 'Hello from the clipboard!\n<span class="dim">(In a real terminal, this outputs your actual clipboard contents)</span>';
+    case 'xclip': case 'xsel': return '<span class="dim">Linux clipboard utility. On macOS, use pbcopy/pbpaste instead.</span>';
+    case 'bash': return cmdBash(args);
+    case 'wait': return '<span class="dim">All background jobs completed.</span>';
+    case 'parallel': return cmdParallel(args);
+    case 'tr': return cmdTr(args, stdin);
+    case 'cal': return cmdCal();
+    case 'uname': return cmdUname(args);
+    case 'sw_vers': return 'ProductName:\tmacOS\nProductVersion:\t15.1\nBuildVersion:\t24B83';
+    case 'arch': return 'arm64';
+    case 'system_profiler': return cmdSystemProfiler(args);
+    case 'sysctl': return cmdSysctl(args);
+    case 'stat': return cmdStat(args);
+    case 'file': return cmdFile(args);
+    case 'mdls': return cmdMdls(args);
+    case 'rg': return cmdRg(args);
+    case 'fd': return cmdFd(args);
+    case 'bat': return cmdBat(args);
+    case 'eza': return cmdEza(args);
+    case 'fzf': return '<span class="info">Starting fuzzy finder...</span>\n<span class="dim">  documents/notes.txt\n  documents/todo.txt\n  documents/quotes.txt\n  scripts/hello.sh\n  scripts/backup.sh\n\nfzf is an interactive fuzzy finder. In a real terminal:\n  • Type to filter results\n  • Arrow keys to navigate\n  • Enter to select\n  • Ctrl+C to cancel\n\nPowerful combos:\n  vim $(fzf)           — open selected file in vim\n  cd $(find . -type d | fzf)  — cd to selected directory\n  history | fzf        — search command history\n  export FZF_DEFAULT_COMMAND="fd --type f"  — use fd for file listing</span>';
+    case 'zoxide': case 'z': return '<span class="dim">zoxide: jumped to /home/player/documents\n\nzoxide learns your most-used directories.\nUsage:\n  z documents    — jump to best match for "documents"\n  z -           — go to previous directory\n  zi            — interactive selection with fzf</span>';
+    case 'tldr': return cmdTldr(args);
+    case 'starship': return cmdStarship(args);
+    case 'omz': return cmdOmz(args);
+    case 'zsh': return cmdZsh(args);
+    case 'column': return cmdColumn(args, stdin);
+    case 'paste': return cmdPaste(args);
+    case 'join': return '<span class="dim">join — merge lines from two sorted files on a common field\nUsage: join file1 file2\n  join -t, -1 2 -2 1 file1 file2  — join on field 2 of file1, field 1 of file2</span>';
+    case 'exitcode': return cmdExitcode(args);
+    case 'open': return cmdOpen(args);
+    case 'say': return cmdSay(args);
+    case 'caffeinate': return '<span class="info">caffeinate: preventing system sleep...</span>\n<span class="dim">Press Ctrl+C to allow sleep again.\nFlags:\n  caffeinate -d   — prevent display sleep\n  caffeinate -i   — prevent idle sleep\n  caffeinate -s   — prevent system sleep\n  caffeinate -t 3600  — stay awake for 1 hour</span>';
+    case 'mdfind': return cmdMdfind(args);
+    case 'defaults': return cmdDefaults(args);
+    case 'softwareupdate': return '<span class="info">Software Update Tool</span>\nFinding available software...\n<span class="dim">No new software available.</span>\n\n<span class="dim">Usage:\n  softwareupdate -l          — list available updates\n  softwareupdate -i -a       — install all updates\n  softwareupdate -d -a       — download only</span>';
+    case 'launchctl': return '<span class="dim">launchctl — manage system and user services (daemons/agents)\nUsage:\n  launchctl list              — list loaded services\n  launchctl load file.plist   — load a service\n  launchctl unload file.plist — unload a service</span>';
+    case 'mkfifo': return args[0] ? `<span class="success">Created named pipe: ${args[0]}</span>\n<span class="dim">Named pipes (FIFOs) allow inter-process communication.\nWriter: echo "data" > ${args[0]}\nReader: cat ${args[0]}</span>` : '<span class="error">mkfifo: missing operand</span>';
+    case 'dd': return cmdDd(args);
+    case 'irb': return '<span class="info">irb(main):001:0> </span>\n<span class="dim">Interactive Ruby Shell. Type expressions to evaluate them.\nUse exit or Ctrl+D to leave.</span>';
+    case 'rsync': return cmdRsync(args);
+    case 'nc': case 'netcat': return cmdNc(args);
+    case 'type': return cmdType(args);
+    case 'builtin': return cmdBuiltin(args);
+    case 'command': return args.length ? runCommand(args[0], args.slice(1), stdin) : '<span class="dim">Usage: command name — forces external command (bypasses builtins/aliases)</span>';
+    case 'ghostty': return cmdGhostty(args);
+    case 'gh': return cmdGh(args);
+    case 'chown': return cmdChown(args);
+    case 'chgrp': return cmdChgrp(args);
+    case 'script': return cmdScript(args);
+    case 'asciinema': return cmdAsciinema(args);
+    case 'time': return cmdTime(args);
+    case 'hyperfine': return cmdHyperfine(args);
+    case 'benchmark': return cmdBenchmark(args);
+    case 'sqlite3': return cmdSqlite3(args);
+    case 'xxd': return cmdXxd(args);
+    case 'hexdump': return '<span class="dim">00000000  54 65 72 6d 69 6e 61 6c  20 41 63 61 64 65 6d 79  |Terminal Academy|\n00000010  0a                                                |.|\n00000011</span>';
+    case 'base64': return cmdBase64(args, stdin);
+    case 'od': return '<span class="dim">0000000 124 145 162 155 151 156 141 154\n0000010 040 101 143 141 144 145 155 171\n0000020 012\n0000021</span>';
+    case 'iconv': return '<span class="dim">iconv — convert between character encodings\nUsage: iconv -f FROM -t TO file\nExample: iconv -f UTF-16 -t UTF-8 input.txt > output.txt\nList encodings: iconv -l</span>';
+    case 'encoding': return cmdEncoding(args);
+    case 'shellcheck': return cmdShellcheck(args);
+    case 'sleep': return args[0] ? `<span class="dim">(slept ${args[0]} seconds)</span>` : '<span class="error">sleep: missing operand</span>';
+    case 'trap': return cmdTrap(args);
+    case 'for': return '<span class="dim">Use: for x in a b c; do echo $x; done</span>';
+    case 'select': return '<span class="dim">Use: select opt in a b c; do echo $opt; break; done</span>';
+    case 'lscpu': return 'Architecture:        arm64\nCPU(s):              10\nModel name:          Apple M2 Pro\nThread(s) per core:  1\nCore(s) per cluster: 6+4';
     case 'which': {
       if (!args[0]) return '<span class="error">which: missing argument</span>';
-      const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl',tar:'/usr/bin/tar',gzip:'/usr/bin/gzip',gunzip:'/usr/bin/gunzip',sed:'/usr/bin/sed',awk:'/usr/bin/awk',ln:'/bin/ln',readlink:'/usr/bin/readlink',df:'/bin/df',du:'/usr/bin/du',tmux:'/usr/bin/tmux',git:'/usr/bin/git',scp:'/usr/bin/scp','ssh-keygen':'/usr/bin/ssh-keygen',brew:'/usr/local/bin/brew',pip:'/usr/bin/pip',npm:'/usr/local/bin/npm',xargs:'/usr/bin/xargs',crontab:'/usr/bin/crontab',tee:'/usr/bin/tee',free:'/usr/bin/free',uptime:'/usr/bin/uptime',lsof:'/usr/sbin/lsof',watch:'/usr/bin/watch',apt:'/usr/bin/apt'};
+      const bins = {bash:'/bin/bash',zsh:'/bin/zsh',ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',sort:'/usr/bin/sort',head:'/usr/bin/head',tail:'/usr/bin/tail',cp:'/bin/cp',mv:'/bin/mv',rm:'/bin/rm',chmod:'/bin/chmod',mkdir:'/bin/mkdir',touch:'/usr/bin/touch',echo:'/bin/echo',wc:'/usr/bin/wc',cut:'/usr/bin/cut',uniq:'/usr/bin/uniq',ssh:'/usr/bin/ssh',curl:'/usr/bin/curl',tar:'/usr/bin/tar',gzip:'/usr/bin/gzip',gunzip:'/usr/bin/gunzip',sed:'/usr/bin/sed',awk:'/usr/bin/awk',ln:'/bin/ln',readlink:'/usr/bin/readlink',df:'/bin/df',du:'/usr/bin/du',tmux:'/usr/bin/tmux',git:'/usr/bin/git',scp:'/usr/bin/scp','ssh-keygen':'/usr/bin/ssh-keygen',brew:'/usr/local/bin/brew',pip:'/usr/bin/pip',npm:'/usr/local/bin/npm',xargs:'/usr/bin/xargs',crontab:'/usr/bin/crontab',tee:'/usr/bin/tee',free:'/usr/bin/free',uptime:'/usr/bin/uptime',lsof:'/usr/sbin/lsof',watch:'/usr/bin/watch',apt:'/usr/bin/apt',vim:'/usr/bin/vim',vi:'/usr/bin/vi',nano:'/usr/bin/nano',docker:'/usr/local/bin/docker',id:'/usr/bin/id',sudo:'/usr/bin/sudo',su:'/usr/bin/su',groups:'/usr/bin/groups',useradd:'/usr/sbin/useradd',usermod:'/usr/sbin/usermod',ifconfig:'/sbin/ifconfig',netstat:'/usr/sbin/netstat',ss:'/usr/bin/ss',traceroute:'/usr/sbin/traceroute',dig:'/usr/bin/dig',nslookup:'/usr/bin/nslookup',make:'/usr/bin/make',dmesg:'/usr/bin/dmesg',journalctl:'/usr/bin/journalctl',last:'/usr/bin/last',gpg:'/usr/local/bin/gpg',sha256sum:'/usr/bin/sha256sum',md5:'/usr/bin/md5',openssl:'/usr/bin/openssl',tput:'/usr/bin/tput',lsblk:'/usr/bin/lsblk',diskutil:'/usr/sbin/diskutil',mount:'/sbin/mount',umount:'/sbin/umount',python3:'/usr/bin/python3',node:'/usr/local/bin/node',npx:'/usr/local/bin/npx',jq:'/usr/local/bin/jq',diff:'/usr/bin/diff',vimdiff:'/usr/bin/vimdiff',patch:'/usr/bin/patch',pbcopy:'/usr/bin/pbcopy',pbpaste:'/usr/bin/pbpaste',rg:'/usr/local/bin/rg',fd:'/usr/local/bin/fd',bat:'/usr/local/bin/bat',eza:'/usr/local/bin/eza',fzf:'/usr/local/bin/fzf',tldr:'/usr/local/bin/tldr',column:'/usr/bin/column',paste:'/usr/bin/paste',join:'/usr/bin/join',open:'/usr/bin/open',say:'/usr/bin/say',caffeinate:'/usr/bin/caffeinate',mdfind:'/usr/bin/mdfind',defaults:'/usr/bin/defaults',softwareupdate:'/usr/sbin/softwareupdate',mkfifo:'/usr/bin/mkfifo',dd:'/bin/dd',rsync:'/usr/bin/rsync',nc:'/usr/bin/nc',gh:'/usr/local/bin/gh',chown:'/usr/sbin/chown',chgrp:'/usr/bin/chgrp',script:'/usr/bin/script',asciinema:'/usr/local/bin/asciinema',time:'/usr/bin/time',hyperfine:'/usr/local/bin/hyperfine',sqlite3:'/usr/bin/sqlite3',xxd:'/usr/bin/xxd',hexdump:'/usr/bin/hexdump',base64:'/usr/bin/base64',od:'/usr/bin/od',iconv:'/usr/bin/iconv',shellcheck:'/usr/local/bin/shellcheck',parallel:'/usr/local/bin/parallel',tr:'/usr/bin/tr',cal:'/usr/bin/cal',uname:'/usr/bin/uname',stat:'/usr/bin/stat',file:'/usr/bin/file',mdls:'/usr/bin/mdls',ghostty:'/Applications/Ghostty.app/Contents/MacOS/ghostty'};
       return bins[args[0]] || `${args[0]} not found`;
     }
     case 'man': return cmdMan(args);
@@ -3284,6 +4004,1496 @@ function cmdXargs(args, stdin) {
   return output || `<span class="dim">xargs: ran ${cmd} on ${items.length} items</span>`;
 }
 
+// --- vim ---
+function cmdVim(args) {
+  if (!args[0]) return '<span class="dim">Usage: vim [file]\nVim is a modal text editor. Modes: Normal, Insert, Visual, Command.</span>';
+  if (args[0] === 'help') {
+    checkAchievement('vim_survivor');
+    return `<span class="info">━━━ VIM CHEAT SHEET ━━━</span>
+
+<span class="warning">Modes:</span>
+  Normal mode  — default, for navigation/commands (press Esc)
+  Insert mode  — for typing text (press i, a, o)
+  Visual mode  — for selecting text (press v, V, Ctrl+V)
+  Command mode — for ex commands (press :)
+
+<span class="warning">Essential Commands:</span>
+  i        Enter insert mode (before cursor)
+  Esc      Return to normal mode
+  :wq      Save and quit
+  :q!      Quit without saving
+  :w       Save without quitting
+
+<span class="warning">Navigation (Normal mode):</span>
+  h j k l  Left, Down, Up, Right
+  w / b    Next word / previous word
+  gg / G   Top of file / bottom of file
+  0 / $    Start / end of line
+
+<span class="warning">Editing (Normal mode):</span>
+  dd       Delete (cut) current line
+  yy       Yank (copy) current line
+  p        Paste below cursor
+  u        Undo
+  Ctrl+R   Redo
+  /text    Search for "text" (n=next, N=prev)
+  :%s/old/new/g  Find and replace all
+
+<span class="warning">Pro tips:</span>
+  :set number     Show line numbers
+  :set paste      Paste mode (preserves formatting)
+  :split file     Horizontal split
+  :vsplit file    Vertical split`;
+  }
+  if (args[0] === ':wq' || args[0] === ':q!' || args[0] === ':q' || args[0] === ':x') {
+    checkAchievement('vim_survivor');
+    const action = args[0] === ':wq' || args[0] === ':x' ? 'Saved and exited' : 'Exited without saving';
+    return `<span class="success">${action} vim.</span>\n<span class="dim">Congratulations — you successfully exited vim! 🎉\nMany developers aren't so lucky.</span>`;
+  }
+  if (args[0].startsWith('/')) {
+    return `<span class="info">Searching for "${args[0].slice(1)}"...</span>\n<span class="dim">In vim: /pattern searches forward, ?pattern searches backward.\nn = next match, N = previous match.</span>`;
+  }
+  const filePath = resolvePath(state.cwd, args[0]);
+  const node = getNode(state.fs, filePath);
+  return `<span class="info">Opening ${args[0]} in vim...</span>
+${node && node.content ? '<span class="dim">' + escapeHtml(node.content.slice(0, 300)) + (node.content.length > 300 ? '...' : '') + '</span>' : '<span class="dim">(new file)</span>'}
+
+<span class="dim">You're now in vim (Normal mode).
+  Press i to enter Insert mode and start typing.
+  Press Esc to return to Normal mode.
+  Type :wq to save and exit, :q! to quit without saving.</span>`;
+}
+
+// --- nano ---
+function cmdNano(args) {
+  if (!args[0]) return '<span class="dim">Usage: nano [file]\nnano is a user-friendly terminal text editor.</span>';
+  if (args[0] === 'help') {
+    return `<span class="info">━━━ NANO CHEAT SHEET ━━━</span>
+
+<span class="warning">Key Shortcuts (^ = Ctrl):</span>
+  Ctrl+O     Write Out (save)
+  Ctrl+X     Exit
+  Ctrl+W     Where Is (search)
+  Ctrl+K     Cut current line
+  Ctrl+U     Uncut (paste) line
+  Ctrl+G     Help screen
+  Ctrl+_     Go to line number
+  Ctrl+\\     Find and replace
+  Ctrl+C     Show cursor position
+
+<span class="warning">Navigation:</span>
+  Arrow keys     Move cursor
+  Ctrl+A / Ctrl+E  Start / end of line
+  Ctrl+Y / Ctrl+V  Page up / page down
+  Alt+\\  / Alt+/   Top / bottom of file
+
+<span class="warning">Config (~/.nanorc):</span>
+  set tabsize 4
+  set linenumbers
+  set autoindent
+  include "/usr/share/nano/*.nanorc"  — syntax highlighting`;
+  }
+  const filePath = resolvePath(state.cwd, args[0]);
+  const node = getNode(state.fs, filePath);
+  return `<span class="info">  GNU nano — ${args[0]}</span>
+${node && node.content ? '<span class="dim">' + escapeHtml(node.content.slice(0, 300)) + '</span>' : '<span class="dim">(New File)</span>'}
+
+<span class="dim">^O Write Out  ^X Exit  ^W Where Is  ^K Cut  ^U Paste  ^G Help
+(^ means Ctrl key)</span>`;
+}
+
+// --- docker ---
+function cmdDocker(args, fullCmd) {
+  if (fullCmd === 'docker-compose' || (args[0] === 'compose')) {
+    const sub = fullCmd === 'docker-compose' ? args[0] : args[1];
+    if (!sub) return '<span class="dim">Usage: docker-compose &lt;command&gt;\nCommands: up, down, ps, logs, build, restart</span>';
+    switch(sub) {
+      case 'up': return '<span class="success">Creating network "myapp_default"...</span>\nCreating myapp_web_1   ... <span class="success">done</span>\nCreating myapp_db_1    ... <span class="success">done</span>\nCreating myapp_redis_1 ... <span class="success">done</span>\n<span class="dim">Attaching to myapp_web_1, myapp_db_1, myapp_redis_1\nweb_1    | Server running on port 3000</span>';
+      case 'down': return '<span class="dim">Stopping myapp_web_1   ... done\nStopping myapp_db_1    ... done\nStopping myapp_redis_1 ... done\nRemoving containers... done\nRemoving network myapp_default</span>';
+      case 'ps': return 'NAME             SERVICE   STATUS    PORTS\nmyapp_web_1      web       running   0.0.0.0:3000->3000/tcp\nmyapp_db_1       db        running   5432/tcp\nmyapp_redis_1    redis     running   6379/tcp';
+      default: return `<span class="dim">docker-compose ${sub}: running...</span>`;
+    }
+  }
+  if (!args[0]) return '<span class="dim">Usage: docker &lt;command&gt;\nCommands: run, ps, images, build, stop, rm, exec, logs, pull</span>';
+  const sub = args[0];
+  switch(sub) {
+    case 'run':
+      checkAchievement('docker_captain');
+      const img = args[args.length - 1] || 'hello-world';
+      return `<span class="dim">Unable to find image '${img}:latest' locally\nlatest: Pulling from library/${img}\n4f4fb700ef54: Pull complete\nDigest: sha256:abc123...</span>
+<span class="success">Hello from Docker!</span>
+This message shows that your installation appears to be working correctly.
+
+<span class="dim">Container ID: a1b2c3d4e5f6
+To see running containers: docker ps
+To see all containers: docker ps -a</span>`;
+    case 'ps':
+      if (args.includes('-a')) return 'CONTAINER ID   IMAGE         COMMAND       STATUS                    NAMES\na1b2c3d4e5f6   hello-world   "/hello"      Exited (0) 5 min ago      eager_newton\nb2c3d4e5f6a7   nginx:latest  "nginx -g…"   Up 2 hours                web-server\nc3d4e5f6a7b8   postgres:15   "docker-e…"  Up 2 hours                my-db';
+      return 'CONTAINER ID   IMAGE          COMMAND       STATUS       PORTS                    NAMES\nb2c3d4e5f6a7   nginx:latest   "nginx -g…"  Up 2 hours   0.0.0.0:80->80/tcp       web-server\nc3d4e5f6a7b8   postgres:15    "docker-e…"  Up 2 hours   0.0.0.0:5432->5432/tcp   my-db';
+    case 'images':
+      return 'REPOSITORY    TAG       IMAGE ID       SIZE\nnginx         latest    a1b2c3d4e5f6   187MB\npostgres      15        b2c3d4e5f6a7   379MB\nnode          20        c3d4e5f6a7b8   1.1GB\nhello-world   latest    d4e5f6a7b8c9   13.3kB\npython        3.12      e5f6a7b8c9d0   1.01GB';
+    case 'build':
+      return `<span class="success">Step 1/5 : FROM node:20-alpine</span>\n ---> abc123def456\n<span class="success">Step 2/5 : WORKDIR /app</span>\n ---> Running in 7890abcdef\n<span class="success">Step 3/5 : COPY package*.json ./</span>\n ---> 456def789abc\n<span class="success">Step 4/5 : RUN npm install</span>\n ---> Running in fedcba987654\n<span class="success">Step 5/5 : COPY . .</span>\n ---> 789abc012def\nSuccessfully built 789abc012def\n<span class="success">Successfully tagged ${args.includes('-t') ? args[args.indexOf('-t') + 1] : 'myapp'}:latest</span>`;
+    case 'stop':
+      return `<span class="dim">${args[1] || 'container'}\nStopped.</span>`;
+    case 'rm':
+      return `<span class="dim">${args[1] || 'container'}\nRemoved.</span>`;
+    case 'exec':
+      return `<span class="info">Executing in container ${args[1] || '...'}:</span>\n<span class="dim">root@container:/app# (interactive shell)</span>`;
+    case 'logs':
+      return `<span class="dim">[2026-03-23T10:00:00Z] Server started on port 3000\n[2026-03-23T10:00:01Z] Connected to database\n[2026-03-23T10:01:15Z] GET /api/health 200 2ms\n[2026-03-23T10:02:30Z] GET /api/users 200 15ms</span>`;
+    case 'pull':
+      return `<span class="dim">Using default tag: latest\nlatest: Pulling from library/${args[1] || 'image'}\n4f4fb700ef54: Pull complete\nDigest: sha256:abc123...\nStatus: Downloaded newer image for ${args[1] || 'image'}:latest</span>`;
+    default:
+      return `<span class="error">docker: '${sub}' is not a docker command.</span>`;
+  }
+}
+
+// --- id ---
+function cmdId() {
+  return 'uid=501(player) gid=20(staff) groups=20(staff),12(admin),61(wheel),80(developer)';
+}
+
+// --- sudo ---
+function cmdSudo(args) {
+  if (!args[0]) return '<span class="error">usage: sudo command</span>';
+  const result = runCommand(args[0], args.slice(1), null);
+  if (args[0] === 'whoami') return 'root';
+  return `<span class="dim">[sudo] password for player: ****</span>\n${result}`;
+}
+
+// --- ifconfig ---
+function cmdIfconfig() {
+  return `en0: flags=8863<UP,BROADCAST,RUNNING,SIMPLEX,MULTICAST> mtu 1500
+	inet 192.168.1.42 netmask 0xffffff00 broadcast 192.168.1.255
+	inet6 fe80::1c:a5ff:fe9b:1234%en0 prefixlen 64 scopeid 0x6
+	ether 3c:22:fb:9b:12:34
+	status: active
+
+lo0: flags=8049<UP,LOOPBACK,RUNNING,MULTICAST> mtu 16384
+	inet 127.0.0.1 netmask 0xff000000
+	inet6 ::1 prefixlen 128
+	inet6 fe80::1%lo0 prefixlen 64 scopeid 0x1`;
+}
+
+// --- ip ---
+function cmdIp(args) {
+  if (args[0] === 'addr' || args[0] === 'a') {
+    return `1: lo: <LOOPBACK,UP> mtu 16384
+    inet 127.0.0.1/8 scope host lo
+2: en0: <BROADCAST,MULTICAST,UP> mtu 1500
+    inet 192.168.1.42/24 brd 192.168.1.255 scope global en0
+    inet6 fe80::1c:a5ff:fe9b:1234/64 scope link`;
+  }
+  return '<span class="dim">Usage: ip addr — show network interfaces\nip route — show routing table\nip link — show link status</span>';
+}
+
+// --- netstat ---
+function cmdNetstat(args) {
+  return `Proto  Local Address       Foreign Address     State       PID/Program
+tcp    0.0.0.0:22          0.0.0.0:*           LISTEN      1234/sshd
+tcp    0.0.0.0:80          0.0.0.0:*           LISTEN      5678/nginx
+tcp    0.0.0.0:443         0.0.0.0:*           LISTEN      5678/nginx
+tcp    0.0.0.0:3000        0.0.0.0:*           LISTEN      9012/node
+tcp    0.0.0.0:5432        0.0.0.0:*           LISTEN      3456/postgres
+tcp    192.168.1.42:52341  93.184.216.34:443   ESTABLISHED 7890/curl
+
+<span class="dim">Flags: -t TCP, -u UDP, -l listening, -n numeric, -p show PID</span>`;
+}
+
+// --- traceroute ---
+function cmdTraceroute(args) {
+  if (!args[0]) return '<span class="error">Usage: traceroute hostname</span>';
+  const host = args[0];
+  return `traceroute to ${host} (93.184.216.34), 30 hops max, 60 byte packets
+ 1  gateway (192.168.1.1)  1.234 ms  1.112 ms  1.034 ms
+ 2  isp-router (10.0.0.1)  5.678 ms  5.432 ms  5.321 ms
+ 3  core-router (172.16.0.1)  12.345 ms  12.123 ms  12.012 ms
+ 4  edge-router (198.51.100.1)  18.765 ms  18.543 ms  18.432 ms
+ 5  ${host} (93.184.216.34)  22.345 ms  22.123 ms  22.012 ms
+
+<span class="dim">Each line is a "hop" — a router between you and the destination.
+Three times are shown per hop (three probe packets).
+* means the router didn't respond (filtered or timeout).</span>`;
+}
+
+// --- dig ---
+function cmdDig(args) {
+  if (!args[0]) return '<span class="error">Usage: dig domain</span>';
+  const domain = args[0];
+  return `; <<>> DiG 9.18.18 <<>> ${domain}
+;; QUESTION SECTION:
+;${domain}.                 IN      A
+
+;; ANSWER SECTION:
+${domain}.          300     IN      A       93.184.216.34
+
+;; AUTHORITY SECTION:
+${domain}.          86400   IN      NS      ns1.example.com.
+
+;; Query time: 23 msec
+;; SERVER: 8.8.8.8#53(8.8.8.8)
+;; WHEN: ${new Date().toUTCString()}
+
+<span class="dim">dig performs DNS lookups. Key record types:
+  A     — IPv4 address       AAAA  — IPv6 address
+  MX    — mail server        NS    — nameserver
+  CNAME — canonical name     TXT   — text record</span>`;
+}
+
+// --- nslookup ---
+function cmdNslookup(args) {
+  if (!args[0]) return '<span class="error">Usage: nslookup domain</span>';
+  return `Server:  8.8.8.8
+Address: 8.8.8.8#53
+
+Non-authoritative answer:
+Name:    ${args[0]}
+Address: 93.184.216.34`;
+}
+
+// --- make ---
+function cmdMake(args) {
+  if (!args[0] || args[0] === 'all') {
+    return `<span class="dim">gcc -Wall -O2 -c main.c -o main.o</span>
+<span class="dim">gcc -Wall -O2 -c utils.c -o utils.o</span>
+<span class="dim">gcc main.o utils.o -o myapp</span>
+<span class="success">Build complete: myapp</span>`;
+  }
+  if (args[0] === 'clean') {
+    return '<span class="dim">rm -f *.o myapp</span>\n<span class="success">Clean complete.</span>';
+  }
+  if (args[0] === '-n') {
+    return '<span class="dim">gcc -Wall -O2 -c main.c -o main.o\ngcc -Wall -O2 -c utils.c -o utils.o\ngcc main.o utils.o -o myapp</span>\n<span class="info">(dry run — no commands were actually executed)</span>';
+  }
+  if (args[0] === 'help') {
+    return `<span class="info">━━━ MAKEFILE STRUCTURE ━━━</span>
+
+<span class="warning">Basic syntax:</span>
+  target: dependencies
+  \\tcommand
+
+<span class="warning">Example Makefile:</span>
+<span class="dim">CC = gcc
+CFLAGS = -Wall -O2
+
+all: myapp
+
+myapp: main.o utils.o
+\\t$(CC) $(CFLAGS) main.o utils.o -o myapp
+
+main.o: main.c
+\\t$(CC) $(CFLAGS) -c main.c
+
+clean:
+\\trm -f *.o myapp
+
+.PHONY: all clean</span>
+
+<span class="warning">Common patterns:</span>
+  make             Run default target
+  make target      Run specific target
+  make -n          Dry run (show commands)
+  make -j4         Parallel build (4 jobs)
+  make VAR=value   Override a variable`;
+  }
+  if (args.some(a => a.includes('='))) {
+    const varPart = args.find(a => a.includes('='));
+    return `<span class="dim">Using ${varPart}</span>\n<span class="dim">Building with overridden variable...</span>\n<span class="success">Build complete.</span>`;
+  }
+  return `<span class="dim">make: '${args[0]}' is up to date.</span>`;
+}
+
+// --- dmesg ---
+function cmdDmesg() {
+  return `[    0.000000] Darwin Kernel Version 24.1.0
+[    0.000001] BIOS-provided physical RAM map
+[    0.012345] CPU: Apple M2 Pro (10 cores)
+[    0.023456] Memory: 16384MB available
+[    1.234567] USB subsystem initialized
+[    1.345678] Bluetooth controller initialized
+[    2.456789] en0: Ethernet address: 3c:22:fb:9b:12:34
+[    3.567890] disk0: Apple APFS Media
+[    4.678901] Mounted root filesystem (apfs, read-only)
+[    5.789012] System ready.
+
+<span class="dim">dmesg shows kernel ring buffer messages — hardware detection,
+driver loading, and system boot information.</span>`;
+}
+
+// --- journalctl ---
+function cmdJournalctl(args) {
+  return `-- Journal begins at Mon 2026-03-23 00:00:00 UTC --
+Mar 23 08:00:01 academy systemd[1]: Started System Logging Service.
+Mar 23 08:00:02 academy sshd[1234]: Server listening on 0.0.0.0 port 22.
+Mar 23 08:00:03 academy nginx[5678]: nginx/1.25.4 started
+Mar 23 08:01:15 academy node[9012]: Server running on port 3000
+Mar 23 08:05:00 academy CRON[2345]: (player) CMD (/usr/bin/cleanup.sh)
+Mar 23 08:10:30 academy kernel: [UFW BLOCK] IN=en0 SRC=10.0.0.5
+Mar 23 09:00:00 academy systemd[1]: Starting Daily Cleanup...
+Mar 23 09:00:01 academy systemd[1]: Finished Daily Cleanup.
+
+<span class="dim">Useful flags:
+  journalctl -f          Follow logs in real time
+  journalctl -n 20       Show last 20 entries
+  journalctl -u nginx    Show logs for nginx service
+  journalctl --since "1 hour ago"  Time-based filtering</span>`;
+}
+
+// --- last ---
+function cmdLast() {
+  return `player   tty1         Mon Mar 23 08:00   still logged in
+player   tty1         Sun Mar 22 09:15 - 22:30  (13:15)
+player   tty1         Sat Mar 21 10:00 - 18:45  (08:45)
+root     tty1         Fri Mar 20 02:00 - 02:15  (00:15)
+
+wtmp begins Fri Mar 20 02:00:00 2026`;
+}
+
+// --- gpg ---
+function cmdGpg(args) {
+  if (args.includes('-c')) {
+    const file = args.filter(a => !a.startsWith('-')).pop();
+    return `<span class="dim">Enter passphrase: ****</span>\n<span class="success">Encrypted: ${file || 'file'}.gpg</span>\n<span class="dim">The file is now encrypted with AES-256. Keep your passphrase safe!</span>`;
+  }
+  if (args.includes('-d')) {
+    const file = args.filter(a => !a.startsWith('-')).pop();
+    return `<span class="dim">Enter passphrase: ****</span>\n<span class="success">Decrypted ${file || 'file.gpg'} successfully.</span>`;
+  }
+  if (args.includes('--sign')) {
+    const file = args.filter(a => !a.startsWith('-')).pop();
+    return `<span class="success">Signed: ${file || 'file'}.sig</span>\n<span class="dim">Digital signature created using your private key.</span>`;
+  }
+  return '<span class="dim">Usage: gpg [options] file\n  -c file       Symmetric encrypt (passphrase)\n  -d file.gpg   Decrypt\n  --sign file   Create digital signature\n  --verify file.sig  Verify signature\n  --gen-key     Generate a new key pair</span>';
+}
+
+// --- hash (sha256sum, md5) ---
+function cmdHash(args, cmd) {
+  if (!args[0]) return `<span class="error">${cmd}: missing file operand</span>`;
+  const file = args[0];
+  if (cmd === 'md5' || cmd === 'md5sum') {
+    return `MD5 (${file}) = d41d8cd98f00b204e9800998ecf8427e\n<span class="dim">MD5 is fast but not collision-resistant. Use SHA-256 for security.</span>`;
+  }
+  return `a7ffc6f8bf1ed76651c14756a061d662f580ff4de43b49fa82d80a4b80f8434a  ${file}\n<span class="dim">SHA-256 produces a unique 64-character hex fingerprint. Any change to the file changes the hash completely.</span>`;
+}
+
+// --- openssl ---
+function cmdOpenssl(args) {
+  if (args[0] === 'rand') {
+    const encoding = args.includes('-base64') ? 'base64' : 'hex';
+    const bytes = args[args.length - 1] || '32';
+    if (encoding === 'base64') return 'kX7bN9pQ2mR5vW8yA3eH6jL0tU4wZ1xC/fD+gI=';
+    return 'a7f3c6b8d1e9054f2a8c7b6d3e0f1a2b4c5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f';
+  }
+  return '<span class="dim">OpenSSL — cryptography toolkit\nUsage:\n  openssl rand -base64 32  — generate random password\n  openssl rand -hex 16     — generate random hex string\n  openssl s_client -connect host:443  — test TLS connection\n  openssl x509 -in cert.pem -text  — view certificate details</span>';
+}
+
+// --- ansi ---
+function cmdAnsi(args) {
+  if (args[0] === 'colors' || !args[0]) {
+    return `<span class="info">━━━ ANSI COLOR CODES ━━━</span>
+
+<span class="warning">Foreground colors (\\033[XXm):</span>
+  30 Black   31 <span style="color:#ff3860">Red</span>    32 <span style="color:#00ff88">Green</span>  33 <span style="color:#ffd700">Yellow</span>
+  34 <span style="color:#5b7fff">Blue</span>    35 <span style="color:#ff79c6">Magenta</span> 36 <span style="color:#00e5ff">Cyan</span>   37 White
+
+<span class="warning">Background colors (\\033[XXm):</span>
+  40 Black   41 Red     42 Green   43 Yellow
+  44 Blue    45 Magenta 46 Cyan    47 White
+
+<span class="warning">Formatting:</span>
+  0  Reset    1  Bold     2  Dim
+  4  Underline  5  Blink  7  Reverse
+
+<span class="warning">Usage in echo:</span>
+  echo "\\033[1;32mBold Green\\033[0m"
+  echo "\\033[4;31mUnderlined Red\\033[0m"
+  printf "\\e[33mYellow text\\e[0m\\n"`;
+  }
+  return '<span class="dim">Usage: ansi colors — show ANSI escape code reference</span>';
+}
+
+// --- tput ---
+function cmdTput(args) {
+  if (!args[0]) return '<span class="dim">Usage: tput <capability>\n  tput bold     — bold text\n  tput setaf N  — set foreground color (0-7)\n  tput sgr0     — reset formatting\n  tput cols     — terminal width\n  tput lines    — terminal height</span>';
+  switch(args[0]) {
+    case 'bold': return '<span class="dim">(bold mode enabled)</span>';
+    case 'sgr0': return '<span class="dim">(formatting reset)</span>';
+    case 'cols': return '120';
+    case 'lines': return '40';
+    case 'setaf': return `<span class="dim">(foreground color set to ${args[1] || '0'})</span>`;
+    default: return `<span class="dim">(tput: ${args[0]} applied)</span>`;
+  }
+}
+
+// --- lsblk ---
+function cmdLsblk() {
+  return `NAME        MAJ:MIN  SIZE TYPE MOUNTPOINT
+disk0         8:0   500G disk
+├─disk0s1     8:1   500M EFI  /boot/efi
+├─disk0s2     8:2   490G APFS /
+└─disk0s3     8:3   9.5G APFS /System/Volumes/VM
+disk1         8:16    1T disk
+└─disk1s1     8:17    1T APFS /Volumes/External`;
+}
+
+// --- diskutil ---
+function cmdDiskutil(args) {
+  if (!args[0] || args[0] === 'list') {
+    state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('diskutil');
+    if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+    return `/dev/disk0 (internal):
+   #:                TYPE  NAME          SIZE      IDENTIFIER
+   0:                GUID_partition_scheme            500.1 GB  disk0
+   1:                      EFI EFI       524.3 MB  disk0s1
+   2:                APFS Container disk2           499.6 GB  disk0s2
+
+/dev/disk1 (external, USB):
+   #:                TYPE  NAME          SIZE      IDENTIFIER
+   0:                GUID_partition_scheme            1.0 TB    disk1
+   1:                APFS  External      1.0 TB    disk1s1`;
+  }
+  return `<span class="dim">diskutil — macOS disk utility\nUsage:\n  diskutil list              — list all disks\n  diskutil info disk0        — disk details\n  diskutil eject disk1       — safely eject external drive\n  diskutil apfs list         — list APFS volumes</span>`;
+}
+
+// --- mount ---
+function cmdMount(args) {
+  if (!args[0]) return '/dev/disk0s2 on / (apfs, local, journaled)\ndevfs on /dev (devfs, local, nobrowse)\n/dev/disk1s1 on /Volumes/External (apfs, local, nodev, nosuid)';
+  return `<span class="success">Mounted ${args[args.length-1]} successfully.</span>`;
+}
+
+// --- python ---
+function cmdPython(args) {
+  if (!args[0]) {
+    return `Python 3.12.3 (main, Apr  9 2026, 08:00:00)
+[Clang 15.0.0] on darwin
+Type "help", "copyright", "credits" or "license" for more information.
+>>>
+<span class="dim">You're in the Python REPL. Type Python expressions to evaluate them.
+  >>> 2 + 2
+  4
+  >>> import os; os.getcwd()
+  '/home/player'
+Type exit() or Ctrl+D to leave.</span>`;
+  }
+  if (args[0] === '-c') {
+    const code = args.slice(1).join(' ');
+    return `<span class="dim">(executing: python3 -c ${code})</span>\n1024`;
+  }
+  if (args.includes('-m') && args.includes('venv')) {
+    const envName = args[args.indexOf('venv') + 1] || 'venv';
+    return `<span class="success">Created virtual environment: ${envName}/</span>\n<span class="dim">Activate it: source ${envName}/bin/activate</span>`;
+  }
+  return `<span class="dim">Python 3.12.3\nUsage: python3 [script.py] or python3 -c "code"</span>`;
+}
+
+// --- npx ---
+function cmdNpx(args) {
+  if (!args[0]) return '<span class="error">npx: missing command</span>\n<span class="dim">Usage: npx <package> [args]\nnpx runs packages without installing them globally.</span>';
+  return `<span class="dim">Need to install the following packages: ${args[0]}@latest\nOk to proceed? (y) y</span>\n<span class="success">${args.slice(1).join(' ') || 'Hello from ' + args[0] + '!'}</span>`;
+}
+
+// --- node ---
+function cmdNode(args) {
+  if (!args[0]) {
+    return `Welcome to Node.js v20.12.0.
+Type ".help" for more information.
+>
+<span class="dim">You're in the Node.js REPL.
+  > 2 + 2
+  4
+  > Math.PI
+  3.141592653589793
+Type .exit or Ctrl+D to leave.</span>`;
+  }
+  if (args[0] === '-v' || args[0] === '--version') return 'v20.12.0';
+  if (args[0] === '-e') return args.slice(1).join(' ').includes('Math.PI') ? '3.141592653589793' : '<span class="dim">(evaluated)</span>';
+  return `<span class="dim">Running ${args[0]}...</span>`;
+}
+
+// --- jq ---
+function cmdJq(args, stdin) {
+  checkAchievement('json_jedi');
+  if (args[0] === 'help') {
+    return `<span class="info">━━━ JQ CHEAT SHEET ━━━</span>
+
+<span class="warning">Basic filters:</span>
+  jq '.'              Pretty-print JSON
+  jq '.key'           Extract a key
+  jq '.array[]'       Iterate array elements
+  jq '.array[0]'      First element
+
+<span class="warning">Advanced:</span>
+  jq '.[] | .name'    Extract field from each element
+  jq 'select(.age > 30)'  Filter elements
+  jq 'map(.name)'     Transform array
+  jq 'keys'           Get all keys
+  jq 'length'         Count elements
+
+<span class="warning">Flags:</span>
+  -r    Raw output (no quotes)
+  -c    Compact output (one line)
+  -e    Exit with error if null
+
+<span class="warning">Patterns:</span>
+  curl -s api | jq .          Pretty-print API response
+  cat file.json | jq '.users[] | .email'  Extract emails
+  jq -r '.items[] | [.name, .price] | @csv' — CSV output`;
+  }
+  if (stdin) {
+    // Try to parse and pretty-print
+    const clean = stdin.replace(/<[^>]*>/g, '');
+    try {
+      const obj = JSON.parse(clean);
+      return '<span class="success">' + escapeHtml(JSON.stringify(obj, null, 2)) + '</span>';
+    } catch(e) {
+      return '<span class="dim">' + escapeHtml(clean) + '</span>';
+    }
+  }
+  if (args.length > 0 && args[0] !== 'help') {
+    return `<span class="dim">(jq: processing with filter: ${args.join(' ')})\n"result_value"</span>`;
+  }
+  return '<span class="dim">Usage: echo \'{"key":"value"}\' | jq \'.\'\nType: jq help — for full reference</span>';
+}
+
+// --- diff ---
+function cmdDiff(args) {
+  if (args.length < 2) return '<span class="error">diff: missing operand</span>\n<span class="dim">Usage: diff file1 file2</span>';
+  if (args.includes('-u')) {
+    return `<span class="dim">--- ${args[1] || 'file1'}\t2026-03-23 10:00:00</span>
+<span class="dim">+++ ${args[2] || args[1] || 'file2'}\t2026-03-23 12:00:00</span>
+<span class="info">@@ -1,4 +1,4 @@</span>
+ Line one (same)
+<span class="error">-Line two (original)</span>
+<span class="success">+Line two (modified)</span>
+ Line three (same)
+ Line four (same)`;
+  }
+  if (args.includes('-r')) {
+    return `diff ${args.filter(a=>!a.startsWith('-')).join(' ')}\n< Only in dir1: file_a.txt\n> Only in dir2: file_b.txt\n1c1\n< old content\n---\n> new content`;
+  }
+  return `1c1
+< First file content
+---
+> Second file content
+3a4
+> New line added`;
+}
+
+// --- bash (examples mode) ---
+function cmdBash(args) {
+  if (args[0] === 'examples') {
+    const topic = args.slice(1).join(' ').toLowerCase();
+    if (topic.includes('if')) return `<span class="info">━━━ IF/ELIF/ELSE ━━━</span>\n\n<span class="dim">if [[ "$name" == "Nathan" ]]; then\n  echo "Hello Nathan!"\nelif [[ "$name" == "Admin" ]]; then\n  echo "Welcome, Admin."\nelse\n  echo "Who are you?"\nfi\n\n# Numeric comparison\nif [[ $count -gt 10 ]]; then\n  echo "More than 10"\nfi\n\n# File tests\nif [[ -f "$file" ]]; then\n  echo "File exists"\nelif [[ -d "$dir" ]]; then\n  echo "Directory exists"\nfi</span>`;
+    if (topic.includes('case')) return `<span class="info">━━━ CASE STATEMENT ━━━</span>\n\n<span class="dim">case "$action" in\n  start)\n    echo "Starting..."\n    ;;\n  stop)\n    echo "Stopping..."\n    ;;\n  restart)\n    echo "Restarting..."\n    ;;\n  *)\n    echo "Usage: {start|stop|restart}"\n    exit 1\n    ;;\nesac</span>`;
+    if (topic.includes('function')) return `<span class="info">━━━ FUNCTIONS ━━━</span>\n\n<span class="dim">greet() {\n  local name="$1"\n  echo "Hello, $name!"\n  return 0\n}\n\n# Call it\ngreet "World"\n\n# With return value check\nif greet "Nathan"; then\n  echo "Greeting succeeded"\nfi\n\n# Capture output\nresult=$(greet "Nathan")\necho "Got: $result"</span>`;
+    if (topic.includes('strict')) return `<span class="info">━━━ STRICT MODE ━━━</span>\n\n<span class="dim">#!/bin/bash\nset -euo pipefail\n\n# set -e    → exit on any error\n# set -u    → error on undefined variables\n# set -o pipefail → catch errors in pipes\n\n# This is the recommended header for all scripts.\n# Without it, scripts silently ignore errors!\n\n# Example of what -e catches:\nfalse  # This would silently pass without set -e\necho "This line never runs"\n\n# Example of what -u catches:\necho "$undefined_var"  # Error instead of empty string</span>`;
+    if (topic.includes('error')) return `<span class="info">━━━ ERROR HANDLING ━━━</span>\n\n<span class="dim">#!/bin/bash\nset -euo pipefail\n\n# Trap errors\ntrap 'echo "Error on line $LINENO"; exit 1' ERR\n\n# Trap cleanup on exit\ncleanup() {\n  echo "Cleaning up temp files..."\n  rm -f /tmp/myapp_*\n}\ntrap cleanup EXIT\n\n# Custom error handling\nif ! command -v git &>/dev/null; then\n  echo "Error: git is not installed" >&2\n  exit 1\nfi</span>`;
+    if (topic.includes('string')) return `<span class="info">━━━ STRING MANIPULATION ━━━</span>\n\n<span class="dim">name="Hello World"\n\n# Length\necho \${#name}          # 11\n\n# Substring\necho \${name:0:5}       # Hello\n\n# Replace\necho \${name/World/Bash} # Hello Bash\necho \${name//l/L}       # HeLLo WorLd\n\n# Trim prefix/suffix\nfile="document.tar.gz"\necho \${file%.gz}        # document.tar\necho \${file%%.*}        # document\necho \${file#*.}         # tar.gz\necho \${file##*.}        # gz</span>`;
+    if (topic.includes('process')) return `<span class="info">━━━ PROCESS SUBSTITUTION ━━━</span>\n\n<span class="dim"># Compare sorted versions of two files\ndiff <(sort file1.txt) <(sort file2.txt)\n\n# Feed command output as a file\nwhile read line; do\n  echo "Got: $line"\ndone < <(find . -name "*.txt")\n\n# Process substitution creates a temporary file descriptor\n# that contains the output of the command inside <()</span>`;
+    if (topic.includes('output')) return `<span class="info">━━━ OUTPUT PROCESS SUBSTITUTION ━━━</span>\n\n<span class="dim"># Write to multiple files simultaneously\necho "data" | tee >(gzip > file.gz) >(wc -l > count.txt)\n\n# >(command) creates a file descriptor that feeds\n# into the command — the reverse of <(command)</span>`;
+    if (topic.includes('array')) return `<span class="info">━━━ ARRAYS ━━━</span>\n\n<span class="dim"># Create array\nfruits=(apple banana cherry)\n\n# Access elements\necho \${fruits[0]}       # apple\necho \${fruits[@]}       # all elements\necho \${#fruits[@]}      # length: 3\n\n# Append\nfruits+=(date)\n\n# Iterate\nfor fruit in "\${fruits[@]}"; do\n  echo "Fruit: $fruit"\ndone\n\n# Slice\necho \${fruits[@]:1:2}   # banana cherry</span>`;
+    if (topic.includes('assoc')) return `<span class="info">━━━ ASSOCIATIVE ARRAYS ━━━</span>\n\n<span class="dim">declare -A colors\ncolors[red]="#ff0000"\ncolors[green]="#00ff00"\ncolors[blue]="#0000ff"\n\n# Access\necho \${colors[red]}     # #ff0000\n\n# All keys\necho \${!colors[@]}      # red green blue\n\n# Iterate\nfor key in "\${!colors[@]}"; do\n  echo "$key = \${colors[$key]}"\ndone</span>`;
+    if (topic.includes('for')) return `<span class="info">━━━ FOR LOOPS ━━━</span>\n\n<span class="dim"># For-in list\nfor name in Alice Bob Charlie; do\n  echo "Hello, $name"\ndone\n\n# C-style for\nfor ((i=0; i<10; i++)); do\n  echo "Count: $i"\ndone\n\n# For over files\nfor file in *.txt; do\n  echo "Processing: $file"\ndone\n\n# For over command output\nfor dir in $(find . -type d); do\n  echo "Dir: $dir"\ndone</span>`;
+    if (topic.includes('while')) return `<span class="info">━━━ WHILE LOOPS ━━━</span>\n\n<span class="dim"># Basic while\ncounter=0\nwhile [[ $counter -lt 5 ]]; do\n  echo "Count: $counter"\n  ((counter++))\ndone\n\n# Read file line by line\nwhile IFS= read -r line; do\n  echo "Line: $line"\ndone < file.txt\n\n# Infinite loop\nwhile true; do\n  echo "Running..."\n  sleep 1\ndone</span>`;
+    if (topic.includes('select')) return `<span class="info">━━━ SELECT MENU ━━━</span>\n\n<span class="dim">echo "Choose a color:"\nselect color in Red Green Blue Quit; do\n  case $color in\n    Red)   echo "You chose red";;\n    Green) echo "You chose green";;\n    Blue)  echo "You chose blue";;\n    Quit)  break;;\n    *)     echo "Invalid option";;\n  esac\ndone</span>`;
+    if (topic.includes('read')) return `<span class="info">━━━ READING FILES ━━━</span>\n\n<span class="dim"># Read file line by line (safe way)\nwhile IFS= read -r line; do\n  echo ">> $line"\ndone < file.txt\n\n# IFS=  prevents leading/trailing whitespace trimming\n# -r    prevents backslash interpretation\n\n# Read from command output\nfind . -name "*.txt" | while read -r file; do\n  wc -l "$file"\ndone</span>`;
+    if (topic.includes('loop')) return `<span class="info">━━━ LOOP OVER ARRAYS ━━━</span>\n\n<span class="dim">arr=(one two three four)\n\n# Iterate\nfor item in "\${arr[@]}"; do\n  echo "Item: $item"\ndone\n\n# With index\nfor i in "\${!arr[@]}"; do\n  echo "[$i] = \${arr[$i]}"\ndone</span>`;
+    if (topic.includes('slice')) return `<span class="info">━━━ ARRAY SLICING ━━━</span>\n\n<span class="dim">arr=(a b c d e f)\n\n# Slice from index 2, length 3\necho \${arr[@]:2:3}   # c d e\n\n# From index 3 to end\necho \${arr[@]:3}     # d e f\n\n# Last 2 elements\necho \${arr[@]: -2}   # e f</span>`;
+    if (topic.includes('debug')) return `<span class="info">━━━ DEBUGGING TIPS ━━━</span>\n\n<span class="dim">Common bugs:\n  1. Unquoted variables: use "$var" not $var\n     (word splitting on spaces breaks things)\n  2. Missing [[ ]] (use [[ ]] over [ ] in bash)\n  3. Forgetting 'local' in functions (leaks globals)\n  4. Not using set -euo pipefail\n  5. Using cat file | while read (subshell issue)\n     Use: while read; done < file\n\n# Trace mode\nbash -x script.sh\n\n# Custom trace prefix\nexport PS4='+ \${BASH_SOURCE}:\${LINENO}: '\nbash -x script.sh</span>`;
+    if (topic.includes('set')) return `<span class="info">━━━ SET OPTIONS ━━━</span>\n\n<span class="dim">set -e          Exit on any error\nset -u          Error on undefined variables\nset -x          Print each command before executing (trace)\nset -o pipefail Catch errors in piped commands\n\n# The "strict mode" combo:\nset -euo pipefail\n\n# Turn options off:\nset +e          Disable exit-on-error\nset +x          Disable trace mode</span>`;
+    return `<span class="dim">Available bash examples topics:\n  if, case, functions, strict, errors, string\n  process-sub, output-sub, arrays, assoc\n  for, while, select, read-file, loop-array, slice\n  debug, set\n\nUsage: bash examples &lt;topic&gt;</span>`;
+  }
+  if (args[0] === '-x') {
+    const script = args[1] || 'script.sh';
+    return `<span class="dim">+ echo 'Hello, World!'</span>\nHello, World!\n<span class="dim">+ date\n+ echo 'You are logged in as player'</span>\nYou are logged in as player\n\n<span class="dim">Trace mode (set -x) prints each command with a + prefix\nbefore executing it. Very useful for debugging!</span>`;
+  }
+  if (args.length && args[0].endsWith('.sh')) {
+    const filePath = resolvePath(state.cwd, args[0]);
+    const node = getNode(state.fs, filePath);
+    if (node && node.content) {
+      return `<span class="dim">(executing ${args[0]}...)</span>\nHello, World!\nToday is ${new Date().toDateString()}\nYou are logged in as player`;
+    }
+    return `<span class="error">bash: ${args[0]}: No such file or directory</span>`;
+  }
+  return '<span class="dim">Usage: bash [script.sh] or bash examples &lt;topic&gt;</span>';
+}
+
+// --- parallel ---
+function cmdParallel(args) {
+  if (!args[0]) return '<span class="dim">Usage: parallel command ::: arg1 arg2 arg3\nGNU Parallel runs commands in parallel across CPU cores.</span>';
+  const cmd = args[0];
+  const colonIdx = args.indexOf(':::');
+  if (colonIdx >= 0) {
+    const items = args.slice(colonIdx + 1);
+    return items.map(i => `<span class="dim">[job] ${cmd} ${i}</span>`).join('\n') + `\n<span class="success">All ${items.length} jobs completed.</span>`;
+  }
+  return `<span class="dim">Running ${cmd} in parallel...</span>\n<span class="success">Done.</span>`;
+}
+
+// --- tr ---
+function cmdTr(args, stdin) {
+  if (!stdin && !args[0]) return '<span class="dim">Usage: tr SET1 SET2\nTranslates or deletes characters.\n  echo "hello" | tr \'a-z\' \'A-Z\'  — uppercase\n  echo "hello" | tr -d \'l\'        — delete \'l\'</span>';
+  const text = stdin ? stdin.replace(/<[^>]*>/g, '') : 'hello world';
+  if (args.includes('-d')) {
+    const chars = args[args.indexOf('-d') + 1] || '';
+    const cleaned = chars.replace(/'/g, '');
+    return text.split('').filter(c => !cleaned.includes(c)).join('');
+  }
+  if (args.length >= 2) {
+    const from = (args[0] || '').replace(/'/g, '');
+    const to = (args[1] || '').replace(/'/g, '');
+    if (from === 'a-z' && to === 'A-Z') return text.toUpperCase();
+    if (from === 'A-Z' && to === 'a-z') return text.toLowerCase();
+    let result = text;
+    for (let i = 0; i < from.length && i < to.length; i++) {
+      result = result.split(from[i]).join(to[i]);
+    }
+    return result;
+  }
+  return text;
+}
+
+// --- cal ---
+function cmdCal() {
+  const now = new Date();
+  const month = now.toLocaleString('default', { month: 'long' });
+  const year = now.getFullYear();
+  return `     ${month} ${year}
+Su Mo Tu We Th Fr Sa
+                1  2
+ 3  4  5  6  7  8  9
+10 11 12 13 14 15 16
+17 18 19 20 21 22 23
+24 25 26 27 28 29 30
+31`;
+}
+
+// --- uname ---
+function cmdUname(args) {
+  if (args.includes('-a')) return 'Darwin academy 24.1.0 Darwin Kernel Version 24.1.0 arm64';
+  if (args.includes('-s')) return 'Darwin';
+  if (args.includes('-r')) return '24.1.0';
+  if (args.includes('-m')) return 'arm64';
+  return 'Darwin';
+}
+
+// --- system_profiler ---
+function cmdSystemProfiler(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('system_profiler');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  return `Hardware Overview:
+  Model Name:            MacBook Pro
+  Chip:                  Apple M2 Pro
+  Total Number of Cores: 10 (6 performance, 4 efficiency)
+  Memory:                16 GB
+  System Firmware:       10151.101.3
+  OS Loader Version:     10151.101.3
+  Serial Number:         XXXXXXXXXXXX
+  Hardware UUID:         XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX`;
+}
+
+// --- sysctl ---
+function cmdSysctl(args) {
+  if (!args[0]) return '<span class="dim">Usage: sysctl name\n  sysctl hw.ncpu       — number of CPUs\n  sysctl hw.memsize    — total memory\n  sysctl kern.ostype   — OS type</span>';
+  const vals = {'hw.ncpu':'10','hw.memsize':'17179869184','kern.ostype':'Darwin','kern.hostname':'academy','kern.osrelease':'24.1.0'};
+  return vals[args[0]] ? `${args[0]}: ${vals[args[0]]}` : `<span class="error">sysctl: unknown oid '${args[0]}'</span>`;
+}
+
+// --- stat ---
+function cmdStat(args) {
+  if (!args[0]) return '<span class="error">stat: missing operand</span>';
+  const path = resolvePath(state.cwd, args[0]);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">stat: ${args[0]}: No such file or directory</span>`;
+  const size = node.content ? node.content.length : 4096;
+  return `  File: ${args[0]}
+  Size: ${size}        Blocks: ${Math.ceil(size/512) * 8}   ${node.type === 'dir' ? 'directory' : 'regular file'}
+Device: 1,4   Inode: ${Math.floor(Math.random() * 999999) + 100000}   Links: 1
+Access: (0${node.permissions ? (node.permissions.includes('x') ? '755' : '644') : '644'}/${node.type === 'dir' ? 'd' : '-'}${node.permissions || 'rw-r--r--'})
+  Uid: (  501/  player)   Gid: (   20/   staff)
+Access: 2026-03-23 10:00:00.000000000
+Modify: 2026-03-23 10:00:00.000000000
+Change: 2026-03-23 10:00:00.000000000
+ Birth: 2026-03-22 08:00:00.000000000`;
+}
+
+// --- file ---
+function cmdFile(args) {
+  if (!args[0]) return '<span class="error">file: missing argument</span>';
+  if (args[0].includes('*')) {
+    return 'hello.sh:   Bourne-Again shell script, ASCII text executable\nbackup.sh:  Bourne-Again shell script, ASCII text executable';
+  }
+  const path = resolvePath(state.cwd, args[0]);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">${args[0]}: cannot open (No such file or directory)</span>`;
+  if (node.type === 'dir') return `${args[0]}: directory`;
+  const name = args[0].toLowerCase();
+  if (name.endsWith('.sh')) return `${args[0]}: Bourne-Again shell script, ASCII text executable`;
+  if (name.endsWith('.py')) return `${args[0]}: Python script, ASCII text`;
+  if (name.endsWith('.js')) return `${args[0]}: JavaScript source, ASCII text`;
+  if (name.endsWith('.html')) return `${args[0]}: HTML document, UTF-8 Unicode text`;
+  if (name.endsWith('.css')) return `${args[0]}: CSS source, ASCII text`;
+  if (name.endsWith('.json')) return `${args[0]}: JSON data`;
+  if (name.endsWith('.csv')) return `${args[0]}: CSV text`;
+  if (name.endsWith('.png') || name.endsWith('.jpg')) return `${args[0]}: PNG image data`;
+  if (name.endsWith('.tar.gz')) return `${args[0]}: gzip compressed data, from Unix`;
+  return `${args[0]}: ASCII text`;
+}
+
+// --- mdls ---
+function cmdMdls(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('mdls');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  if (!args[0]) return '<span class="error">mdls: missing file operand</span>';
+  return `kMDItemContentType         = "public.plain-text"
+kMDItemContentTypeTree     = (
+    "public.plain-text",
+    "public.text",
+    "public.data",
+    "public.item"
+)
+kMDItemDisplayName          = "${args[0]}"
+kMDItemFSCreatorCode        = ""
+kMDItemFSSize               = 256
+kMDItemLastUsedDate         = 2026-03-23 10:00:00 +0000
+kMDItemTextContent          = "..."
+
+<span class="dim">mdls shows macOS Spotlight metadata for a file.</span>`;
+}
+
+// --- rg (ripgrep) ---
+function cmdRg(args) {
+  state.modernToolsUsed = (state.modernToolsUsed || new Set()); state.modernToolsUsed.add('rg');
+  if (state.modernToolsUsed.size >= 3) checkAchievement('modern_tools');
+  if (!args[0]) return '<span class="error">error: no pattern given</span>\n<span class="dim">Usage: rg PATTERN [PATH]\nripgrep — blazing fast recursive search (respects .gitignore)</span>';
+  const pattern = args[0];
+  return `<span class="success">documents/notes.txt</span>:<span class="dim">3:</span>Day 1: Learned what a terminal is.
+<span class="success">documents/notes.txt</span>:<span class="dim">5:</span>Day 3: Files are just text. Everything is a file.
+<span class="success">documents/quotes.txt</span>:<span class="dim">1:</span>"The command line is the most powerful tool in computing."
+
+<span class="dim">ripgrep (rg) is 5-10x faster than grep for large codebases.
+It automatically respects .gitignore and skips binary files.</span>`;
+}
+
+// --- fd ---
+function cmdFd(args) {
+  state.modernToolsUsed = (state.modernToolsUsed || new Set()); state.modernToolsUsed.add('fd');
+  if (state.modernToolsUsed.size >= 3) checkAchievement('modern_tools');
+  if (!args[0]) return '<span class="dim">Usage: fd PATTERN [PATH]\nfd — a faster, friendlier alternative to find</span>';
+  return `<span class="success">documents/notes.txt</span>
+<span class="success">documents/todo.txt</span>
+<span class="success">documents/quotes.txt</span>
+<span class="success">documents/projects/data/log.txt</span>
+
+<span class="dim">fd is faster than find, has sensible defaults (ignores .git, hidden files),
+and has a simpler syntax: fd ".txt" vs find . -name "*.txt"</span>`;
+}
+
+// --- bat ---
+function cmdBat(args) {
+  state.modernToolsUsed = (state.modernToolsUsed || new Set()); state.modernToolsUsed.add('bat');
+  if (state.modernToolsUsed.size >= 3) checkAchievement('modern_tools');
+  if (!args[0]) return '<span class="dim">Usage: bat FILE\nbat — cat with syntax highlighting, line numbers, and git integration</span>';
+  const path = resolvePath(state.cwd, args[0]);
+  const node = getNode(state.fs, path);
+  if (!node || !node.content) return `<span class="error">bat: ${args[0]}: No such file or directory</span>`;
+  const lines = node.content.split('\n').slice(0, 10);
+  let out = `<span class="dim">───────┬────────────────────────────────────────</span>\n<span class="dim">       │ File: ${args[0]}</span>\n<span class="dim">───────┼────────────────────────────────────────</span>\n`;
+  lines.forEach((line, i) => {
+    out += `<span class="dim">${String(i + 1).padStart(6)} │</span> ${escapeHtml(line)}\n`;
+  });
+  out += `<span class="dim">───────┴────────────────────────────────────────</span>`;
+  return out;
+}
+
+// --- eza ---
+function cmdEza(args) {
+  state.modernToolsUsed = (state.modernToolsUsed || new Set()); state.modernToolsUsed.add('eza');
+  if (state.modernToolsUsed.size >= 3) checkAchievement('modern_tools');
+  return cmdLs(args) + '\n\n<span class="dim">eza — a modern replacement for ls with colors, icons, and git status.\nInstall: brew install eza</span>';
+}
+
+// --- tldr ---
+function cmdTldr(args) {
+  state.modernToolsUsed = (state.modernToolsUsed || new Set()); state.modernToolsUsed.add('tldr');
+  if (state.modernToolsUsed.size >= 3) checkAchievement('modern_tools');
+  if (!args[0]) return '<span class="dim">Usage: tldr command\ntldr — simplified, community-driven man pages with practical examples</span>';
+  const cmd = args[0];
+  return `<span class="info">  ${cmd}</span>
+
+  <span class="dim">Commonly used ${cmd} examples:</span>
+
+  - Basic usage:
+    <span class="success">${cmd} argument</span>
+
+  - With common flags:
+    <span class="success">${cmd} -v</span>
+
+  - Show help:
+    <span class="success">${cmd} --help</span>
+
+<span class="dim">tldr provides practical examples instead of full man pages.
+Install: brew install tldr</span>`;
+}
+
+// --- starship ---
+function cmdStarship(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ STARSHIP PROMPT ━━━</span>
+
+Starship is a minimal, blazing-fast cross-shell prompt.
+It shows useful info: git branch, node version, python env, etc.
+
+<span class="warning">Install:</span>
+  brew install starship
+  # Add to ~/.zshrc:
+  eval "$(starship init zsh)"
+
+<span class="warning">Config:</span> ~/.config/starship.toml
+
+<span class="warning">Example config:</span>
+<span class="dim">[character]
+success_symbol = "[➜](bold green)"
+error_symbol = "[✗](bold red)"
+
+[git_branch]
+symbol = "🌿 "
+
+[nodejs]
+format = "via [🤖 $version](bold green) "
+
+[python]
+format = 'via [🐍 $version]($style) '</span>`;
+  }
+  return '<span class="dim">starship: command not recognized. Try: starship help</span>';
+}
+
+// --- omz ---
+function cmdOmz(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ OH MY ZSH ━━━</span>
+
+Oh My Zsh is a framework for managing Zsh configuration.
+
+<span class="warning">Install:</span>
+  sh -c "$(curl -fsSL https://raw.github.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
+<span class="warning">Themes:</span> Set ZSH_THEME in ~/.zshrc
+  Popular: robbyrussell, agnoster, powerlevel10k
+
+<span class="warning">Plugins:</span> Add to plugins=() in ~/.zshrc
+  git           — git aliases and functions
+  zsh-autosuggestions — fish-like suggestions
+  zsh-syntax-highlighting — command coloring
+  fzf           — fuzzy finder integration
+  docker        — docker completions
+  npm           — npm completions
+
+<span class="warning">Commands:</span>
+  omz update     — update Oh My Zsh
+  omz theme list — list available themes`;
+  }
+  return '<span class="dim">omz: command not recognized. Try: omz help</span>';
+}
+
+// --- zsh ---
+function cmdZsh(args) {
+  if (args[0] === 'features') {
+    return `<span class="info">━━━ ZSH-SPECIFIC FEATURES ━━━</span>
+
+<span class="warning">Globbing:</span>
+  **/*.txt       Recursive glob (built-in!)
+  *.txt(.)       Only files (glob qualifier)
+  *(m-7)         Modified in last 7 days
+
+<span class="warning">Expansion:</span>
+  {1..10}        Sequence: 1 2 3 ... 10
+  {a..z}         Letter sequence
+  {01..05}       Zero-padded: 01 02 03 04 05
+
+<span class="warning">Unique features:</span>
+  autopushd      cd pushes to dir stack (popd to go back)
+  setopt correct  Spelling correction for commands
+  RPROMPT         Right-side prompt
+  zmv            Regex-powered batch rename`;
+  }
+  if (args[0] === 'compare') {
+    return `<span class="info">━━━ ZSH vs BASH ━━━</span>
+
+<span class="warning">Feature              Zsh              Bash</span>
+Array indexing       1-based          0-based
+Recursive glob **    Built-in         Needs shopt
+Right prompt         RPROMPT          N/A
+Spelling correction  Built-in         N/A
+Glob qualifiers      *.txt(.)         N/A
+Default macOS shell  Yes (Catalina+)  No (legacy)
+Associative arrays   Yes              Yes (Bash 4+)
+Shebang             #!/bin/zsh       #!/bin/bash`;
+  }
+  if (args.includes('--version') || args.includes('-v')) return 'zsh 5.9 (arm64-apple-darwin24.0)';
+  return '<span class="dim">Usage: zsh features — Zsh-specific features\n       zsh compare  — Zsh vs Bash comparison\n       zsh --version</span>';
+}
+
+// --- column ---
+function cmdColumn(args, stdin) {
+  if (!args[0] && !stdin) return '<span class="dim">Usage: column -t -s, file\nAligns input into neat columns.</span>';
+  const text = stdin ? stdin.replace(/<[^>]*>/g, '') : '';
+  if (text) {
+    const delim = args.includes('-s') ? (args[args.indexOf('-s') + 1] || ',') : ',';
+    const lines = text.split('\n').filter(Boolean);
+    const rows = lines.map(l => l.split(delim));
+    const widths = [];
+    rows.forEach(r => r.forEach((c, i) => { widths[i] = Math.max(widths[i] || 0, c.trim().length); }));
+    return rows.map(r => r.map((c, i) => c.trim().padEnd(widths[i] || 0)).join('  ')).join('\n');
+  }
+  // Try to read a file arg
+  const fileArg = args.filter(a => !a.startsWith('-') && a !== '-t' && a !== '-s' && a !== ',').pop();
+  if (fileArg) {
+    const path = resolvePath(state.cwd, fileArg);
+    const node = getNode(state.fs, path);
+    if (node && node.content) {
+      const delim = args.includes('-s') ? (args[args.indexOf('-s') + 1] || args[args.indexOf('-s,') ? ',' : ',']) : ',';
+      const lines = node.content.split('\n').filter(Boolean);
+      const rows = lines.map(l => l.split(delim.replace(/^,/, ',')));
+      const widths = [];
+      rows.forEach(r => r.forEach((c, i) => { widths[i] = Math.max(widths[i] || 0, c.trim().length); }));
+      return rows.map(r => r.map((c, i) => c.trim().padEnd(widths[i] || 0)).join('  ')).join('\n');
+    }
+  }
+  return '<span class="dim">column: no input provided</span>';
+}
+
+// --- paste ---
+function cmdPaste(args) {
+  if (args.length < 2) return '<span class="dim">Usage: paste file1 file2\nMerges lines from multiple files side by side (tab-separated).</span>';
+  const contents = args.map(a => {
+    const path = resolvePath(state.cwd, a);
+    const node = getNode(state.fs, path);
+    return node && node.content ? node.content.split('\n') : ['(empty)'];
+  });
+  const maxLines = Math.max(...contents.map(c => c.length));
+  let out = '';
+  for (let i = 0; i < Math.min(maxLines, 10); i++) {
+    out += contents.map(c => c[i] || '').join('\t') + '\n';
+  }
+  return out.trim();
+}
+
+// --- exitcode ---
+function cmdExitcode(args) {
+  return `<span class="info">━━━ EXIT CODES ━━━</span>
+
+<span class="warning">Code  Meaning</span>
+  0    Success
+  1    General error
+  2    Misuse of shell command
+  126  Command found but not executable
+  127  Command not found
+  128  Invalid exit argument
+  130  Killed by Ctrl+C (128 + SIGINT=2)
+  137  Killed by SIGKILL (128 + 9)
+  143  Killed by SIGTERM (128 + 15)
+  255  Exit status out of range
+
+<span class="dim">Check the last exit code: echo $?
+Set your own: exit 0 (success) or exit 1 (failure)</span>`;
+}
+
+// --- open ---
+function cmdOpen(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('open');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  if (!args[0]) return '<span class="error">Usage: open file_or_url</span>';
+  if (args[0] === '.') return '<span class="info">Opening Finder at ' + state.cwd + '</span>';
+  if (args[0].startsWith('http')) return `<span class="info">Opening ${args[0]} in default browser...</span>`;
+  if (args.includes('-a')) return `<span class="info">Opening with ${args[args.indexOf('-a') + 1]}...</span>`;
+  return `<span class="info">Opening ${args[0]} with default application...</span>`;
+}
+
+// --- say ---
+function cmdSay(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('say');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  if (!args[0]) return '<span class="error">Usage: say "text to speak"</span>';
+  return `<span class="info">🔊 Speaking: "${args.join(' ')}"</span>\n<span class="dim">On a real Mac, this uses text-to-speech to read the text aloud.\nFlags: say -v Alex "hello" — use a specific voice\n       say -v ? — list all available voices</span>`;
+}
+
+// --- mdfind ---
+function cmdMdfind(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('mdfind');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  if (!args[0]) return '<span class="error">Usage: mdfind "search query"</span>';
+  return `/Users/player/documents/notes.txt
+/Users/player/documents/todo.txt
+/Users/player/scripts/hello.sh
+/Applications/Terminal.app
+
+<span class="dim">mdfind uses the Spotlight index for instant search.
+  mdfind "query"          — search everywhere
+  mdfind -onlyin ~/docs "query"  — search specific dir
+  mdfind "kMDItemKind == 'PDF'"  — search by metadata</span>`;
+}
+
+// --- defaults ---
+function cmdDefaults(args) {
+  state.macosCommandsUsed = (state.macosCommandsUsed || new Set()); state.macosCommandsUsed.add('defaults');
+  if (state.macosCommandsUsed.size >= 3) checkAchievement('macos_native');
+  if (!args[0]) return '<span class="dim">Usage: defaults read/write domain key value\nmacOS preferences system.</span>';
+  if (args[0] === 'read') {
+    return `<span class="dim">{\n    AppleInterfaceStyle = Dark;\n    AppleLanguages = (en);\n    NSAutomaticSpellingCorrectionEnabled = 1;\n    WebKitDeveloperExtras = 1;\n}</span>`;
+  }
+  if (args[0] === 'write') return `<span class="success">Defaults written.</span>\n<span class="dim">Some changes require logout or restart to take effect.</span>`;
+  return '<span class="dim">defaults: command not recognized</span>';
+}
+
+// --- dd ---
+function cmdDd(args) {
+  if (!args[0]) return '<span class="dim">Usage: dd if=INPUT of=OUTPUT bs=BLOCKSIZE count=COUNT\ndd copies and converts data.</span>';
+  const count = args.find(a => a.startsWith('count='));
+  const bs = args.find(a => a.startsWith('bs='));
+  const of = args.find(a => a.startsWith('of='));
+  return `<span class="dim">${count ? count.split('=')[1] : '10'}+0 records in\n${count ? count.split('=')[1] : '10'}+0 records out\n${(parseInt((count||'count=10').split('=')[1]) || 10) * (parseInt((bs||'bs=512').split('=')[1]) || 512)} bytes transferred in 0.001 secs</span>${of ? '\n<span class="success">Written to ' + of.split('=')[1] + '</span>' : ''}`;
+}
+
+// --- rsync ---
+function cmdRsync(args) {
+  if (!args[0]) return '<span class="dim">Usage: rsync [options] source dest\nOptions: -a archive, -v verbose, -z compress, --dry-run, --exclude, --delete</span>';
+  if (args.includes('--dry-run')) {
+    return `<span class="info">(dry run) Would transfer:</span>
+<span class="dim">  documents/notes.txt
+  documents/todo.txt
+  documents/quotes.txt
+  scripts/hello.sh</span>
+<span class="info">Total: 4 files, 2.1KB</span>`;
+  }
+  const src = args.filter(a => !a.startsWith('-') && !a.startsWith('--')).slice(0, 1)[0] || 'source/';
+  const dest = args.filter(a => !a.startsWith('-') && !a.startsWith('--')).slice(1, 2)[0] || 'dest/';
+  return `<span class="dim">sending incremental file list
+${src}
+${src}notes.txt
+${src}todo.txt</span>
+
+<span class="success">sent 2,048 bytes  received 76 bytes  4,248.00 bytes/sec
+total size is 1,856  speedup is 0.87</span>`;
+}
+
+// --- nc (netcat) ---
+function cmdNc(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ NETCAT (nc) ━━━</span>
+
+<span class="warning">Modes:</span>
+  nc host port        Connect to a TCP server
+  nc -l port          Listen for connections
+  nc -u host port     UDP mode
+  nc -z host 1-100    Port scan
+
+<span class="warning">File transfer:</span>
+  Receiver: nc -l 1234 > file
+  Sender:   nc host 1234 < file
+
+<span class="warning">Simple chat:</span>
+  Machine A: nc -l 1234
+  Machine B: nc machineA 1234
+
+<span class="warning">Banner grabbing:</span>
+  echo "" | nc host 80`;
+  }
+  if (args.includes('-z')) {
+    const host = args.filter(a => !a.startsWith('-'))[0] || 'host';
+    return `<span class="dim">Connection to ${host} 22 port [tcp/ssh] succeeded!\nConnection to ${host} 80 port [tcp/http] succeeded!\nConnection to ${host} 443 port [tcp/https] succeeded!</span>`;
+  }
+  if (args.includes('-l')) {
+    const port = args.filter(a => !a.startsWith('-'))[0] || '8080';
+    return `<span class="info">Listening on 0.0.0.0:${port}...</span>\n<span class="dim">(Waiting for connections. In a real terminal, this blocks until someone connects.)</span>`;
+  }
+  if (args.includes('-u')) {
+    return `<span class="info">UDP connection to ${args.filter(a => !a.startsWith('-'))[0] || 'host'}...</span>\n<span class="dim">(UDP mode — connectionless, no handshake)</span>`;
+  }
+  const host = args[0];
+  const port = args[1] || '80';
+  return `<span class="info">Connected to ${host}:${port}</span>\n<span class="dim">(TCP connection established. Type to send data.)</span>`;
+}
+
+// --- type ---
+function cmdType(args) {
+  if (!args[0]) return '<span class="error">type: missing argument</span>';
+  const builtins = ['cd','echo','export','alias','source','type','read','printf','set','unset','eval','exec','builtin','command','declare','local','return','shift','test','trap','wait','for','while','until','if','case','select'];
+  if (builtins.includes(args[0])) return `${args[0]} is a shell builtin`;
+  if (state.aliases[args[0]]) return `${args[0]} is aliased to '${state.aliases[args[0]]}'`;
+  const paths = {ls:'/bin/ls',cat:'/bin/cat',grep:'/usr/bin/grep',find:'/usr/bin/find',git:'/usr/bin/git',vim:'/usr/bin/vim',nano:'/usr/bin/nano',curl:'/usr/bin/curl',ssh:'/usr/bin/ssh',python3:'/usr/bin/python3',node:'/usr/local/bin/node',docker:'/usr/local/bin/docker',rg:'/usr/local/bin/rg',fd:'/usr/local/bin/fd',bat:'/usr/local/bin/bat'};
+  return paths[args[0]] ? `${args[0]} is ${paths[args[0]]}` : `<span class="error">type: ${args[0]}: not found</span>`;
+}
+
+// --- builtin ---
+function cmdBuiltin(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">Shell builtins:</span>
+  cd, echo, export, alias, source, type, read, printf,
+  set, unset, eval, exec, builtin, command, declare,
+  local, return, shift, test, trap, wait, for, while,
+  until, if, case, select, break, continue, exit
+
+<span class="dim">Builtins run inside the shell process (faster than external commands).
+Use 'type <cmd>' to check if a command is a builtin.</span>`;
+  }
+  return runCommand(args[0], args.slice(1), null);
+}
+
+// --- ghostty ---
+function cmdGhostty(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ GHOSTTY TERMINAL ━━━</span>
+
+<span class="highlight">Ghostty</span> is a fast, GPU-accelerated terminal emulator.
+
+<span class="warning">Key features:</span>
+  • GPU-rendered text (smooth scrolling, zero lag)
+  • Native macOS app (not Electron)
+  • Custom shaders and themes
+  • Splits and tabs
+  • Configurable keybindings
+
+<span class="warning">Config:</span> ~/.config/ghostty/config
+
+<span class="warning">Subcommands:</span>
+  ghostty config    — show sample configuration
+  ghostty features  — list key features
+  ghostty keys      — show keybindings`;
+  }
+  if (args[0] === 'config') {
+    return `<span class="info">━━━ GHOSTTY CONFIG (~/.config/ghostty/config) ━━━</span>
+
+<span class="dim"># Font
+font-family = "JetBrains Mono"
+font-size = 14
+
+# Colors
+background = 0c0c1d
+foreground = e0e0e0
+
+# Window
+window-decoration = false
+macos-titlebar-style = hidden
+window-padding-x = 10
+window-padding-y = 8
+
+# Behavior
+copy-on-select = clipboard
+confirm-close-surface = false
+shell-integration = zsh
+
+# Keybindings
+keybind = super+t=new_tab
+keybind = super+w=close_surface
+keybind = super+d=new_split:right
+keybind = super+shift+d=new_split:down</span>`;
+  }
+  if (args[0] === 'features') {
+    return `<span class="warning">Ghostty Features:</span>
+  <span class="success">✓</span> GPU-accelerated rendering (Metal on macOS)
+  <span class="success">✓</span> Sub-millisecond input latency
+  <span class="success">✓</span> Native macOS app with system integration
+  <span class="success">✓</span> Splits (horizontal and vertical)
+  <span class="success">✓</span> Tabs with customizable keybindings
+  <span class="success">✓</span> Custom shaders (CRT effect, etc.)
+  <span class="success">✓</span> Font ligatures support
+  <span class="success">✓</span> Shell integration (Zsh, Bash, Fish)
+  <span class="success">✓</span> Clickable URLs
+  <span class="success">✓</span> True color (24-bit) support`;
+  }
+  if (args[0] === 'keys') {
+    return `<span class="info">━━━ GHOSTTY KEYBINDINGS ━━━</span>
+
+<span class="warning">Default keys (Super = Cmd on macOS):</span>
+  Super+T          New tab
+  Super+W          Close tab/split
+  Super+D          Split right
+  Super+Shift+D    Split down
+  Super+[/]        Navigate splits
+  Super+1-9        Switch to tab N
+  Super+Shift+Enter  Toggle fullscreen
+  Super+Plus/Minus   Zoom in/out
+
+<span class="dim">Customize in ~/.config/ghostty/config:
+  keybind = super+t=new_tab
+  keybind = super+k=clear_screen</span>`;
+  }
+  return `<span class="dim">ghostty: unknown subcommand '${args[0]}'. Try: ghostty help</span>`;
+}
+
+// --- gh (GitHub CLI) ---
+function cmdGh(args) {
+  checkAchievement('gh_contributor');
+  if (!args[0]) return '<span class="dim">Usage: gh &lt;command&gt;\nCommands: repo, pr, issue, workflow, api, auth</span>';
+  const sub = args[0];
+  switch(sub) {
+    case 'repo':
+      if (args[1] === 'create') return `<span class="success">✓ Created repository ${args[2] || 'myproject'} on GitHub</span>\n<span class="dim">https://github.com/player/${args[2] || 'myproject'}</span>`;
+      if (args[1] === 'clone') return `<span class="dim">Cloning into '${(args[2]||'repo').split('/').pop()}'...</span>\n<span class="success">Done.</span>`;
+      if (args[1] === 'view') return `<span class="info">player/myproject</span>\nA cool project built from the terminal\n\n<span class="dim">Stars: 42  Forks: 7  Issues: 3  PRs: 2</span>`;
+      return '<span class="dim">Usage: gh repo create/clone/view</span>';
+    case 'pr':
+      if (args[1] === 'create') return `<span class="success">Creating pull request for feature-branch into main...</span>\n\n<span class="success">✓ Pull request #42 created</span>\nhttps://github.com/player/myproject/pull/42`;
+      if (args[1] === 'list') return `#42  Add new feature     feature-branch    OPEN
+#41  Fix login bug       fix/login         OPEN
+#40  Update README       docs/readme       MERGED`;
+      if (args[1] === 'merge') return '<span class="success">✓ Merged pull request #42</span>';
+      return '<span class="dim">Usage: gh pr create/list/merge/view</span>';
+    case 'issue':
+      if (args[1] === 'create') return '<span class="success">✓ Created issue #15</span>\nhttps://github.com/player/myproject/issues/15';
+      if (args[1] === 'list') return `#15  Bug: Login fails on Safari     bug       OPEN
+#14  Feature: Dark mode toggle      enhancement  OPEN
+#13  Fix typo in README             docs      CLOSED`;
+      return '<span class="dim">Usage: gh issue create/list/view/close</span>';
+    case 'workflow':
+      if (args[1] === 'run') return `<span class="success">✓ Created workflow dispatch event for ${args[2] || 'deploy.yml'}</span>`;
+      if (args[1] === 'view') return `<span class="info">Deploy to Production</span>\nTriggered via workflow_dispatch\n\n<span class="success">✓ build (12s)</span>\n<span class="success">✓ test (45s)</span>\n<span class="success">✓ deploy (30s)</span>`;
+      return '<span class="dim">Usage: gh workflow run/view/list</span>';
+    case 'api':
+      return `<span class="dim">{\n  "login": "player",\n  "name": "Terminal Academy Student",\n  "public_repos": 12,\n  "followers": 42\n}</span>`;
+    case 'auth':
+      return '<span class="success">✓ Logged in to github.com as player</span>';
+    default:
+      return `<span class="error">gh: '${sub}' is not a gh command.</span>`;
+  }
+}
+
+// --- chown ---
+function cmdChown(args) {
+  if (!args[0]) return '<span class="error">chown: missing operand</span>\n<span class="dim">Usage: chown [user][:group] file</span>';
+  const recursive = args.includes('-R');
+  const target = args.filter(a => !a.startsWith('-')).slice(-1)[0];
+  const owner = args.filter(a => !a.startsWith('-'))[0];
+  return `<span class="success">Changed ownership of '${target || 'file'}' to ${owner}</span>${recursive ? '\n<span class="dim">(recursively applied to all contents)</span>' : ''}`;
+}
+
+// --- chgrp ---
+function cmdChgrp(args) {
+  if (args.length < 2) return '<span class="error">chgrp: missing operand</span>\n<span class="dim">Usage: chgrp group file</span>';
+  return `<span class="success">Changed group of '${args[1]}' to ${args[0]}</span>`;
+}
+
+// --- script ---
+function cmdScript(args) {
+  if (!args[0]) return '<span class="dim">Usage: script [file]\nRecords your terminal session to a file.</span>';
+  return `<span class="success">Script started, output file is ${args[0]}</span>\n<span class="dim">Everything you type will be recorded.\nType "exit" to stop recording.</span>`;
+}
+
+// --- asciinema ---
+function cmdAsciinema(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ ASCIINEMA ━━━</span>
+
+Record, replay, and share terminal sessions.
+
+<span class="warning">Commands:</span>
+  asciinema rec demo.cast    Record a session
+  asciinema play demo.cast   Replay a recording
+  asciinema upload demo.cast Share on asciinema.org
+
+<span class="warning">Install:</span>
+  brew install asciinema
+
+<span class="dim">Recordings include timing data, so playback looks real-time.
+Great for: tutorials, documentation, bug reports.</span>`;
+  }
+  if (args[0] === 'rec') return `<span class="success">Recording started: ${args[1] || 'session.cast'}</span>\n<span class="dim">Press Ctrl+D or type "exit" to stop recording.</span>`;
+  if (args[0] === 'play') return `<span class="info">Playing ${args[1] || 'session.cast'}...</span>\n<span class="dim">$ ls\ndocuments/  scripts/  downloads/\n$ echo "Hello"\nHello\n(playback complete)</span>`;
+  if (args[0] === 'upload') return `<span class="success">Uploaded: https://asciinema.org/a/abc123</span>`;
+  return `<span class="error">asciinema: unknown command '${args[0]}'</span>`;
+}
+
+// --- time ---
+function cmdTime(args) {
+  if (!args[0]) return '<span class="dim">Usage: time command\nMeasures execution time of a command.</span>';
+  const result = runCommand(args[0], args.slice(1), null);
+  return `${result}\n\n<span class="dim">real    0m0.012s\nuser    0m0.005s\nsys     0m0.004s</span>`;
+}
+
+// --- hyperfine ---
+function cmdHyperfine(args) {
+  if (!args[0]) return '<span class="dim">Usage: hyperfine "command1" "command2"\nStatistical benchmarking tool.</span>';
+  const cmd1 = args[0].replace(/"/g, '');
+  const cmd2 = args[1] ? args[1].replace(/"/g, '') : null;
+  let out = `<span class="info">Benchmark #1: ${cmd1}</span>
+  Time (mean ± σ):     12.3 ms ±  1.2 ms
+  Range (min … max):   10.1 ms … 15.6 ms  (50 runs)`;
+  if (cmd2) {
+    out += `\n\n<span class="info">Benchmark #2: ${cmd2}</span>
+  Time (mean ± σ):      3.1 ms ±  0.4 ms
+  Range (min … max):    2.5 ms …  4.2 ms  (100 runs)
+
+<span class="success">Summary: '${cmd2}' ran 3.97x faster than '${cmd1}'</span>`;
+  }
+  return out;
+}
+
+// --- benchmark ---
+function cmdBenchmark(args) {
+  return `<span class="info">━━━ BENCHMARKING TIPS ━━━</span>
+
+<span class="warning">Basic timing:</span>
+  time command         — wall clock, CPU user, CPU sys
+  /usr/bin/time -l cmd — detailed: memory, page faults
+
+<span class="warning">Statistical (install hyperfine):</span>
+  hyperfine "cmd1" "cmd2"  — run many times, compare means
+
+<span class="warning">Profiling scripts:</span>
+  PS4='+ $(date +%s.%N) ' bash -x script.sh  — timestamp each line
+
+<span class="warning">Common optimizations:</span>
+  • Replace grep with rg (ripgrep) — 5-10x faster
+  • Replace find with fd — 5x faster
+  • Use xargs -P for parallelism
+  • Avoid cat | grep (use grep directly)
+  • Sort large files with sort -S 50% (use 50% RAM)`;
+}
+
+// --- sqlite3 ---
+function cmdSqlite3(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ SQLITE3 ━━━</span>
+
+<span class="warning">Usage:</span>
+  sqlite3 database.db    Open/create database
+
+<span class="warning">Dot-commands (inside sqlite3):</span>
+  .tables               List all tables
+  .schema tablename     Show CREATE statement
+  .mode csv             CSV output mode
+  .import file.csv tbl  Import CSV into table
+  .output file.txt      Redirect output to file
+  .quit                 Exit sqlite3
+
+<span class="warning">SQL examples:</span>
+  CREATE TABLE users (id INTEGER PRIMARY KEY, name TEXT, email TEXT);
+  INSERT INTO users VALUES (1, 'Nathan', 'nathan@example.com');
+  SELECT * FROM users WHERE name LIKE '%Nathan%';
+  SELECT COUNT(*) FROM users;
+
+<span class="dim">SQLite is embedded in: browsers, iOS, Android, Python, most apps.</span>`;
+  }
+  if (args[0] === 'create') {
+    return `<span class="dim">CREATE TABLE users (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  name TEXT NOT NULL,\n  email TEXT UNIQUE,\n  created_at DATETIME DEFAULT CURRENT_TIMESTAMP\n);\n\nCREATE TABLE posts (\n  id INTEGER PRIMARY KEY AUTOINCREMENT,\n  user_id INTEGER REFERENCES users(id),\n  title TEXT NOT NULL,\n  body TEXT\n);</span>`;
+  }
+  if (args[0] === 'select') {
+    return `<span class="dim">-- Basic SELECT\nSELECT * FROM users;\n\n-- With WHERE\nSELECT name, email FROM users WHERE id > 5;\n\n-- With JOIN\nSELECT u.name, p.title\nFROM users u JOIN posts p ON u.id = p.user_id;\n\n-- Aggregation\nSELECT COUNT(*), AVG(age) FROM users;</span>`;
+  }
+  if (args[0] === 'import') {
+    return `<span class="dim">-- Import CSV:\n.mode csv\n.import users.csv users\n\n-- Verify:\nSELECT * FROM users LIMIT 5;\n\n-- Export:\n.mode csv\n.output export.csv\nSELECT * FROM users;\n.output stdout</span>`;
+  }
+  return `<span class="info">SQLite version 3.45.0</span>\nEnter ".help" for usage hints.\nsqlite> \n<span class="dim">(Interactive SQLite shell. Type .quit to exit.)</span>`;
+}
+
+// --- xxd ---
+function cmdXxd(args) {
+  if (!args[0]) return '<span class="error">Usage: xxd file</span>';
+  if (args.includes('-r')) return '<span class="dim">(reversed hex dump back to binary)</span>';
+  const path = resolvePath(state.cwd, args[args.length - 1]);
+  const node = getNode(state.fs, path);
+  const text = (node && node.content) ? node.content.slice(0, 64) : 'Terminal Academy';
+  let out = '';
+  for (let i = 0; i < text.length; i += 16) {
+    const chunk = text.slice(i, i + 16);
+    const hex = Array.from(chunk).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join(' ');
+    const ascii = Array.from(chunk).map(c => (c.charCodeAt(0) >= 32 && c.charCodeAt(0) < 127) ? c : '.').join('');
+    out += `<span class="dim">${i.toString(16).padStart(8, '0')}: ${hex.padEnd(48)}  ${ascii}</span>\n`;
+  }
+  return out.trim();
+}
+
+// --- base64 ---
+function cmdBase64(args, stdin) {
+  if (args.includes('-d') || args.includes('-D')) {
+    const input = stdin ? stdin.replace(/<[^>]*>/g, '') : 'aGVsbG8gd29ybGQ=';
+    // Simple base64 decode simulation
+    try { return atob(input.trim()); } catch(e) { return 'hello world'; }
+  }
+  const input = stdin ? stdin.replace(/<[^>]*>/g, '') : 'hello world';
+  try { return btoa(input.trim()); } catch(e) { return 'aGVsbG8gd29ybGQ='; }
+}
+
+// --- encoding ---
+function cmdEncoding(args) {
+  return `<span class="info">━━━ ENCODING REFERENCE ━━━</span>
+
+<span class="warning">Common encodings:</span>
+  ASCII     7-bit, 128 characters (English only)
+  UTF-8     Variable-width, backward-compatible with ASCII
+  UTF-16    2 or 4 bytes per character (used by Windows, Java)
+  Latin-1   8-bit, 256 characters (Western European)
+
+<span class="warning">Tools:</span>
+  file file.txt           — detect encoding
+  iconv -f SRC -t DST     — convert between encodings
+  xxd file                — hex dump to inspect raw bytes
+  base64 / base64 -d      — encode/decode Base64
+
+<span class="warning">File magic bytes (first bytes identify file type):</span>
+  89 50 4E 47  — PNG image
+  FF D8 FF     — JPEG image
+  25 50 44 46  — PDF document
+  50 4B 03 04  — ZIP archive
+  1F 8B        — gzip compressed`;
+}
+
+// --- shellcheck ---
+function cmdShellcheck(args) {
+  if (!args[0]) return '<span class="error">Usage: shellcheck script.sh</span>';
+  const script = args.filter(a => !a.startsWith('-'))[0] || 'script.sh';
+  return `<span class="dim">In ${script} line 3:</span>
+<span class="warning">  echo $var</span>
+         <span class="info">^-- SC2086: Double quote to prevent globbing and word splitting.</span>
+
+<span class="dim">In ${script} line 7:</span>
+<span class="warning">  cat file | grep "pattern"</span>
+  <span class="info">^-- SC2002: Useless use of cat. Consider 'grep "pattern" file'.</span>
+
+<span class="dim">In ${script} line 12:</span>
+<span class="warning">  [ $count -eq 0 ]</span>
+    <span class="info">^-- SC2154: count is referenced but not assigned.</span>
+
+<span class="dim">Found 3 issues (2 warnings, 1 info).
+shellcheck — a static analysis tool for shell scripts.
+Install: brew install shellcheck</span>`;
+}
+
+// --- trap ---
+function cmdTrap(args) {
+  if (!args[0] || args[0] === 'help') {
+    return `<span class="info">━━━ TRAP COMMAND ━━━</span>
+
+<span class="warning">trap</span> catches signals and runs cleanup code.
+
+<span class="warning">Syntax:</span>
+  trap 'commands' SIGNAL
+
+<span class="warning">Examples:</span>
+<span class="dim">  # Catch Ctrl+C
+  trap 'echo "Caught SIGINT! Cleaning up..."; exit' SIGINT
+
+  # Cleanup on exit (any reason)
+  trap 'rm -f /tmp/myapp_*' EXIT
+
+  # Catch errors
+  trap 'echo "Error on line $LINENO"' ERR
+
+  # Ignore a signal
+  trap '' SIGTERM</span>
+
+<span class="warning">Common signals to trap:</span>
+  EXIT    — script is exiting (any reason)
+  ERR     — a command failed (with set -e)
+  SIGINT  — Ctrl+C
+  SIGTERM — kill command
+  SIGHUP  — terminal disconnected`;
+  }
+  return `<span class="dim">trap: set handler for '${args[args.length-1]}'</span>`;
+}
+
 // --- man ---
 function cmdMan(args) {
   if (!args[0]) return 'What manual page do you want?\nUsage: man <command>';
@@ -3329,27 +5539,36 @@ function cmdHelp() {
   return `
 <span class="info">━━━ TERMINAL ACADEMY COMMANDS ━━━</span>
 
-<span class="warning">Navigation:</span>       pwd, cd, ls
-<span class="warning">File Reading:</span>     cat, head, tail, wc
-<span class="warning">File Creation:</span>    touch, mkdir, echo (with > or >>)
-<span class="warning">File Management:</span>  cp, mv, rm, ln, readlink
-<span class="warning">Search:</span>           grep, find, which
-<span class="warning">Text Processing:</span>  sort, uniq, cut, sed, awk, xargs, tee
-<span class="warning">Permissions:</span>      chmod
-<span class="warning">Environment:</span>      env, export, alias, source
-<span class="warning">System:</span>           whoami, hostname, date, ps, history, clear, colors
-<span class="warning">Process Control:</span>  jobs, fg, bg, kill, top
-<span class="warning">Monitoring:</span>       df, du, free, uptime, lsof, watch
+<span class="warning">Navigation:</span>       pwd, cd, ls, z (zoxide)
+<span class="warning">File Reading:</span>     cat, head, tail, wc, bat, stat, file, mdls
+<span class="warning">File Creation:</span>    touch, mkdir, echo (with > or >>), mkfifo
+<span class="warning">File Management:</span>  cp, mv, rm, ln, readlink, rsync, chown, chgrp
+<span class="warning">Search:</span>           grep, find, which, type, rg, fd, fzf, mdfind
+<span class="warning">Text Processing:</span>  sort, uniq, cut, sed, awk, xargs, tee, tr, jq, column, paste
+<span class="warning">Diff &amp; Patch:</span>     diff, vimdiff, patch
+<span class="warning">Permissions:</span>      chmod, chown, chgrp, sudo, id, groups
+<span class="warning">Environment:</span>      env, export, alias, source, bash
+<span class="warning">System:</span>           whoami, hostname, date, uname, arch, sw_vers, sysctl
+<span class="warning">Process Control:</span>  jobs, fg, bg, kill, top, wait, parallel, time
+<span class="warning">Monitoring:</span>       df, du, free, uptime, lsof, watch, lsblk, mount
 <span class="warning">Archives:</span>         tar, gzip, gunzip
-<span class="warning">Networking:</span>       curl, ping, ssh, scp, ssh-keygen, wget
-<span class="warning">Packages:</span>        brew, apt, pip, npm
-<span class="warning">Version Control:</span>  git (init, add, commit, status, log, diff, branch...)
+<span class="warning">Networking:</span>       curl, ping, ssh, scp, ssh-keygen, wget, nc, dig, traceroute
+<span class="warning">Editors:</span>          vim, nano
+<span class="warning">Containers:</span>       docker, docker-compose
+<span class="warning">Packages:</span>        brew, apt, pip, npm, npx, nvm
+<span class="warning">Version Control:</span>  git, gh (GitHub CLI)
 <span class="warning">Multiplexer:</span>     tmux (new, ls, attach, help)
 <span class="warning">Scheduling:</span>      crontab (-l, -e, example, add)
+<span class="warning">Encryption:</span>       gpg, sha256sum, md5, openssl, base64
+<span class="warning">Data:</span>             sqlite3, xxd, hexdump, dd
+<span class="warning">Languages:</span>        python3, node, irb, bash
+<span class="warning">macOS:</span>            open, say, caffeinate, defaults, diskutil, pbcopy, pbpaste
+<span class="warning">Shell Debug:</span>      shellcheck, set -x, trap
+<span class="warning">Terminals:</span>        ghostty (config, features, keys)
 <span class="warning">Shortcuts:</span>        shortcut &lt;key&gt; (e.g., shortcut ctrl-c)
 <span class="warning">Claude Code:</span>      claude &lt;topic&gt; (help, slash, mcp, skills, hooks)
 <span class="warning">Warp Terminal:</span>    warp &lt;topic&gt; (blocks, workflows, ai, drive, tips)
-<span class="warning">Learning:</span>         man &lt;cmd&gt;, glossary [term], help
+<span class="warning">Learning:</span>         man &lt;cmd&gt;, glossary [term], help, tldr
 
 <span class="warning">Special Syntax:</span>
   command1 <span class="highlight">|</span> command2    Pipe output to next command
@@ -3394,6 +5613,7 @@ function handleCommand(raw) {
   if (raw.includes('|')) {
     checkAchievement('piper');
     if (raw.split('|').length >= 3) checkAchievement('chain');
+    if (raw.split('|').length >= 5) checkAchievement('pipeline_pro');
   }
 
   // Validate current lesson task
@@ -3467,7 +5687,18 @@ const validCommands = new Set([
   'ssh','wget','claude','warp','which','man','glossary','help','xp','achievements',
   'colors','tee','ln','readlink','tar','gzip','gunzip','sed','awk','source','brew','apt',
   'pip','npm','git','ssh-keygen','scp','df','du','free','uptime','lsof','watch',
-  'tmux','crontab','xargs'
+  'tmux','crontab','xargs',
+  'vim','vi','nano','docker','docker-compose','id','sudo','su','groups','useradd','usermod',
+  'ifconfig','ip','netstat','ss','traceroute','dig','nslookup','make','dmesg','journalctl',
+  'last','gpg','sha256sum','md5','md5sum','openssl','ansi','tput','lsblk','diskutil',
+  'mount','umount','python3','python','deactivate','npx','node','nvm','jq','diff','vimdiff',
+  'patch','pbcopy','pbpaste','xclip','xsel','bash','wait','parallel','tr','cal','time',
+  'uname','sw_vers','arch','system_profiler','sysctl','stat','file','mdls','rg','fd','bat',
+  'eza','fzf','zoxide','z','tldr','starship','omz','zsh','column','paste','join',
+  'exitcode','open','say','caffeinate','mdfind','defaults','softwareupdate','launchctl',
+  'mkfifo','dd','irb','rsync','nc','netcat','type','builtin','command','ghostty','gh',
+  'chown','chgrp','script','asciinema','hyperfine','benchmark','sqlite3','xxd','hexdump',
+  'base64','od','iconv','encoding','shellcheck','sleep','trap','for','select','lscpu'
 ]);
 
 function updateSyntaxHighlight() {
@@ -3617,7 +5848,8 @@ function validateTask(rawCmd) {
 
         if (state.completedLessons.size >= 17) checkAchievement('halfway');
         if (state.completedLessons.size >= 18) checkAchievement('graduate');
-        if (state.completedLessons.size >= lessons.length) checkAchievement('master');
+        if (state.completedLessons.size >= 35) checkAchievement('master');
+        if (state.completedLessons.size >= lessons.length) checkAchievement('ultimate_master');
 
         // Auto-advance after a moment
         if (state.currentLesson < lessons.length - 1) {
@@ -3791,6 +6023,9 @@ function saveState() {
     quizAllTimeCorrect: quizState.allTimeCorrect,
     quizAllTimeTotal: quizState.allTimeTotal,
     quizSessionHistory: quizState.sessionHistory,
+    // Tracking sets for new achievements
+    macosCommandsUsed: [...(state.macosCommandsUsed || [])],
+    modernToolsUsed: [...(state.modernToolsUsed || [])],
   };
   for (const [k, v] of Object.entries(state.completedTasks)) {
     save.completedTasks[k] = [...v];
@@ -3856,6 +6091,9 @@ function loadState() {
     quizState.allTimeCorrect = save.quizAllTimeCorrect || 0;
     quizState.allTimeTotal = save.quizAllTimeTotal || 0;
     quizState.sessionHistory = save.quizSessionHistory || {};
+    // Restore tracking sets
+    state.macosCommandsUsed = new Set(save.macosCommandsUsed || []);
+    state.modernToolsUsed = new Set(save.modernToolsUsed || []);
     // Restore taskIndex
     const completed = state.completedTasks[state.currentLesson] || new Set();
     const lesson = lessons[state.currentLesson];
@@ -4892,6 +7130,8 @@ function buildSaveObject() {
     quizAllTimeCorrect: quizState.allTimeCorrect,
     quizAllTimeTotal: quizState.allTimeTotal,
     quizSessionHistory: quizState.sessionHistory,
+    macosCommandsUsed: [...(state.macosCommandsUsed || [])],
+    modernToolsUsed: [...(state.modernToolsUsed || [])],
   };
   for (const [k, v] of Object.entries(state.completedTasks)) save.completedTasks[k] = [...v];
   for (const [k, v] of Object.entries(challengeState.completed)) save.challengeCompleted[k] = [...v];
@@ -4929,6 +7169,8 @@ function restoreSaveObject(save) {
   quizState.allTimeCorrect = save.quizAllTimeCorrect || 0;
   quizState.allTimeTotal = save.quizAllTimeTotal || 0;
   quizState.sessionHistory = save.quizSessionHistory || {};
+  state.macosCommandsUsed = new Set(save.macosCommandsUsed || []);
+  state.modernToolsUsed = new Set(save.modernToolsUsed || []);
   // Restore taskIndex
   const completed = state.completedTasks[state.currentLesson] || new Set();
   const lesson = lessons[state.currentLesson];
