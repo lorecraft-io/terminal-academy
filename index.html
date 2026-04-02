@@ -528,7 +528,7 @@ body { background:var(--bg); color:var(--text); font-family:var(--font); height:
     <h1>Terminal <span>Academy</span></h1>
     <p class="subtitle">Master the command line, one command at a time</p>
     <p>Welcome, cadet! You're about to learn how to wield the most powerful tool in computing — the terminal. Through hands-on missions, you'll go from zero to power user.</p>
-    <p style="color:var(--yellow);font-size:12px;">18 Chapters · 70+ Missions · Endless Challenges · 60+ Quiz Questions · Achievements · Encyclopedia</p>
+    <p style="color:var(--yellow);font-size:12px;">81 Chapters · 300+ Missions · Endless Challenges · 60+ Quiz Questions · Achievements · Encyclopedia</p>
     <button onclick="startGame()">BEGIN TRAINING →</button>
   </div>
 </div>
@@ -665,7 +665,7 @@ function createFS() {
               'desk_photo.txt': file('rw-r--r--', '[A framed photo showing Agent_K at a team event.\n They\'re smiling, wearing a NEXUS lanyard.\n Written on the back: "The truth is in the data."]\n'),
               'case_files': dir('rwxr-xr-x', {
                 'breach_report.txt': file('rw-r--r--', 'INCIDENT REPORT #2024-0042\n========================\nClassification: CONFIDENTIAL\nFiled by: Agent_K\nDate: 2024-01-10\n\nSUMMARY:\nUnauthorized access detected on internal server\ncluster between 02:15-03:47 on Jan 8, 2024.\nAttacker used valid credentials belonging to a\ndeactivated service account (svc_legacy_admin).\n\nACTIONS TAKEN:\n- Flagged anomalous login patterns\n- Cross-referenced with badge access logs\n- Identified data exfiltration from archives/\n\nSUSPICIOUS FINDINGS:\n- The service account was supposedly deactivated\n  6 months ago, but someone reactivated it\n- Access originated from INSIDE the building\n- 3.2GB of data was copied from the archives\n- Firewall logs show the data was sent to\n  an external IP: 198.51.100.42\n\nNEXT STEPS:\n- Review server_room access logs for Jan 8\n- Cross-reference personnel with building access\n- Check for any backdoors or persistence mechanisms\n\nSTATUS: ACTIVE INVESTIGATION\n'),
-                'suspects.csv': file('rw-r--r--', 'id,name,codename,department,clearance,alibi_verified\n1,Marcus Webb,RAVEN,Engineering,3,yes\n2,Diana Frost,ECHO,Analysis,4,no\n3,Tom Nakamura,VIPER,IT Security,5,yes\n4,Lisa Park,EMBER,Operations,3,yes\n5,unknown,LYNX,unknown,unknown,no\n6,Carlos Reyes,ATLAS,Archives,2,yes\n7,Yuki Tanaka,LOTUS,Lab,4,no\n'),
+                'suspects.csv': file('rw-r--r--', 'id,name,codename,department,clearance,alibi_verified\n1,Marcus Webb,RAVEN,Engineering,3,yes\n2,Diana Frost,ECHO,Analysis,4,no\n3,Tom Nakamura,VIPER,IT Security,5,yes\n4,Lisa Park,EMBER,Operations,3,yes\n5,Carlos Reyes,ATLAS,Archives,2,yes\n6,unknown,LYNX,unknown,unknown,no\n'),
                 'timeline.txt': file('rw-r--r--', 'INVESTIGATION TIMELINE\n=====================\n\nJan 8, 02:15  - Unauthorized login detected (svc_legacy_admin)\nJan 8, 02:23  - Archive access: personnel files downloaded\nJan 8, 03:01  - Archive access: classified section accessed\nJan 8, 03:47  - Data exfiltration to 198.51.100.42\nJan 8, 04:00  - Connection terminated\nJan 9, 09:00  - Routine scan flags the anomaly\nJan 10, 11:00 - Agent_K assigned to investigation\nJan 10, 14:00 - Agent_K files breach_report.txt\nJan 11, 22:00 - Agent_K accesses server_room (after hours)\nJan 12, 01:30 - Agent_K last seen entering the building\nJan 12, 02:00 - Agent_K badge used in server_room\nJan 12, 03:15 - Last command logged from Agent_K terminal\nJan 12, ??:?? - Agent_K goes dark\n'),
               }),
               'bookmarks.txt': file('rw-r--r--', 'Agent_K\'s Research Notes\n=======================\n\n- Check server_room/access.log for entries around 02:00\n- The firewall rules were modified recently — compare old vs new\n- Personnel file for "ECHO" (Diana Frost) — clearance level 4,\n  alibi NOT verified\n- Also suspicious: "LYNX" — no record in personnel database?\n- Remember to check hidden directories in archives/\n'),
@@ -686,7 +686,7 @@ function createFS() {
                 'msg_003_from_analyst.txt': file('rw-r--r--', 'FROM: Yuki Tanaka (Lab)\nTO: Agent_K\nDATE: 2024-01-11\nSUBJECT: RE: Malware Analysis\n\nK,\n\nI analyzed the backdoor script you found.\nIt\'s sophisticated — custom-built, not off-the-shelf.\nWhoever wrote this has deep knowledge of our\ninternal systems.\n\nThe coding style matches samples in our database\nfrom a threat actor we call "PHANTOM." But here\'s\nthe thing — PHANTOM is supposed to be an external\nthreat. This code was written by someone with\nINSIDE knowledge.\n\nCheck the lab/analysis/ folder. I left my full\nreport there.\n\n- Yuki\n'),
               }),
               'outbox': dir('rwxr-xr-x', {
-                '.unsent_draft.txt': file('rw-------', 'FROM: Agent_K\nTO: Director Chen\nDATE: 2024-01-12 02:45\nSUBJECT: URGENT — I know who the mole is\nSTATUS: *** UNSENT ***\n\nDirector,\n\nI\'ve identified the mole. The evidence points to\nDiana Frost (codename ECHO).\n\nProof:\n1. She\'s the only suspect whose alibi is unverified\n2. She had access to svc_legacy_admin credentials\n3. The badge used on Jan 8 (V-????) matches the\n   visitor badge she signed out on Jan 5 and\n   "lost" — check the visitor_log\n4. The PHANTOM coding style matches her academic\n   papers on network security (archived in lab)\n5. She has clearance level 4 — enough to access\n   the classified archives that were stolen\n6. First letters of suspect codenames she suggested:\n   R-E-V-E-L — she\'s taunting us\n\nI\'m in the server room now collecting final\nevidence. If this message sends, something\nwent wrong. Check the vault — I\'m copying\neverything there.\n\n*** THIS MESSAGE WAS NEVER SENT ***\n*** Agent_K session terminated at 03:15 ***\n'),
+                '.unsent_draft.txt': file('rw-------', 'FROM: Agent_K\nTO: Director Chen\nDATE: 2024-01-12 02:45\nSUBJECT: URGENT — I know who the mole is\nSTATUS: *** UNSENT ***\n\nDirector,\n\nI\'ve identified the mole. The evidence points to\nDiana Frost (codename ECHO).\n\nProof:\n1. She\'s the only suspect whose alibi is unverified\n2. She had access to svc_legacy_admin credentials\n3. The badge used on Jan 8 (V-????) matches the\n   visitor badge she signed out on Jan 5 and\n   "lost" — check the visitor_log\n4. The PHANTOM coding style matches her academic\n   papers on network security (archived in lab)\n5. She has clearance level 4 — enough to access\n   the classified archives that were stolen\n6. First letters of suspect codenames she suggested:\n   R-E-V-E-A-L — she\'s taunting us\n\nI\'m in the server room now collecting final\nevidence. If this message sends, something\nwent wrong. Check the vault — I\'m copying\neverything there.\n\n*** THIS MESSAGE WAS NEVER SENT ***\n*** Agent_K session terminated at 03:15 ***\n'),
               }),
             }),
             'archives': dir('rwxr-xr-x', {
@@ -708,7 +708,7 @@ function createFS() {
                 'network_capture.txt': file('rw-r--r--', 'NETWORK CAPTURE SUMMARY\n======================\nCapture window: 2024-01-08 02:00 - 04:00\n\n02:14:02 - TCP SYN to 198.51.100.42:4444\n02:14:03 - TCP SYN-ACK from 198.51.100.42\n02:14:03 - Connection established\n02:15:00 - Data transfer begins\n02:23:15 - Large transfer: archives/personnel/* (340KB)\n03:01:44 - Large transfer: archives/.classified/* (2.8MB)\n03:47:22 - Connection terminated\n03:48:01 - All traces cleaned (attempted)\n\nTotal data exfiltrated: ~3.2GB\nDestination: 198.51.100.42 (unregistered VPS)\n'),
               }),
               'tools': dir('rwxr-xr-x', {
-                'decoder.sh': file('rw-r--r--', '#!/bin/bash\n# NEXUS Decoder Tool v2.1\n# Decodes suspect codename patterns\n#\n# Usage: Make executable first! (chmod +x decoder.sh)\n# Then conceptually "run" it by reading the output.\n#\n# Running decoder on suspects.csv codenames...\n# Extracting first letters of codenames:\n#   RAVEN  → R\n#   ECHO   → E\n#   VIPER  → V\n#   EMBER  → E\n#   LYNX   → L\n#   ATLAS  → A\n#   LOTUS  → L\n#\n# Decoded message: R-E-V-E-L-A-L → "REVEAL"\n#\n# WAIT. The codenames spell "REVEAL"?\n# Agent_K noted this too. But who assigned\n# the codenames? Check the case files...\n# It was Diana Frost. She was taunting us.\n'),
+                'decoder.sh': file('rw-r--r--', '#!/bin/bash\n# NEXUS Decoder Tool v2.1\n# Decodes suspect codename patterns\n#\n# Usage: Make executable first! (chmod +x decoder.sh)\n# Then conceptually "run" it by reading the output.\n#\n# Running decoder on suspects.csv codenames...\n# Extracting first letters of codenames:\n#   RAVEN  → R\n#   ECHO   → E\n#   VIPER  → V\n#   EMBER  → E\n#   ATLAS  → A\n#   LYNX   → L\n#\n# Decoded message: R-E-V-E-A-L → "REVEAL"\n#\n# WAIT. The codenames spell "REVEAL"?\n# Agent_K noted this too. But who assigned\n# the codenames? Check the case files...\n# It was Diana Frost. She was taunting us.\n'),
                 'scanner.sh': file('rw-r--r--', '#!/bin/bash\n# NEXUS Network Scanner v1.3\n# Scans for active connections to suspicious IPs\n#\n# Usage: chmod +x scanner.sh to make executable\n#\n# Scan results:\n# [ALERT] Outbound rule to 198.51.100.42 still active!\n# [ALERT] Port 4444 - known backdoor port\n# [ALERT] Port 8080 - data exfiltration port\n# [INFO]  Backdoor cron job: DISABLED (by Agent_K)\n# [INFO]  Last connection: 2024-01-12 03:15\n# [WARN]  Firewall rules modified by deactivated account\n#\n# Recommendation: Remove suspicious firewall rules\n# and revoke svc_legacy_admin permanently.\n'),
               }),
             }),
@@ -782,7 +782,7 @@ function resolvePath(cwd, inputPath) {
   return '/' + resolved.join('/');
 }
 
-function getNode(fs, path) {
+function getNode(fs, path, _symlinkDepth) {
   if (path === '/') return fs['/'];
   const parts = path.split('/').filter(Boolean);
   let node = fs['/'];
@@ -790,10 +790,11 @@ function getNode(fs, path) {
     if (!node || node.type !== 'dir' || !node.children[p]) return null;
     node = node.children[p];
   }
-  // Follow symlinks
+  // Follow symlinks with recursion guard
   if (node && node.type === 'symlink') {
+    if ((_symlinkDepth || 0) >= 10) return null;
     const targetPath = resolvePath(path.replace(/\/[^/]+$/, '') || '/', node.target);
-    return getNode(fs, targetPath);
+    return getNode(fs, targetPath, (_symlinkDepth || 0) + 1);
   }
   return node;
 }
@@ -1942,8 +1943,8 @@ const achievementDefs = [
   { id:'env_setter', name:'Configurator', desc:'Set an environment variable', icon:'⚙️' },
   { id:'aliaser', name:'Shortcut King', desc:'Create a command alias', icon:'👑' },
   { id:'speed_demon', name:'Speed Demon', desc:'Complete a lesson in under 90 seconds', icon:'⚡' },
-  { id:'halfway', name:'Halfway There', desc:'Complete 17 chapters', icon:'🏔️' },
-  { id:'graduate', name:'Graduate', desc:'Complete the first 18 chapters', icon:'🎖️' },
+  { id:'halfway', name:'Halfway There', desc:'Complete 40 chapters', icon:'🏔️' },
+  { id:'graduate', name:'Graduate', desc:'Complete 60 chapters', icon:'🎖️' },
   { id:'centurion', name:'Centurion', desc:'Run 100 commands', icon:'💯' },
   { id:'treasure', name:'Treasure Hunter', desc:'Find the hidden treasure file', icon:'🏆' },
   { id:'shortcut_pro', name:'Shortcut Pro', desc:'Learn 5 keyboard shortcuts', icon:'⌨️' },
@@ -1999,46 +2000,68 @@ let state = {
 // ============================================================
 // COMMAND IMPLEMENTATIONS
 // ============================================================
+function splitRespectingQuotes(str, delimiter) {
+  const parts = [];
+  let current = '';
+  let inSingle = false, inDouble = false;
+  for (let i = 0; i < str.length; i++) {
+    const ch = str[i];
+    if (ch === '"' && !inSingle) { inDouble = !inDouble; current += ch; }
+    else if (ch === "'" && !inDouble) { inSingle = !inSingle; current += ch; }
+    else if (!inSingle && !inDouble && str.slice(i, i + delimiter.length) === delimiter) {
+      parts.push(current); current = ''; i += delimiter.length - 1;
+    } else { current += ch; }
+  }
+  parts.push(current);
+  return parts.map(s => s.trim()).filter(Boolean);
+}
+
 function execCommand(raw, stdinData) {
   const trimmed = raw.trim();
   if (!trimmed) return '';
 
   // Handle && chaining (stops on error, like real shells)
-  if (trimmed.includes('&&') && !trimmed.match(/"[^"]*&&[^"]*"|'[^']*&&[^']*'/)) {
-    const parts = trimmed.split('&&').map(s => s.trim()).filter(Boolean);
-    let output = '';
-    for (const part of parts) {
-      const result = execCommand(part, null);
-      if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
-      if (result && result.includes('class="error"')) break; // Stop on error
+  if (trimmed.includes('&&')) {
+    const parts = splitRespectingQuotes(trimmed, '&&');
+    if (parts.length > 1) {
+      let output = '';
+      for (const part of parts) {
+        const result = execCommand(part, null);
+        if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
+        if (result && result.includes('class="error"')) break;
+      }
+      return output;
     }
-    return output;
   }
 
   // Handle ; chaining
   if (trimmed.includes(';')) {
-    const parts = trimmed.split(';').map(s => s.trim()).filter(Boolean);
-    let output = '';
-    for (const part of parts) {
-      const result = execCommand(part, null);
-      if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
+    const parts = splitRespectingQuotes(trimmed, ';');
+    if (parts.length > 1) {
+      let output = '';
+      for (const part of parts) {
+        const result = execCommand(part, null);
+        if (result !== null && result !== undefined) output += (output ? '\n' : '') + result;
+      }
+      return output;
     }
-    return output;
   }
 
   // Handle pipes
-  if (trimmed.includes('|')) {
-    const segments = trimmed.split('|').map(s => s.trim()).filter(Boolean);
-    let data = null;
-    let output = '';
-    for (let i = 0; i < segments.length; i++) {
-      output = execCommand(segments[i], data);
-      data = output;
+  if (trimmed.includes('|') && !trimmed.includes('||')) {
+    const segments = splitRespectingQuotes(trimmed, '|');
+    if (segments.length > 1) {
+      let data = null;
+      let output = '';
+      for (let i = 0; i < segments.length; i++) {
+        output = execCommand(segments[i], data);
+        data = output ? output.replace(/<[^>]*>/g, '') : output;
+      }
+      return output;
     }
-    return output;
   }
 
-  // Handle output redirection
+  // Handle output redirection (quote-aware)
   let redirectFile = null;
   let appendMode = false;
   let stderrRedirect = false;
@@ -2046,20 +2069,30 @@ function execCommand(raw, stdinData) {
   if (trimmed.includes('2>&1')) {
     cmdPart = trimmed.replace('2>&1', '').trim();
   }
-  if (trimmed.includes('>>')) {
-    const idx = trimmed.indexOf('>>');
-    cmdPart = trimmed.slice(0, idx).trim();
-    redirectFile = trimmed.slice(idx + 2).trim().replace('2>&1', '').trim();
+  // Find redirect operator outside quotes
+  let rIdx = -1, rType = '';
+  { let inS = false, inD = false;
+    for (let i = 0; i < trimmed.length; i++) {
+      if (trimmed[i] === '"' && !inS) inD = !inD;
+      else if (trimmed[i] === "'" && !inD) inS = !inS;
+      else if (!inS && !inD) {
+        if (trimmed.slice(i, i+2) === '>>' && rIdx === -1) { rIdx = i; rType = '>>'; }
+        else if (trimmed.slice(i, i+2) === '2>' && trimmed[i+2] !== '&' && rIdx === -1) { rIdx = i; rType = '2>'; }
+        else if (trimmed[i] === '>' && trimmed[i-1] !== '2' && rIdx === -1) { rIdx = i; rType = '>'; }
+      }
+    }
+  }
+  if (rType === '>>') {
+    cmdPart = trimmed.slice(0, rIdx).trim();
+    redirectFile = trimmed.slice(rIdx + 2).trim().replace('2>&1', '').trim().replace(/^["']|["']$/g, '');
     appendMode = true;
-  } else if (trimmed.includes('2>') && !trimmed.includes('2>&1')) {
-    const idx = trimmed.indexOf('2>');
-    cmdPart = trimmed.slice(0, idx).trim();
-    redirectFile = trimmed.slice(idx + 2).trim();
+  } else if (rType === '2>') {
+    cmdPart = trimmed.slice(0, rIdx).trim();
+    redirectFile = trimmed.slice(rIdx + 2).trim().replace(/^["']|["']$/g, '');
     stderrRedirect = true;
-  } else if (trimmed.includes('>')) {
-    const idx = trimmed.indexOf('>');
-    cmdPart = trimmed.slice(0, idx).trim();
-    redirectFile = trimmed.slice(idx + 1).trim();
+  } else if (rType === '>') {
+    cmdPart = trimmed.slice(0, rIdx).trim();
+    redirectFile = trimmed.slice(rIdx + 1).trim().replace(/^["']|["']$/g, '');
     appendMode = false;
   }
 
@@ -2080,10 +2113,7 @@ function execCommand(raw, stdinData) {
   // Variable substitution in args
   args = args.map(a => a.replace(/\$(\w+)/g, (_, name) => state.envVars[name] || ''));
   if (cmdName === 'echo') {
-    // Rejoin for echo to handle $VAR in the whole string
-    let echoStr = args.join(' ');
-    echoStr = echoStr.replace(/\$(\w+)/g, (_, name) => state.envVars[name] || '');
-    args = [echoStr];
+    args = [args.join(' ')];
   }
 
   const output = runCommand(cmdName, args, stdinData);
@@ -2099,7 +2129,7 @@ function execCommand(raw, stdinData) {
       }
       return '';
     }
-    return `<span class="error">Cannot redirect to ${redirectFile}</span>`;
+    return `<span class="error">Cannot redirect to ${escapeHtml(redirectFile)}</span>`;
   }
 
   return output;
@@ -2134,10 +2164,21 @@ function runCommand(cmd, args, stdin) {
     case 'pwd': return state.cwd;
     case 'whoami': return 'player';
     case 'hostname': return 'academy';
-    case 'date': return new Date().toString();
+    case 'date': {
+      const d = new Date();
+      const fmt = args.find(a => a.startsWith('+'));
+      if (fmt) {
+        return fmt.slice(1).replace(/%Y/g, d.getFullYear()).replace(/%m/g, String(d.getMonth()+1).padStart(2,'0'))
+          .replace(/%d/g, String(d.getDate()).padStart(2,'0')).replace(/%H/g, String(d.getHours()).padStart(2,'0'))
+          .replace(/%M/g, String(d.getMinutes()).padStart(2,'0')).replace(/%S/g, String(d.getSeconds()).padStart(2,'0'))
+          .replace(/%s/g, Math.floor(d.getTime()/1000)).replace(/%A/g, d.toLocaleDateString('en',{weekday:'long'}))
+          .replace(/%B/g, d.toLocaleDateString('en',{month:'long'})).replace(/%Z/g, Intl.DateTimeFormat().resolvedOptions().timeZone);
+      }
+      return d.toString();
+    }
     case 'clear': { document.getElementById('terminal').innerHTML = ''; return ''; }
 
-    case 'echo': return args.join(' ');
+    case 'echo': return escapeHtml(args.join(' '));
 
     case 'ls': return cmdLs(args);
     case 'cd': return cmdCd(args);
@@ -2150,6 +2191,20 @@ function runCommand(cmd, args, stdin) {
     case 'cp': return cmdCp(args);
     case 'mv': return cmdMv(args);
     case 'rm': return cmdRm(args);
+    case 'rmdir': {
+      if (!args.length) return '<span class="error">rmdir: missing operand</span>';
+      let out = [];
+      for (const a of args) {
+        const p = resolvePath(state.cwd, a);
+        const n = getNode(state.fs, p);
+        if (!n) { out.push(`<span class="error">rmdir: ${escapeHtml(a)}: No such file or directory</span>`); continue; }
+        if (n.type !== 'dir') { out.push(`<span class="error">rmdir: ${escapeHtml(a)}: Not a directory</span>`); continue; }
+        if (Object.keys(n.children).length > 0) { out.push(`<span class="error">rmdir: ${escapeHtml(a)}: Directory not empty</span>`); continue; }
+        const { parent, name } = getParentAndName(state.fs, p);
+        if (parent) delete parent.children[name];
+      }
+      return out.join('\n') || '';
+    }
     case 'grep': return cmdGrep(args, stdin);
     case 'find': return cmdFind(args);
     case 'sort': return cmdSort(args, stdin);
@@ -2159,6 +2214,11 @@ function runCommand(cmd, args, stdin) {
     case 'env': case 'printenv': return Object.entries(state.envVars).map(([k,v])=>`${k}=${v}`).join('\n');
     case 'export': return cmdExport(args);
     case 'alias': return cmdAlias(args);
+    case 'unalias': {
+      if (!args.length) return '<span class="error">unalias: usage: unalias name</span>';
+      for (const a of args) { delete state.aliases[a]; }
+      return '';
+    }
     case 'history': { checkAchievement('historian'); return state.history.map((h,i)=>`  ${i+1}  ${h}`).join('\n'); }
     case 'ps': return 'PID   TTY     TIME  CMD\n  1   tty1    0:00  bash\n  42  tty1    0:00  terminal-academy\n  99  tty1    0:00  ps';
     case 'jobs': return '[1]+  Stopped                 vim notes.txt\n[2]-  Running                 node server.js &\n[3]   Running                 python3 train.py &';
@@ -2314,7 +2374,7 @@ function runCommand(cmd, args, stdin) {
     case 'help': return cmdHelp();
     case 'xp': return `Level ${state.level} — ${state.xp} XP total`;
     case 'achievements': return 'Check the Achievements tab in the side panel! →';
-    default: return `<span class="error">Command not found: ${cmd}. Type <span class="info">help</span> for available commands.</span>`;
+    default: return `<span class="error">Command not found: ${escapeHtml(cmd)}. Type <span class="info">help</span> for available commands.</span>`;
   }
 }
 
@@ -2329,7 +2389,7 @@ function cmdLs(args) {
   }
   const path = resolvePath(state.cwd, target);
   const node = getNode(state.fs, path);
-  if (!node) return `<span class="error">ls: cannot access '${target}': No such file or directory</span>`;
+  if (!node) return `<span class="error">ls: cannot access '${escapeHtml(target)}': No such file or directory</span>`;
   if (node.type === 'file') {
     return showLong ? formatLong(target || path.split('/').pop(), node) : (target || path.split('/').pop());
   }
@@ -2390,8 +2450,8 @@ function cmdCd(args) {
   }
   const path = resolvePath(state.cwd, target);
   const node = getNode(state.fs, path);
-  if (!node) return `<span class="error">cd: no such directory: ${target}</span>`;
-  if (node.type !== 'dir') return `<span class="error">cd: not a directory: ${target}</span>`;
+  if (!node) return `<span class="error">cd: no such directory: ${escapeHtml(target)}</span>`;
+  if (node.type !== 'dir') return `<span class="error">cd: not a directory: ${escapeHtml(target)}</span>`;
   state.prevDir = state.cwd;
   state.cwd = path;
   state.dirsVisited.add(path);
@@ -2408,7 +2468,7 @@ function cmdCat(args, stdin) {
   for (const a of args) {
     const path = resolvePath(state.cwd, a);
     const node = getNode(state.fs, path);
-    if (!node) { output += `<span class="error">cat: ${a}: No such file or directory</span>\n`; continue; }
+    if (!node) { output += `<span class="error">cat: ${escapeHtml(a)}: No such file or directory</span>\n`; continue; }
     if (node.type === 'dir') { output += `<span class="error">cat: ${a}: Is a directory</span>\n`; continue; }
     output += node.content;
     state.filesRead.add(path);
@@ -2474,7 +2534,7 @@ function cmdWc(args, stdin) {
     content = node.content;
   }
   if (!content) return '0';
-  const lines = content.split('\n').length;
+  const lines = (content.match(/\n/g) || []).length;
   const words = content.split(/\s+/).filter(Boolean).length;
   const chars = content.length;
   const parts = [];
@@ -2509,6 +2569,7 @@ function cmdMkdir(args) {
     if (a === '-p') recursive = true;
     else dirs.push(a);
   }
+  if (!dirs.length) return '<span class="error">mkdir: missing operand</span>';
   for (const d of dirs) {
     if (recursive) {
       const path = resolvePath(state.cwd, d);
@@ -2543,9 +2604,16 @@ function cmdCp(args) {
   const srcNode = getNode(state.fs, srcPath);
   if (!srcNode) return `<span class="error">cp: ${paths[0]}: No such file or directory</span>`;
   if (srcNode.type === 'dir' && !recursive) return `<span class="error">cp: -r not specified; omitting directory '${paths[0]}'</span>`;
-  const { parent, name } = getParentAndName(state.fs, dstPath);
-  if (!parent) return `<span class="error">cp: cannot create '${paths[1]}'</span>`;
-  parent.children[name] = JSON.parse(JSON.stringify(srcNode));
+  const dstNode = getNode(state.fs, dstPath);
+  if (dstNode && dstNode.type === 'dir') {
+    // Copy into directory using source's name
+    const srcName = srcPath.split('/').pop();
+    dstNode.children[srcName] = JSON.parse(JSON.stringify(srcNode));
+  } else {
+    const { parent, name } = getParentAndName(state.fs, dstPath);
+    if (!parent) return `<span class="error">cp: cannot create '${escapeHtml(paths[1])}'</span>`;
+    parent.children[name] = JSON.parse(JSON.stringify(srcNode));
+  }
   return '';
 }
 
@@ -2581,26 +2649,32 @@ function cmdRm(args) {
       if (a.includes('f')) force = true;
     } else targets.push(a);
   }
+  const protectedPaths = ['/', '/home', '/home/player', '/etc', '/dev', '/usr', '/var', '/tmp'];
+  let errors = [];
   for (const t of targets) {
     const path = resolvePath(state.cwd, t);
-    const node = getNode(state.fs, path);
-    if (!node) {
-      if (!force) return `<span class="error">rm: ${t}: No such file or directory</span>`;
+    if (protectedPaths.includes(path)) {
+      errors.push(`<span class="error">rm: cannot remove '${escapeHtml(t)}': Permission denied (protected system path)</span>`);
       continue;
     }
-    if (node.type === 'dir' && !recursive) return `<span class="error">rm: ${t}: is a directory (use -r)</span>`;
+    const node = getNode(state.fs, path);
+    if (!node) {
+      if (!force) errors.push(`<span class="error">rm: ${escapeHtml(t)}: No such file or directory</span>`);
+      continue;
+    }
+    if (node.type === 'dir' && !recursive) { errors.push(`<span class="error">rm: ${escapeHtml(t)}: is a directory (use -r)</span>`); continue; }
     const { parent, name } = getParentAndName(state.fs, path);
     if (parent) {
       delete parent.children[name];
       checkAchievement('destroyer');
     }
   }
-  return '';
+  return errors.join('\n') || '';
 }
 
 // --- grep ---
 function cmdGrep(args, stdin) {
-  let caseI = false, lineNums = false, recursive = false, countOnly = false;
+  let caseI = false, lineNums = false, recursive = false, countOnly = false, extendedRe = false;
   let pattern = null, targets = [];
   for (let i = 0; i < args.length; i++) {
     if (args[i].startsWith('-') && !pattern) {
@@ -2608,21 +2682,26 @@ function cmdGrep(args, stdin) {
       if (args[i].includes('n')) lineNums = true;
       if (args[i].includes('r')) recursive = true;
       if (args[i].includes('c')) countOnly = true;
+      if (args[i].includes('E') || args[i].includes('P')) extendedRe = true;
     } else if (!pattern) pattern = args[i];
     else targets.push(args[i]);
   }
   if (!pattern) return '<span class="error">grep: missing pattern</span>';
   checkAchievement('detective');
+  checkAchievement('regex_master');
 
   function searchContent(content, filename) {
-    const regex = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseI ? 'i' : '');
+    const escaped = extendedRe ? pattern : pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    let regex;
+    try { regex = new RegExp(escaped, caseI ? 'gi' : 'g'); } catch(e) { regex = new RegExp(pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), caseI ? 'gi' : 'g'); }
+    const testRegex = new RegExp(regex.source, caseI ? 'i' : '');
     const lines = content.split('\n');
     const matches = [];
     lines.forEach((line, idx) => {
-      if (regex.test(line)) {
-        const highlighted = line.replace(new RegExp(`(${pattern.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, caseI?'gi':'g'), '<span class="highlight">$1</span>');
+      if (testRegex.test(line)) {
+        const highlighted = line.replace(regex, '<span class="highlight">$&</span>');
         let prefix = '';
-        if (filename) prefix = `<span class="info">${filename}</span>:`;
+        if (filename) prefix = `<span class="info">${escapeHtml(filename)}</span>:`;
         if (lineNums) prefix += `<span class="warning">${idx+1}</span>:`;
         matches.push(prefix + highlighted);
       }
@@ -2690,10 +2769,11 @@ function cmdSort(args, stdin) {
   let reverse = false, numeric = false, unique = false;
   let filePath = null;
   for (const a of args) {
-    if (a === '-r') reverse = true;
-    else if (a === '-n') numeric = true;
-    else if (a === '-u') unique = true;
-    else if (!a.startsWith('-')) filePath = a;
+    if (a.startsWith('-') && a !== '-') {
+      if (a.includes('r')) reverse = true;
+      if (a.includes('n')) numeric = true;
+      if (a.includes('u')) unique = true;
+    } else if (!a.startsWith('-')) filePath = a;
   }
   let content = stdin;
   if (!content && filePath) {
@@ -3401,10 +3481,12 @@ function cmdGunzip(args) {
   if (!target.endsWith('.gz')) return `<span class="error">gunzip: ${target}: unknown suffix -- ignored</span>`;
   const outName = target.slice(0, -3);
   const path = resolvePath(state.cwd, target);
+  const node = getNode(state.fs, path);
+  if (!node) return `<span class="error">gunzip: ${escapeHtml(target)}: No such file or directory</span>`;
   const { parent, name } = getParentAndName(state.fs, path);
   const outBaseName = outName.split('/').pop();
   if (parent) {
-    parent.children[outBaseName] = file('rw-r--r--', '(decompressed content)');
+    parent.children[outBaseName] = file('rw-r--r--', node.content || '(decompressed content)');
     delete parent.children[name];
   }
   return `<span class="dim">${target} → ${outName} (decompressed)</span>`;
@@ -3436,7 +3518,10 @@ function cmdSed(args, stdin) {
   const subMatch = expression.match(/^s\/(.+?)\/(.*)\/([gi]*)$/);
   if (subMatch) {
     const [, pattern, replacement, flags] = subMatch;
-    const regex = new RegExp(pattern, flags.includes('g') ? 'g' : '');
+    let rFlags = '';
+    if (flags.includes('g')) rFlags += 'g';
+    if (flags.includes('i')) rFlags += 'i';
+    const regex = new RegExp(pattern, rFlags);
     const result = content.split('\n').map(line => line.replace(regex, replacement)).join('\n');
     if (inPlace && filePath) {
       const path = resolvePath(state.cwd, filePath);
@@ -5596,11 +5681,13 @@ function printToTerminal(html, className) {
   div.className = 'line ' + (className || '');
   div.innerHTML = html;
   terminalEl.appendChild(div);
+  // Cap terminal output at 1000 lines to prevent memory bloat
+  while (terminalEl.children.length > 1000) terminalEl.removeChild(terminalEl.firstChild);
   terminalEl.scrollTop = terminalEl.scrollHeight;
 }
 
 function handleCommand(raw) {
-  const promptText = `player@academy:${shortPath(state.cwd)}$ `;
+  const promptText = `player@academy:${escapeHtml(shortPath(state.cwd))}$ `;
   printToTerminal(`<span class="prompt-text">${promptText}</span><span class="cmd-text">${escapeHtml(raw)}</span>`);
 
   state.history.push(raw);
@@ -5682,8 +5769,8 @@ function tabComplete() {
 // ============================================================
 const validCommands = new Set([
   'pwd','whoami','hostname','date','clear','echo','ls','cd','cat','head','tail','wc',
-  'touch','mkdir','cp','mv','rm','grep','find','sort','uniq','cut','chmod','env','printenv',
-  'export','alias','history','ps','jobs','fg','bg','kill','top','shortcut','curl','ping',
+  'touch','mkdir','rmdir','cp','mv','rm','grep','find','sort','uniq','cut','chmod','env','printenv',
+  'export','alias','unalias','history','ps','jobs','fg','bg','kill','top','shortcut','curl','ping',
   'ssh','wget','claude','warp','which','man','glossary','help','xp','achievements',
   'colors','tee','ln','readlink','tar','gzip','gunzip','sed','awk','source','brew','apt',
   'pip','npm','git','ssh-keygen','scp','df','du','free','uptime','lsof','watch',
@@ -5846,8 +5933,8 @@ function validateTask(rawCmd) {
           checkAchievement('speed_demon');
         }
 
-        if (state.completedLessons.size >= 17) checkAchievement('halfway');
-        if (state.completedLessons.size >= 18) checkAchievement('graduate');
+        if (state.completedLessons.size >= 40) checkAchievement('halfway');
+        if (state.completedLessons.size >= 60) checkAchievement('graduate');
         if (state.completedLessons.size >= 35) checkAchievement('master');
         if (state.completedLessons.size >= lessons.length) checkAchievement('ultimate_master');
 
@@ -5942,10 +6029,13 @@ function renderGlossaryPanel() {
 // ============================================================
 function addXP(amount) {
   state.xp += amount;
+  if (state.level < 1) state.level = 1;
   const xpForLevel = level => level * 100;
-  while (state.xp >= xpForLevel(state.level)) {
+  let safetyCounter = 0;
+  while (state.xp >= xpForLevel(state.level) && safetyCounter < 100) {
     state.xp -= xpForLevel(state.level);
     state.level++;
+    safetyCounter++;
     showToast(`⬆ Level Up! You're now Level ${state.level}!`, 'level');
   }
   updateXPBar();
@@ -6214,7 +6304,7 @@ const adventureQuests = [
       { text: 'Make the decoder executable: <code>chmod +x tools/decoder.sh</code>', validate: c => c.cmd.includes('chmod') && c.cmd.includes('decoder'), done: false },
       { text: 'Read the decoder output: <code>cat tools/decoder.sh</code>', validate: c => c.cmd.includes('cat') && c.cmd.includes('decoder'), done: false },
     ],
-    reward: 'The malware matches Diana Frost\'s coding style with 92% confidence. The suspect codenames (RAVEN, ECHO, VIPER, EMBER, LYNX, ATLAS, LOTUS) spell R-E-V-E-A-L — "REVEAL."',
+    reward: 'The malware matches Diana Frost\'s coding style with 92% confidence. The suspect codenames (RAVEN, ECHO, VIPER, EMBER, ATLAS, LYNX) spell R-E-V-E-A-L — "REVEAL."',
     xp: 60,
   },
   {
@@ -6361,7 +6451,12 @@ function selectQuest(idx) {
 
 function validateAdventure(rawCmd) {
   if (!adventureState.started) return;
-  const quest = adventureQuests[adventureState.currentQuest];
+  // Find the first incomplete quest (in case user is viewing a completed one)
+  let activeIdx = adventureState.currentQuest;
+  for (let i = 0; i < adventureQuests.length; i++) {
+    if (!adventureState.completedQuests.has(adventureQuests[i].id)) { activeIdx = i; break; }
+  }
+  const quest = adventureQuests[activeIdx];
   if (!quest || adventureState.completedQuests.has(quest.id)) return;
 
   if (!adventureState.questProgress[quest.id]) adventureState.questProgress[quest.id] = new Set();
@@ -6705,6 +6800,7 @@ let quizState = {
 };
 
 function renderQuizMenu() {
+  if (quizState._advanceTimer) { clearTimeout(quizState._advanceTimer); quizState._advanceTimer = null; }
   const panel = document.getElementById('panel-quiz');
   let html = '<h2>Quiz Mode</h2>';
   html += '<p style="margin-bottom:12px;color:var(--dim)">Test your knowledge! Questions are randomized each time.</p>';
@@ -6855,7 +6951,7 @@ function answerQuiz(choice) {
   document.getElementById('quiz-explain').style.display = 'block';
 
   // Auto-advance after delay
-  setTimeout(() => {
+  quizState._advanceTimer = setTimeout(() => {
     quizState.qIndex++;
     showQuizQuestion();
   }, 2500);
@@ -6975,7 +7071,14 @@ async function doLogin() {
   btn.disabled = true; btn.textContent = 'Logging in...';
   errEl.textContent = '';
 
-  const { data, error } = await sb.auth.signInWithPassword({ email, password });
+  let data, error;
+  try {
+    ({ data, error } = await sb.auth.signInWithPassword({ email, password }));
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Log In';
+    errEl.textContent = e.message || 'Network error. Please try again.';
+    return;
+  }
   btn.disabled = false; btn.textContent = 'Log In';
 
   if (error) { errEl.textContent = error.message; return; }
@@ -7006,10 +7109,17 @@ async function doSignup() {
   btn.disabled = true; btn.textContent = 'Creating account...';
   errEl.textContent = '';
 
-  const { data, error } = await sb.auth.signUp({
-    email, password,
-    options: { data: { display_name: name || email.split('@')[0] } }
-  });
+  let data, error;
+  try {
+    ({ data, error } = await sb.auth.signUp({
+      email, password,
+      options: { data: { display_name: name || email.split('@')[0] } }
+    }));
+  } catch(e) {
+    btn.disabled = false; btn.textContent = 'Create Account';
+    errEl.textContent = e.message || 'Network error. Please try again.';
+    return;
+  }
   btn.disabled = false; btn.textContent = 'Create Account';
 
   if (error) { errEl.textContent = error.message; return; }
@@ -7021,7 +7131,7 @@ async function doSignup() {
       <div style="text-align:center;padding:12px 0">
         <div style="color:var(--green);font-size:16px;font-weight:bold;margin-bottom:12px">Check Your Email!</div>
         <p style="color:var(--dim);font-size:12px;line-height:1.6">
-          We sent a confirmation link to <strong style="color:var(--cyan)">${email}</strong>.
+          We sent a confirmation link to <strong style="color:var(--cyan)">${email.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}</strong>.
           Click it to activate your account, then log in.
         </p>
       </div>`;
@@ -7150,6 +7260,7 @@ function restoreSaveObject(save) {
   state.aliases = save.aliases || {};
   state.envVars = { ...state.envVars, ...(save.envVars || {}) };
   state.commandCount = save.commandCount || 0;
+  state.history = save.history || [];
   if (save.completedTasks) {
     for (const [k, v] of Object.entries(save.completedTasks)) state.completedTasks[k] = new Set(v);
   }
@@ -7194,9 +7305,6 @@ function startGame() {
   document.getElementById('welcome-overlay').classList.add('hidden');
   inputEl.focus();
   state.lessonStartTime = Date.now();
-
-  // Initialize Supabase (if configured)
-  initSupabase();
 
   const hasProgress = loadState();
 
